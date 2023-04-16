@@ -1,0 +1,148 @@
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group 'de.linusdev'
+version '1.0.0'
+
+targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_17
+compileJava.options.encoding = 'UTF-8'
+
+enum CPPBuildType{
+    RELEASE("cmake-build-release", "lib", "a"),
+    DEBUG("cmake-build-debug", "lib", "a"),
+    DEBUG_VS("cmake-build-debug-vs", "", "lib"),
+    ;
+
+    public final String folderName;
+    public final String filePrefix;
+    public final String fileEnding;
+
+    CPPBuildType (String folderName, String filePrefix, String fileEnding) {
+        this.folderName = folderName;
+        this.filePrefix = filePrefix;
+        this.fileEnding = fileEnding;
+    }
+}
+
+CPPBuildType BUILD_TYPE = CPPBuildType.DEBUG_VS
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+    title = "LApi"
+
+    configure(options) {
+        tags(
+                'implNote:a:Implementation Note:',
+                'implSpec:a:Implemenatation Requirements:',
+                'apiNote:a:API Note:'
+        )
+    }
+}
+
+test {
+    jvmArgs '-XX:+CreateCoredumpOnCrash';
+}
+
+repositories {
+    mavenCentral()
+}
+
+def cnlTask = tasks.register('copy-native-libraries') {
+
+
+    def projectPath = project.projectDir.toPath()
+
+    def buildFolder = BUILD_TYPE.folderName;
+
+    def mainLib = projectPath.resolve(buildFolder + "\\" + BUILD_TYPE.filePrefix + "CLGLJava.jnilib")
+    def gladLib = projectPath.resolve(buildFolder + "\\libs\\glad\\" + BUILD_TYPE.filePrefix + "glad." + BUILD_TYPE.fileEnding)
+    def glfwLib = projectPath.resolve(buildFolder + "\\_deps\\glfw3-build\\src\\" + BUILD_TYPE.filePrefix + "glfw3." + BUILD_TYPE.fileEnding)
+
+    if(Files.exists(mainLib) && Files.exists(gladLib) && Files.exists(glfwLib)) {
+        project.logger.lifecycle("Copying c/++ libraries")
+        def resourceMainDir = projectPath.resolve("src/main/resources/native-libraries")
+        def resourceTestDir = projectPath.resolve("src/test/resources/native-libraries")
+
+        for(java.nio.file.Path f : Files.list(resourceMainDir)) Files.delete(f);
+        for(java.nio.file.Path f : Files.list(resourceTestDir)) Files.delete(f);
+
+
+        Files.copy(mainLib, resourceMainDir.resolve(mainLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(gladLib, resourceMainDir.resolve(gladLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(glfwLib, resourceMainDir.resolve(glfwLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+
+        Files.copy(mainLib, resourceTestDir.resolve(mainLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(gladLib, resourceTestDir.resolve(gladLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(glfwLib, resourceTestDir.resolve(glfwLib.getFileName()), StandardCopyOption.REPLACE_EXISTING)
+    } else {
+        project.logger.lifecycle("Cannot copy c/++ libraries.")
+        project.logger.lifecycle(mainLib.toString() + ": " + (Files.exists(mainLib) ? "found" : "missing"))
+        project.logger.lifecycle(gladLib.toString() + ": " + (Files.exists(gladLib) ? "found" : "missing"))
+        project.logger.lifecycle(glfwLib.toString() + ": " + (Files.exists(glfwLib) ? "found" : "missing"))
+    }
+
+}.get()
+tasks.named("build").get().dependsOn(cnlTask)
+
+dependencies {
+    api 'de.linusdev:lutils:1.0.7'
+    api 'org.jetbrains:annotations:23.0.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+publishing {
+    publications {
+
+        OpenCLWindow(MavenPublication) {
+            artifactId = 'OpenCLGLJava'
+            from components.java
+            pom {
+                name = 'OpenCLGLJava'
+                description = ''
+                url = 'https://www.linusdev.de'
+                groupId = 'de.linusdev'
+                version = project.version
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'linusdev'
+                        name = 'Linus Andera'
+                        email = 'linus@linusdev.de'
+                        organizationUrl = 'https://www.linusdev.de'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/lni-dev/OpenCLWindowJava.git'
+                    developerConnection ='scm:git:ssh://github.com:lni-dev/OpenCLWindowJava.git'
+                    url = 'https://github.com/lni-dev/OpenCLWindowJava/tree/master'
+                }
+            }
+        }
+    }
+}

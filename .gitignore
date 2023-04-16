@@ -1,0 +1,8 @@
+/cmake-build-*/
+/build/
+/.gradle/
+*.log
+*.mdmp
+/*.lib
+/*.a
+/*.jnilib
