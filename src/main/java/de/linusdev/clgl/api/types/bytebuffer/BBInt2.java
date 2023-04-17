@@ -17,27 +17,15 @@
 package de.linusdev.clgl.api.types.bytebuffer;
 
 import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.Int2;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class BBInt2 extends BBIntN {
-    public static StructureInfo INFO = new StructureInfo(4, false, 0, 8, 0);
+public class BBInt2 extends BBIntN implements Int2 {
+    public static StructureInfo INFO = new StructureInfo(8, false, 0, 8, 0);
 
     public BBInt2(boolean allocateBuffer) {
-        super(1, allocateBuffer);
-    }
-
-    public void x(int i) {
-        buf.put(0, i);
-    }
-
-    public void y(int i) {
-        buf.put(1, i);
-    }
-
-    public void xy(int x, int y) {
-        buf.put(0, x);
-        buf.put(1, y);
+        super(2, allocateBuffer);
     }
 
     @Override

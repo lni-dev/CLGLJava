@@ -59,6 +59,21 @@ abstract class BBFloatN extends Structure implements FloatN {
     }
 
     @Override
+    public boolean isArrayBacked() {
+        return false;
+    }
+
+    @Override
+    public boolean isBufferBacked() {
+        return true;
+    }
+
+    @Override
+    public @NotNull Structure getStructure() {
+        return this;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 

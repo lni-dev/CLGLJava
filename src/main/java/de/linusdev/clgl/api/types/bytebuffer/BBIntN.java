@@ -18,12 +18,13 @@ package de.linusdev.clgl.api.types.bytebuffer;
 
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.IntN;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.IntBuffer;
 
 @SuppressWarnings("unused")
-public abstract class BBIntN extends Structure {
+public abstract class BBIntN extends Structure implements IntN {
 
     public static StructureInfo INFO = new StructureInfo(4, false, 0, 4, 0);
 
@@ -48,13 +49,34 @@ public abstract class BBIntN extends Structure {
         buf = byteBuf.asIntBuffer();
     }
 
-
-    /**
-     * Count of floats in this buffer.
-     * @return float count in this buffer
-     */
+    @Override
     public int getMemberCount() {
         return memberCount;
+    }
+
+    @Override
+    public int get(int index) {
+        return buf.get(index);
+    }
+
+    @Override
+    public void put(int index, int value) {
+        buf.put(index, value);
+    }
+
+    @Override
+    public boolean isArrayBacked() {
+        return false;
+    }
+
+    @Override
+    public boolean isBufferBacked() {
+        return true;
+    }
+
+    @Override
+    public @NotNull Structure getStructure() {
+        return this;
     }
 
     @Override

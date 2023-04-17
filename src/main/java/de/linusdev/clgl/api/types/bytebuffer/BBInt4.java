@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.cl;
+package de.linusdev.clgl.api.types.bytebuffer;
 
-import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
+import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.Int4;
+import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class CL {
+public class BBInt4 extends BBIntN implements Int4 {
+    public static StructureInfo INFO = new StructureInfo(16, false, 0, 16, 0);
 
-    public static int clGetPlatformIDs(int size, @Nullable Structure array, @Nullable BBInt1 platformCount) {
-
-        return _clGetPlatformIDs(size,
-                array == null ? null : array.getByteBuf(),
-                platformCount == null ? null : platformCount.getByteBuf());
+    public BBInt4(boolean allocateBuffer) {
+        super(4, allocateBuffer);
     }
-    private static native int _clGetPlatformIDs(int num_entries, ByteBuffer p_platforms, ByteBuffer p_num_platforms);
 
+    @Override
+    protected @NotNull StructureInfo getInfo() {
+        return INFO;
+    }
 }

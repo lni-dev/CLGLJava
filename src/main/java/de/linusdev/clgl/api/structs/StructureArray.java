@@ -22,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
 public class StructureArray extends ComplexStructure {
 
     private final @NotNull Sizeable type;
-    @SuppressWarnings("NotNullFieldNotInitialized") // init in calculateInfo()
+    @SuppressWarnings("NotNullFieldNotInitialized") // initialized in calculateInfo()
     private @NotNull StructureInfo info;
 
     private final int size;

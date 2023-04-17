@@ -16,13 +16,7 @@
 
 package de.linusdev.clgl.api.types;
 
-public interface FloatN {
-
-    /**
-     * Count of floats in this buffer.
-     * @return float count in this buffer
-     */
-    int getMemberCount();
+public interface FloatN extends Vector {
 
     /**
      * Get component at position {@code index}.

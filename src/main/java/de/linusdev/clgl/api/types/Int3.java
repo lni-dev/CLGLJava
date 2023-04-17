@@ -14,22 +14,39 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.types.bytebuffer;
-
-import de.linusdev.clgl.api.structs.StructureInfo;
-import de.linusdev.clgl.api.types.Int1;
-import org.jetbrains.annotations.NotNull;
+package de.linusdev.clgl.api.types;
 
 @SuppressWarnings("unused")
-public class BBInt1 extends BBIntN implements Int1 {
-    public static StructureInfo INFO = new StructureInfo(4, false, 0, 4, 0);
+public interface Int3 extends IntN {
 
-    public BBInt1(boolean allocateBuffer) {
-        super(1, allocateBuffer);
+    default int x() {
+        return get(0);
     }
 
-    @Override
-    protected @NotNull StructureInfo getInfo() {
-        return INFO;
+    default int y() {
+        return get(1);
     }
+
+    default int z() {
+        return get(2);
+    }
+
+    default void x(int f) {
+        put(0, f);
+    }
+
+    default void y(int f) {
+        put(1, f);
+    }
+
+    default void z(int f) {
+        put(2, f);
+    }
+
+    default void xyz(int x, int y, int z) {
+        put(0, x);
+        put(1, y);
+        put(2, z);
+    }
+
 }

@@ -16,16 +16,8 @@
 
 package de.linusdev.clgl.api.types;
 
-import org.jetbrains.annotations.NotNull;
-
 @SuppressWarnings("unused")
-public interface IntN {
-
-    /**
-     * Count of floats in this buffer.
-     * @return float count in this buffer
-     */
-    int getMemberCount();
+public interface IntN extends Vector {
 
     /**
      * Get component at position {@code index}.
@@ -34,15 +26,14 @@ public interface IntN {
      * @implNote No Error checking will be done by this method. Too large or small indices
      * may result in undefined behavior.
      */
-    float get(int index);
+    int get(int index);
 
     /**
      *  Set component at position {@code index} to {@code value}.
      * @param index index of the vector component to set
      * @param value value to set
-     * @return this
      *  @implNote No Error checking will be done by this method. Too large or small indices
      *  may result in undefined behavior.
      */
-    @NotNull FloatN put(int index, int value);
+    void put(int index, int value);
 }
