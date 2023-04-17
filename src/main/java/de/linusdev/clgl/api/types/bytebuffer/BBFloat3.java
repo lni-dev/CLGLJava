@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.api.types.bytebuffer;
 
-@SuppressWarnings("unused")
-public class Glad {
+import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.Float3;
+import org.jetbrains.annotations.NotNull;
 
-    public static native int gladLoadGL();
+/**
+ * 3 Component float vector. Has the same {@link #getRequiredSize()} as a {@link BBFloat4}.
+ */
+public class BBFloat3 extends BBFloatN implements Float3 {
 
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
+    public static StructureInfo INFO = new StructureInfo(16, false, 0, 12, 4);
 
-    public static native void glFinish();
+    public BBFloat3(boolean allocateBuffer) {
+        super(3, allocateBuffer);
+    }
 
-
+    @Override
+    protected @NotNull StructureInfo getInfo() {
+        return INFO;
+    }
 }

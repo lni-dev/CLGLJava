@@ -20,7 +20,6 @@
 
 JniUtils::JniUtils(JNIEnv* env) {
     env->GetJavaVM(&jvm);
-
 }
 
 JavaVM* JniUtils::getVM() {

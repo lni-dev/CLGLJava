@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.nat.cl;
+
+import de.linusdev.clgl.api.structs.Structure;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
-public class Glad {
+public class CL {
 
-    public static native int gladLoadGL();
-
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
-
-    public static native void glFinish();
-
+    public static native int clGetPlatformIDs(int size, @Nullable Structure array);
 
 }

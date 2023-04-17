@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.api.types;
 
 @SuppressWarnings("unused")
-public class Glad {
+public interface Float1 extends FloatN {
 
-    public static native int gladLoadGL();
+    default float get() {
+        return get(0);
+    }
 
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
-
-    public static native void glFinish();
-
+    default void set(float f) {
+        put(0, f);
+    }
 
 }

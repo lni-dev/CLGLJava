@@ -14,17 +14,26 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.api.utils;
 
-@SuppressWarnings("unused")
-public class Glad {
+import sun.misc.Unsafe;
 
-    public static native int gladLoadGL();
+import java.lang.reflect.Field;
 
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
+public class Utils {
 
-    public static native void glFinish();
+    public static Unsafe UNSAFE;
 
+    static {
+        Field f;
+        try {
+            f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            UNSAFE = (Unsafe) f.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
 
 }

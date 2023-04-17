@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.api.types.array;
+
+import de.linusdev.clgl.api.types.Float1;
 
 @SuppressWarnings("unused")
-public class Glad {
+public class ABFloat1 extends ABFloatN implements Float1 {
 
-    public static native int gladLoadGL();
+    public ABFloat1(float[] array, int arrayStartIndex) {
+        super(array, arrayStartIndex, 1);
+    }
 
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
-
-    public static native void glFinish();
-
-
+    public ABFloat1() {
+        super(1);
+    }
 }

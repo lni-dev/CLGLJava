@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad;
+package de.linusdev.clgl.api.structs;
 
-@SuppressWarnings("unused")
-public class Glad {
-
-    public static native int gladLoadGL();
-
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
-
-    public static native void glFinish();
-
-
+public interface Sizeable {
+    int getRequiredSize();
 }
