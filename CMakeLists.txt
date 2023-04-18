@@ -5,15 +5,17 @@ include(FetchContent)
 include(UseJava)
 
 set(CMAKE_CXX_STANDARD 17)
+option(BUILD_SHARED_LIBS ON)
 
 add_link_options(-static-libgcc -static-libstdc++ -static)
 
 add_subdirectory(libs/glad)
 
-add_library(${PROJECT_NAME} MODULE
+add_library(${PROJECT_NAME} STATIC MODULE
         src/main/cpp/clgl_Load.cpp
         src/main/cpp/clgl_Glad.cpp
         src/main/cpp/clgl_GLFWWindow.cpp
+        src/main/cpp/clgl_CL.cpp
         src/main/cpp/JniUtils.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

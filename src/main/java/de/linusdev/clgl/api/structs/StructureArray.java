@@ -19,7 +19,7 @@ package de.linusdev.clgl.api.structs;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class StructureArray extends ComplexStructure {
+public class StructureArray<T extends Structure> extends ComplexStructure {
 
     private final @NotNull Sizeable type;
     @SuppressWarnings("NotNullFieldNotInitialized") // initialized in calculateInfo()
@@ -36,8 +36,16 @@ public class StructureArray extends ComplexStructure {
         allocate();
     }
 
-    public void set(int index, @NotNull Structure struct) {
+    public void set(int index, @NotNull T struct) {
         items[index] = struct;
+
+        int offset = type.getRequiredSize() * index;
+        struct.useBuffer(this, offset);
+    }
+
+    @SuppressWarnings("unchecked")
+    public T get(int index) {
+        return (T) items[index];
     }
 
     private void calculateInfo() {

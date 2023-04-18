@@ -17,16 +17,23 @@
 package de.linusdev.clgl;
 
 import de.linusdev.clgl.nat.Load;
+import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.glfw3.GLFWWindow;
 import org.junit.jupiter.api.Test;
-
-import static java.lang.Thread.sleep;
 
 public class MainTest {
 
     @Test
     void test() throws InterruptedException {
         Load._init();
+
+
+        for(Long l : CL.getPlatformIDs()) {
+            System.out.println(l);
+            System.out.println(CL.getPlatformInfoString(l, CL.PlatformInfo.CL_PLATFORM_NAME));
+            System.out.println(CL.getPlatformInfoString(l, CL.PlatformInfo.CL_PLATFORM_VERSION));
+        }
+
 
         GLFWWindow._glfwInit();
         GLFWWindow._glfwSetErrorCallback((error, description) -> {
