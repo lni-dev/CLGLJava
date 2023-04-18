@@ -43,6 +43,16 @@ public class ABFloatN implements FloatN {
     }
 
     @Override
+    public boolean isArrayBacked() {
+        return true;
+    }
+
+    @Override
+    public boolean isBufferBacked() {
+        return false;
+    }
+
+    @Override
     public float get(int index) {
         return array[arrayStartIndex + index];
     }
