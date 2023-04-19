@@ -251,6 +251,28 @@ public class CL {
             @Nullable ByteBuffer p_num_devices
     );
 
+    public enum CLContextProperties implements IntBitFieldValue {
+        CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR(0x2006),
+        CL_DEVICES_FOR_GL_CONTEXT_KHR(0x2007),
+        CL_GL_CONTEXT_KHR(0x2008),
+        CL_EGL_DISPLAY_KHR(0x2009),
+        CL_GLX_DISPLAY_KHR(0x200A),
+        CL_WGL_HDC_KHR(0x200B),
+        CL_CGL_SHAREGROUP_KHR(0x200C),
+        ;
+        private final int value;
+
+        CLContextProperties(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+
     public static long clCreateContext(
             @Nullable PrimitiveTypeArray<Long> properties,
             @NotNull PrimitiveTypeArray<Long> devices,
@@ -273,7 +295,7 @@ public class CL {
             @NotNull ByteBuffer p_devices,
             @NotNull Class<Context> callback,
             long user_data,
-            @Nullable ByteBuffer errcode_ret
+            @Nullable ByteBuffer p_errcode_ret
             );
 
     public static void clReleaseContext(@NotNull Context context) {

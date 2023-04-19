@@ -36,8 +36,8 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowHi
     glfwWindowHint(hint, value);
 }
 
-static jobject globalRefErrorCallback;
-static jmethodID onErrorMethodId;
+static jobject globalRefErrorCallback = nullptr;
+static jmethodID onErrorMethodId = nullptr;
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -46,6 +46,10 @@ static jmethodID onErrorMethodId;
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetErrorCallback
   (JNIEnv* env, jclass clazz, jobject callback) {
+
+    if(globalRefErrorCallback)
+        env->DeleteGlobalRef(globalRefErrorCallback);
+
     globalRefErrorCallback = env->NewGlobalRef(callback);
     onErrorMethodId = env->GetMethodID(env->GetObjectClass(callback), "onError", "(ILjava/lang/String;)V");
 

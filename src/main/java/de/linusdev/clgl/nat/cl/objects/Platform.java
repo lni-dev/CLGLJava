@@ -54,6 +54,22 @@ public class Platform {
         return Collections.unmodifiableList(devices);
     }
 
+    /**
+     * @see CL.PlatformInfo#CL_PLATFORM_NAME
+     * @return platform name
+     */
+    public String getPlatformName() {
+        return CL.getPlatformInfoString(getPointer(), CL.PlatformInfo.CL_PLATFORM_NAME);
+    }
+
+    /**
+     * @see CL.PlatformInfo#CL_PLATFORM_VERSION
+     * @return platform version
+     */
+    public String getPlatformVersion() {
+        return CL.getPlatformInfoString(getPointer(), CL.PlatformInfo.CL_PLATFORM_VERSION);
+    }
+
     public long getPointer() {
         return pointer;
     }

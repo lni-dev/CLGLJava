@@ -28,7 +28,7 @@ private:
 public:
 
 
-    JniUtils(JNIEnv* env);
+    explicit JniUtils(JNIEnv* env);
 
     JavaVM* getVM();
     void getEnv(JNIEnv** pToEnvP);

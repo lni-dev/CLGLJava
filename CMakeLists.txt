@@ -16,6 +16,8 @@ add_library(${PROJECT_NAME} STATIC MODULE
         src/main/cpp/clgl_Glad.cpp
         src/main/cpp/clgl_GLFWWindow.cpp
         src/main/cpp/clgl_CL.cpp
+        src/main/cpp/clgl_NativeUtils.cpp
+        src/main/cpp/clgl_WGL.cpp
         src/main/cpp/JniUtils.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

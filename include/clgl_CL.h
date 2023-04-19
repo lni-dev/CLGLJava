@@ -18,7 +18,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetPlatformIDs
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clGetPlatformInfo
- * Signature: (IIILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JIILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetPlatformInfo
   (JNIEnv *, jclass, jlong, jint, jint, jobject, jobject);
@@ -26,10 +26,26 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetPlatformInfo
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clGetDeviceIDs
- * Signature: (IIILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JIILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetDeviceIDs
-  (JNIEnv *, jclass, jlong , jint, jint, jobject, jobject);
+  (JNIEnv *, jclass, jlong, jint, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateContext
+ * Signature: (Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/lang/Class;JLjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateContext
+  (JNIEnv *, jclass, jobject, jint, jobject, jclass, jlong, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseContext
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseContext
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

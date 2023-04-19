@@ -88,60 +88,66 @@ public class PrimitiveTypeArray<T> extends Structure implements Iterable<T> {
             allocate();
     }
 
+    private int toByteIndex(int index) {
+        if(index >= size || index < 0)
+            throw new IndexOutOfBoundsException(index);
+        return index * elementSize;
+    }
+
     public T get(int index) {
-        return get.apply(index);
+        return get.apply(toByteIndex(index));
     }
 
     public void set(int index, T value) {
-        set.accept(value, index);
+        set.accept(value, toByteIndex(index));
     }
 
     public int getInt(int index) {
-        return byteBuf.getInt(index);
+        return byteBuf.getInt(toByteIndex(index));
     }
     
     public float getFloat(int index) {
-        return byteBuf.getFloat(index);
+        return byteBuf.getFloat(toByteIndex(index));
     }
     
     public double getDouble(int index) {
-        return byteBuf.getDouble(index);
+        return byteBuf.getDouble(toByteIndex(index));
     }
 
     public long getLong(int index) {
-        return byteBuf.getLong(index);
+        return byteBuf.getLong(toByteIndex(index));
     }
 
     public short getShort(int index) {
-        return byteBuf.getShort(index);
+        return byteBuf.getShort(toByteIndex(index));
     }
 
     public byte getByte(int index) {
-        return byteBuf.get(index);
+        return byteBuf.get(toByteIndex(index));
     }
 
     public void setInt(int index, int value) {
-        byteBuf.putInt(index, value);
+        byteBuf.putInt(toByteIndex(index), value);
     }
 
     public void setFloat(int index, float value) {
-        byteBuf.putFloat(index, value);
+        byteBuf.putFloat(toByteIndex(index), value);
     }
 
     public void setDouble(int index, double value) {
-        byteBuf.putDouble(index, value);
+        byteBuf.putDouble(toByteIndex(index), value);
     }
 
     public void setLong(int index, long value) {
-        byteBuf.putLong(index, value);
+        byteBuf.putLong(toByteIndex(index), value);
     }
 
     public void setShort(int index, short value) {
-        byteBuf.putShort(index, value);
+        byteBuf.putShort(toByteIndex(index), value);
     }
 
     public void setByte(int index, byte value) {
-        byteBuf.put(index, value);
+        byteBuf.put(toByteIndex(index), value);
     }
 
     public int size() {
