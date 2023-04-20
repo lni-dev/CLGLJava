@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static de.linusdev.clgl.nat.cl.CLStatus.check;
 
+@SuppressWarnings("unused")
 public class Context implements AutoCloseable {
 
     private static final @NotNull ArrayList<Context> contexts = new ArrayList<>(1);
@@ -123,6 +124,6 @@ public class Context implements AutoCloseable {
     public void close() {
         //noinspection resource: contexts[id] == this
         contexts.set(id, null);
-        CL.clReleaseContext(this);
+        CL.clReleaseContext(pointer);
     }
 }

@@ -17,10 +17,14 @@
 package de.linusdev.clgl.nat.cl;
 
 import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
+import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.objects.Context;
+import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
+import de.linusdev.lutils.bitfield.LongBitFieldValue;
+import de.linusdev.lutils.bitfield.LongBitfield;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -251,7 +255,7 @@ public class CL {
             @Nullable ByteBuffer p_num_devices
     );
 
-    public enum CLContextProperties implements IntBitFieldValue {
+    public enum CLContextProperties implements LongBitFieldValue {
         CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR(0x2006),
         CL_DEVICES_FOR_GL_CONTEXT_KHR(0x2007),
         CL_GL_CONTEXT_KHR(0x2008),
@@ -267,7 +271,7 @@ public class CL {
         }
 
         @Override
-        public int getValue() {
+        public long getValue() {
             return value;
         }
     }
@@ -298,12 +302,263 @@ public class CL {
             @Nullable ByteBuffer p_errcode_ret
             );
 
-    public static void clReleaseContext(@NotNull Context context) {
-        check(_clReleaseContext(context.getPointer()));
+    public static void clReleaseContext(long context) {
+        check(_clReleaseContext(context));
     }
 
     private static native int _clReleaseContext(
             long context
     );
 
+    public enum QueueProperty implements LongBitFieldValue {
+        CL_QUEUE_CONTEXT(0x1090),
+        CL_QUEUE_DEVICE(0x1091),
+        CL_QUEUE_REFERENCE_COUNT(0x1092),
+        CL_QUEUE_PROPERTIES(0x1093),
+        CL_QUEUE_SIZE(0x1094),
+        CL_QUEUE_DEVICE_DEFAULT(0x1095),
+        CL_QUEUE_PROPERTIES_ARRAY(0x1098),
+        ;
+
+        private final long value;
+
+        QueueProperty(long value) {
+            this.value = value;
+        }
+
+        @Override
+        public long getValue() {
+            return value;
+        }
+    }
+
+    @SuppressWarnings("PointlessBitwiseExpression")
+    public enum CLQueuePropertiesValue implements LongBitFieldValue {
+        CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE(1 << 0),
+        CL_QUEUE_PROFILING_ENABLE(1 << 1),
+        CL_QUEUE_ON_DEVICE(1 << 2),
+        CL_QUEUE_ON_DEVICE_DEFAULT(1 << 3),
+        ;
+
+        private final long value;
+
+        CLQueuePropertiesValue(long value) {
+            this.value = value;
+        }
+
+        @Override
+        public long getValue() {
+            return value;
+        }
+    }
+
+    public static long clCreateCommandQueueWithProperties(
+            long context,
+            long device,
+            @Nullable PrimitiveTypeArray<Long> properties,
+            @Nullable BBInt1 errCodeRet
+    ) {
+        return _clCreateCommandQueueWithProperties(
+                context,
+                device,
+                properties == null ? null : properties.getByteBuf(),
+                errCodeRet == null ? null : errCodeRet.getByteBuf()
+        );
+    }
+
+    private static native long _clCreateCommandQueueWithProperties(
+      long context,
+      long device,
+      @Nullable ByteBuffer p_properties,
+      @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static long clCreateCommandQueue(
+            long context,
+            long device,
+            @Nullable LongBitfield<CLQueuePropertiesValue> properties,
+            @Nullable BBInt1 errCodeRet
+    ) {
+        return _clCreateCommandQueue(
+                context,
+                device,
+                properties == null ? 0 : properties.getValue(),
+                errCodeRet == null ? null : errCodeRet.getByteBuf()
+        );
+    }
+
+    private static native long _clCreateCommandQueue(
+      long context,
+      long device,
+      long properties,
+      @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static void clReleaseCommandQueue(
+            long queue
+    ) {
+        check(_clReleaseCommandQueue(queue));
+    }
+
+    private static native int _clReleaseCommandQueue(
+            long queue
+    );
+
+    @SuppressWarnings("PointlessBitwiseExpression")
+    public enum CLMemFlag implements LongBitFieldValue {
+        CL_MEM_READ_WRITE(1 << 0),
+        CL_MEM_WRITE_ONLY(1 << 1),
+        CL_MEM_READ_ONLY(1 << 2),
+        CL_MEM_USE_HOST_PTR(1 << 3),
+        CL_MEM_ALLOC_HOST_PTR(1 << 4),
+        CL_MEM_COPY_HOST_PTR(1 << 5),
+        CL_MEM_HOST_WRITE_ONLY(1 << 7),
+        CL_MEM_HOST_READ_ONLY(1 << 8),
+        CL_MEM_HOST_NO_ACCESS(1 << 9),
+        CL_MEM_SVM_FINE_GRAIN_BUFFER(1 << 10),
+        CL_MEM_SVM_ATOMICS(1 << 11),
+        CL_MEM_KERNEL_READ_AND_WRITE(1 << 12),
+        ;
+
+        private final long value;
+
+        CLMemFlag(long value) {
+            this.value = value;
+        }
+
+        @Override
+        public long getValue() {
+            return value;
+        }
+
+    }
+
+
+
+    public static long clCreateBuffer(
+            long context,
+            LongBitfield<CLMemFlag> clMemFlags,
+            long size,
+            @Nullable BBInt1 errCodeRet
+    ) {
+        return _clCreateBuffer(
+                context,
+                clMemFlags.getValue(),
+                size,
+                null,
+                errCodeRet == null ? null : errCodeRet.getByteBuf()
+        );
+    }
+
+    public static long clCreateBuffer(
+            long context,
+            LongBitfield<CLMemFlag> clMemFlags,
+            @NotNull Structure hostPtr,
+            @Nullable BBInt1 errCodeRet
+    ) {
+        return _clCreateBuffer(
+                context,
+                clMemFlags.getValue(),
+                hostPtr.getSize(),
+                hostPtr.getByteBuf(),
+                errCodeRet == null ? null : errCodeRet.getByteBuf()
+        );
+    }
+
+    private static native long _clCreateBuffer(
+            long context,
+            long cl_mem_flags,
+            long size,
+            @Nullable ByteBuffer p_host_ptr,
+            @Nullable ByteBuffer p_errcode_ret
+    );
+
+
+
+    public static void clReleaseMemObject(
+            long memObj
+    ) {
+        check(_clReleaseMemObject(memObj));
+    }
+
+    private static native int _clReleaseMemObject(
+            long memobj
+    );
+
+    private static native int _clEnqueueReadBuffer(
+            long command_queue,
+            long buffer,
+            boolean blocking_read,
+            long offset,
+            long size,
+            @NotNull ByteBuffer p_ptr,
+            int num_events_in_wait_list,
+            @Nullable ByteBuffer p_event_wait_list,
+            @Nullable ByteBuffer event
+    );
+
+    private static native int _clEnqueueWriteBuffer(
+            long command_queue,
+            long buffer,
+            boolean blocking_write,
+            long offset,
+            long size,
+            @NotNull ByteBuffer p_ptr,
+            int num_events_in_wait_list,
+            @Nullable ByteBuffer p_event_wait_list,
+            @Nullable ByteBuffer event
+    );
+
+    public static long clCreateProgramWithSource(
+            long context,
+            @NotNull String src,
+            @Nullable BBInt1 errCodeRet
+    ) {
+        return _clCreateProgramWithSource(
+                context,
+                src,
+                errCodeRet == null ? null : errCodeRet.getByteBuf()
+        );
+    }
+
+    private static native long _clCreateProgramWithSource(
+            long context,
+            @NotNull String src,
+            @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static void clReleaseProgram(
+            long program
+    ) {
+        check(_clReleaseProgram(program));
+    }
+
+    private static native int _clReleaseProgram(
+            long program
+    );
+
+    public static void clBuildProgram(
+            long program,
+            @NotNull PrimitiveTypeArray<Long> deviceList,
+            @Nullable String options,
+            long user_data
+    ) {
+        check(_clBuildProgram(
+                program,
+                deviceList.size(),
+                deviceList.getByteBuf(),
+                options,
+                Program.class,
+                user_data
+        ));
+    }
+
+    private static native int _clBuildProgram(
+            long program,
+            int num_devices,
+            @NotNull ByteBuffer p_device_list,
+            @Nullable String options,
+            @Nullable Class<Program> callback,
+            long user_data
+    );
 }

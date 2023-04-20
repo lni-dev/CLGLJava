@@ -98,7 +98,7 @@ def cnlTask = tasks.register('copy-native-libraries') {
 tasks.named("build").get().dependsOn(cnlTask)
 
 dependencies {
-    api 'de.linusdev:lutils:1.0.7'
+    api 'de.linusdev:lutils:1.0.8'
     api 'org.jetbrains:annotations:23.0.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
