@@ -16,15 +16,67 @@
 
 package de.linusdev.clgl.nat.glad;
 
+import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
+import org.jetbrains.annotations.NotNull;
+
+import java.nio.ByteBuffer;
+
 @SuppressWarnings("unused")
 public class Glad {
 
     public static native int gladLoadGL();
 
-    public static native void glClear(int mask);
-    public static native void glClearColor(float r, float g, float b, float a);
+    public static native void glClear(
+            int mask
+    );
+
+    public static native void glClearColor(
+            float r,
+            float g,
+            float b,
+            float a
+    );
 
     public static native void glFinish();
 
+    public static native void glBindFramebuffer(
+            int target,
+            int framebuffer
+    );
+
+    public static void glGenFramebuffers(
+            @NotNull PrimitiveTypeArray<Integer> ids
+    ) {
+        _glGenFramebuffers(
+                ids.size(),
+                ids.getByteBuf()
+        );
+    }
+
+    private static native void _glGenFramebuffers(
+            int n,
+            @NotNull ByteBuffer p_ids
+    );
+
+    public static void glDeleteFramebuffers(
+            @NotNull PrimitiveTypeArray<Integer> framebuffers
+    ) {
+        _glDeleteFramebuffers(
+                framebuffers.size(),
+                framebuffers.getByteBuf()
+        );
+    }
+
+    private static native void _glDeleteFramebuffers(
+            int n,
+            @NotNull ByteBuffer p_framebuffers
+    );
+
+    private static native void _glNamedFramebufferRenderbuffer(
+            int framebuffer,
+            int attachment,
+            int renderbuffertarget,
+            int renderbuffer
+    );
 
 }
