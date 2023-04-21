@@ -20,6 +20,8 @@ import de.linusdev.clgl.nat.Load;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.nat.cl.objects.Platform;
+import de.linusdev.clgl.nat.glad.Glad;
+import de.linusdev.clgl.nat.glad.objects.GLFrameBuffer;
 import de.linusdev.clgl.nat.glfw3.GLFWWindow;
 import org.junit.jupiter.api.Test;
 
@@ -39,17 +41,21 @@ public class MainTest {
         long pointer = GLFWWindow._glfwCreateWindow(500, 500, "hey");
         GLFWWindow._glfwShowWindow(pointer);
         GLFWWindow._glfwMakeContextCurrent(pointer);
+        Glad.gladLoadGL();
 
         Context clContext =
                 Context.createCLGLSharedContext(Platform.getPlatforms().get(0).getDevices(CL.DeviceType.CL_DEVICE_TYPE_GPU).get(0));
 
         clContext.close();
 
+        GLFrameBuffer f = new GLFrameBuffer();
+
+
         while (GLFWWindow._glfwWindowShouldClose(pointer) == 0) {
             GLFWWindow._glfwPollEvents();
         }
 
-
+        f.close();
         Load._close();
     }
 }

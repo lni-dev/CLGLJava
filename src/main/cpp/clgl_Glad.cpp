@@ -38,6 +38,16 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClear
 
 /*
  * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glClearColor
+ * Signature: (FFFF)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClearColor
+        (JNIEnv* env, jclass clazz, jfloat r, jfloat g, jfloat b, jfloat a) {
+    glClearColor(r, g, b, a);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
  * Method:    glFinish
  * Signature: ()V
  */
@@ -45,4 +55,123 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glFinish
   (JNIEnv* env, jclass clazz) {
     glFinish();
 }
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glBindFramebuffer
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindFramebuffer
+        (JNIEnv* env, jclass clazz, jint target, jint framebuffer) {
+    glBindFramebuffer(target, framebuffer);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glGenFramebuffers
+ * Signature: (ILjava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenFramebuffers
+        (JNIEnv* env, jclass clazz, jint n, jobject p_ids) {
+    void* ids = env->GetDirectBufferAddress(p_ids);
+    glGenFramebuffers(n, reinterpret_cast<GLuint*>(ids));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glGenFramebuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenFramebuffer
+        (JNIEnv* env, jclass clazz) {
+    jint f;
+    glGenFramebuffers(1, reinterpret_cast<GLuint*>(&f));
+    return f;
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glDeleteFramebuffers
+ * Signature: (ILjava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteFramebuffers
+        (JNIEnv* env, jclass clazz, jint n, jobject p_framebuffers) {
+    void* framebuffers = env->GetDirectBufferAddress(p_framebuffers);
+    glDeleteFramebuffers(n, reinterpret_cast<const GLuint*>(framebuffers));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDeleteFramebuffer
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteFramebuffer
+        (JNIEnv* env, jclass clazz, jint framebuffer) {
+    glDeleteFramebuffers(1, reinterpret_cast<GLuint*>(&framebuffer));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glNamedFramebufferRenderbuffer
+ * Signature: (IIII)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glNamedFramebufferRenderbuffer
+        (JNIEnv* env, jclass clazz, jint framebuffer, jint attachment, jint renderbuffertarget, jint renderbuffer) {
+    glNamedFramebufferRenderbuffer(framebuffer, attachment, renderbuffertarget, renderbuffer);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glGenRenderbuffers
+ * Signature: (ILjava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenRenderbuffers
+        (JNIEnv* env, jclass clazz, jint n, jobject p_renderbuffers) {
+    void* renderbuffers = env->GetDirectBufferAddress(p_renderbuffers);
+    glGenRenderbuffers(n, reinterpret_cast<GLuint*>(renderbuffers));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glGenRenderbuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenRenderbuffer
+        (JNIEnv *, jclass) {
+    jint r;
+    glGenRenderbuffers(1, reinterpret_cast<GLuint*>(&r));
+    return r;
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glDeleteRenderbuffers
+ * Signature: (ILjava/nio/ByteBuffer;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteRenderbuffers
+        (JNIEnv* env, jclass clazz, jint n, jobject p_renderbuffers) {
+    void* renderbuffers = env->GetDirectBufferAddress(p_renderbuffers);
+    glDeleteRenderbuffers(n, reinterpret_cast<GLuint*>(renderbuffers));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDeleteRenderbuffer
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteRenderbuffer
+        (JNIEnv* env, jclass clazz, jint renderbuffer) {
+    glDeleteRenderbuffers(1, reinterpret_cast<GLuint*>(&renderbuffer));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glNamedRenderbufferStorage
+ * Signature: (IIII)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glNamedRenderbufferStorage
+        (JNIEnv* env, jclass clazz, jint renderbuffer, jint internalformat, jint width, jint height) {
+    glRenderbufferStorage(renderbuffer, internalformat, width, height);
+}
+
 
