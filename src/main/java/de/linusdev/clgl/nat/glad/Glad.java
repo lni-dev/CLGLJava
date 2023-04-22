@@ -137,4 +137,43 @@ public class Glad {
             int height
     );
 
+    public static native void glBlitNamedFramebuffer(
+            int readFramebuffer,
+            int drawFramebuffer,
+            int srcX0,
+            int srcY0,
+            int srcX1,
+            int srcY1,
+            int dstX0,
+            int dstY0,
+            int dstX1,
+            int dstY1,
+            @MagicConstant(flags = {GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_STENCIL_BUFFER_BIT})
+            int mask,
+            @MagicConstant(intValues = {GL_NEAREST, GL_LINEAR})
+            int filter
+    );
+
+    public static native void glNamedFramebufferReadBuffer(
+            int framebuffer,
+            @MagicConstant(intValues = {
+                    GL_FRONT, GL_LEFT,  GL_FRONT_LEFT, GL_FRONT_RIGHT, GL_RIGHT,GL_BACK,
+                    GL_BACK_LEFT, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+                    GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6,
+                    GL_COLOR_ATTACHMENT7, GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10
+            })
+            int mode
+    );
+
+    public static native void glNamedFramebufferDrawBuffer(
+            int framebuffer,
+            @MagicConstant(intValues = {
+                    GL_NONE, GL_FRONT, GL_LEFT,  GL_FRONT_LEFT, GL_FRONT_RIGHT, GL_RIGHT,GL_BACK,
+                    GL_BACK_LEFT, GL_FRONT_AND_BACK, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+                    GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6,
+                    GL_COLOR_ATTACHMENT7, GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10
+            })
+            int buf
+    );
+
 }

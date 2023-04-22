@@ -17,6 +17,8 @@
 package de.linusdev.clgl.nat.glad.objects;
 
 import de.linusdev.clgl.nat.glad.Glad;
+import de.linusdev.clgl.nat.glad.custom.Binding;
+import de.linusdev.clgl.nat.glad.custom.BindingID;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,32 +29,77 @@ import static de.linusdev.clgl.nat.glad.Glad.glNamedFramebufferRenderbuffer;
 @SuppressWarnings("unused")
 public class GLFrameBuffer extends GLNamedObject<GLFrameBuffer> {
 
+    public static final @NotNull GLFrameBuffer DEFAULT_FRAME_BUFFER = new GLFrameBuffer(0);
+
     public GLFrameBuffer() {
         this.name = glGenFramebuffer();
     }
 
+    protected GLFrameBuffer(int name) {
+        this.name = name;
+    }
+
+    public static @NotNull GLFrameBuffer getDefault() {
+        return DEFAULT_FRAME_BUFFER;
+    }
+
     @Override
     public void reCreate() {
-        Glad.glDeleteFramebuffer(name);
-        this.name = 0;
+        if(!isClosed())
+            Glad.glDeleteFramebuffer(name);
         this.name = glGenFramebuffer();
         callReCreationListener();
     }
 
-    public void addRenderBuffer(
+    public @NotNull Binding<GLFrameBuffer, GLRenderBuffer> addRenderBuffer(
             @NotNull GLRenderBuffer buffer,
             @MagicConstant(intValues = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7, GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10,  GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT,  GL_DEPTH_STENCIL_ATTACHMENT})
             int attachment,
             @MagicConstant(intValues = GL_RENDERBUFFER)
             int target
     ) {
-        //todo store info + add listener
+        if(isClosed())
+            throw new IllegalStateException("Already closed");
+
+        checkAndDeleteExistingBinding(attachment, target);
+
         glNamedFramebufferRenderbuffer(
                 name,
                 attachment,
                 target,
                 buffer.getName()
         );
+
+        return new Binding<>(this, buffer, attachment, target) {
+            @Override
+            protected void _remove(
+                    @NotNull GLFrameBuffer parent,
+                    @NotNull GLRenderBuffer component,
+                    @NotNull BindingID idToRemove
+            ) {
+                glNamedFramebufferRenderbuffer(
+                        parent.getName(),
+                        attachment,
+                        target,
+                        0
+                );
+
+                bindings.remove(idToRemove);
+            }
+
+            @Override
+            protected void onObjectRecreated(
+                    @NotNull GLFrameBuffer parent,
+                    @NotNull GLRenderBuffer component
+            ) {
+                glNamedFramebufferRenderbuffer(
+                        parent.getName(),
+                        attachment,
+                        target,
+                        component.getName()
+                );
+            }
+        };
     }
 
     @Override
@@ -63,5 +110,7 @@ public class GLFrameBuffer extends GLNamedObject<GLFrameBuffer> {
     @Override
     public void close() {
         Glad.glDeleteFramebuffer(name);
+        name = 0;
+        closed = true;
     }
 }

@@ -64,5 +64,6 @@ public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> {
     @Override
     public void close() {
         Glad.glDeleteRenderbuffer(name);
+        closed = true;
     }
 }

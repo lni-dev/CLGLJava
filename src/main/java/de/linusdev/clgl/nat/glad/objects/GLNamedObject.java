@@ -16,17 +16,24 @@
 
 package de.linusdev.clgl.nat.glad.objects;
 
+import de.linusdev.clgl.nat.glad.custom.Binding;
+import de.linusdev.clgl.nat.glad.custom.BindingID;
 import de.linusdev.clgl.nat.glad.listener.ReCreationListener;
 import de.linusdev.lutils.llist.LLinkedList;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
 import java.util.List;
 
 @SuppressWarnings("unused")
 public abstract class GLNamedObject<SELF extends GLNamedObject<SELF>> implements AutoCloseable {
 
     protected int name = 0;
+    protected boolean closed = false;
+
     protected @NotNull List<ReCreationListener<SELF>> rcListeners = new LLinkedList<>();
+    protected @NotNull HashMap<BindingID, Binding<?, ?>> bindings = new HashMap<>();
 
     public int getName() {
         return name;
@@ -50,5 +57,24 @@ public abstract class GLNamedObject<SELF extends GLNamedObject<SELF>> implements
 
     public void removeReCreationListener(@NotNull ReCreationListener<SELF> listener) {
         rcListeners.remove(listener);
+    }
+
+    public boolean isClosed() {
+        return closed;
+    }
+
+    @ApiStatus.Internal
+    public void addBinding(@NotNull Binding<?, ?> binding) {
+        bindings.put(binding.getId(), binding);
+    }
+
+    @ApiStatus.Internal
+    public void removeBinding(@NotNull BindingID id) {
+        bindings.remove(id);
+    }
+
+    protected void checkAndDeleteExistingBinding(@NotNull Object @NotNull ... target) {
+        Binding<?, ?> oldBinding = bindings.get(new BindingID(target));
+        if(oldBinding != null) oldBinding.remove();
     }
 }
