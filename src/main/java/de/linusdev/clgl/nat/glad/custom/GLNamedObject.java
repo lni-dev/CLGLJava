@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.objects;
+package de.linusdev.clgl.nat.glad.custom;
 
-import de.linusdev.clgl.nat.glad.custom.Binding;
-import de.linusdev.clgl.nat.glad.custom.BindingID;
 import de.linusdev.clgl.nat.glad.listener.ReCreationListener;
 import de.linusdev.lutils.llist.LLinkedList;
 import org.jetbrains.annotations.ApiStatus;

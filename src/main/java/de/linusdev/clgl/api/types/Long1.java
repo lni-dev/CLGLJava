@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.listener;
+package de.linusdev.clgl.api.types;
 
-import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
-import org.jetbrains.annotations.NotNull;
+public interface Long1 extends LongN {
 
-public interface ReCreationListener<T extends GLNamedObject<T>> {
+    default long get() {
+        return get(0);
+    }
 
-    void afterReCreation(@NotNull T obj);
-
+    default void set(long f) {
+        put(0, f);
+    }
 }

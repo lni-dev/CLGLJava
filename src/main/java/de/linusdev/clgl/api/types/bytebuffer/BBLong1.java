@@ -14,13 +14,22 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.listener;
+package de.linusdev.clgl.api.types.bytebuffer;
 
-import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
+import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.Long1;
 import org.jetbrains.annotations.NotNull;
 
-public interface ReCreationListener<T extends GLNamedObject<T>> {
+@SuppressWarnings("unused")
+public class BBLong1 extends BBLongN implements Long1 {
+    public static StructureInfo INFO = new StructureInfo(8, false, 0, 8, 0);
 
-    void afterReCreation(@NotNull T obj);
+    public BBLong1(boolean allocateBuffer) {
+        super(1, allocateBuffer);
+    }
 
+    @Override
+    protected @NotNull StructureInfo getInfo() {
+        return INFO;
+    }
 }

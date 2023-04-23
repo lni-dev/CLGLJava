@@ -15,6 +15,14 @@ extern "C" {
 JNIEXPORT jboolean JNICALL Java_de_linusdev_clgl_nat_NativeUtils_isNull
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     de_linusdev_clgl_nat_NativeUtils
+ * Method:    _getNullPointer
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils__1getNullPointer
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

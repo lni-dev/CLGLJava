@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.listener;
+package de.linusdev.clgl.nat.glad.custom;
 
-import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
-import org.jetbrains.annotations.NotNull;
+public interface GlSizedObject {
 
-public interface ReCreationListener<T extends GLNamedObject<T>> {
+    int getWidth();
 
-    void afterReCreation(@NotNull T obj);
-
+    int getHeight();
 }

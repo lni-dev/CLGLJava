@@ -47,6 +47,94 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateContext
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseContext
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateCommandQueueWithProperties
+ * Signature: (JJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateCommandQueueWithProperties
+  (JNIEnv *, jclass, jlong, jlong, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateCommandQueue
+ * Signature: (JJJLjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateCommandQueue
+  (JNIEnv *, jclass, jlong, jlong, jlong, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseCommandQueue
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseCommandQueue
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateBuffer
+ * Signature: (JJJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateBuffer
+  (JNIEnv *, jclass, jlong, jlong, jlong, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseMemObject
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseMemObject
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueReadBuffer
+ * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer
+  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jobject, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueWriteBuffer
+ * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueWriteBuffer
+  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jobject, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateProgramWithSource
+ * Signature: (JLjava/lang/String;Ljava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateProgramWithSource
+  (JNIEnv *, jclass, jlong, jstring, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseProgram
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseProgram
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clBuildProgram
+ * Signature: (JILjava/nio/ByteBuffer;Ljava/lang/String;Ljava/lang/Class;J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clBuildProgram
+  (JNIEnv *, jclass, jlong, jint, jobject, jstring, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clGetProgramBuildInfo
+ * Signature: (JJIJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetProgramBuildInfo
+  (JNIEnv *, jclass, jlong, jlong, jint, jlong, jobject, jobject);
+
 #ifdef __cplusplus
 }
 #endif

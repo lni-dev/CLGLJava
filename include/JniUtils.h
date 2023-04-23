@@ -21,6 +21,8 @@
 
 #include <jni.h>
 
+#define GET_BUF_ADDRESS_NULLABLE(OBJ) (OBJ == nullptr ? nullptr : env->GetDirectBufferAddress(OBJ))
+
 class JniUtils {
 private:
     JavaVM* jvm = nullptr;

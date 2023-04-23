@@ -18,10 +18,12 @@ package de.linusdev.clgl.nat.glad.objects;
 
 import de.linusdev.clgl.nat.glad.GLConstants;
 import de.linusdev.clgl.nat.glad.Glad;
+import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
+import de.linusdev.clgl.nat.glad.custom.GlSizedObject;
 import org.intellij.lang.annotations.MagicConstant;
 
 @SuppressWarnings("unused")
-public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> {
+public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> implements GlSizedObject {
 
     protected @MagicConstant(valuesFromClass = GLConstants.class) int colorFormat;
     protected int width;
@@ -65,5 +67,15 @@ public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> {
     public void close() {
         Glad.glDeleteRenderbuffer(name);
         closed = true;
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
     }
 }

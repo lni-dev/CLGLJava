@@ -19,6 +19,7 @@ package de.linusdev.clgl.nat.cl;
 import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
+import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.nat.cl.objects.Program;
@@ -164,10 +165,10 @@ public class CL {
     }
 
     public static String getPlatformInfoString(long platform, @NotNull PlatformInfo paramName) {
-        BBInt1 size = new BBInt1(true);
+        BBLong1 size = new BBLong1(true);
         check(clGetPlatformInfo(platform, paramName, null, size));
 
-        ByteBuffer info = BufferUtils.createAlignedByteBuffer(size.get(), 8);
+        ByteBuffer info = BufferUtils.createAlignedByteBuffer((int) size.get(), 8);
         check(clGetPlatformInfo(platform, paramName, info, null));
 
         info.limit(info.capacity() - 1); //remove '\0' from c-string
@@ -178,7 +179,7 @@ public class CL {
             long platform,
             @NotNull PlatformInfo paramName,
             @Nullable ByteBuffer paramValue,
-            @Nullable BBInt1 paramValueSizeRet
+            @Nullable BBLong1 paramValueSizeRet
     ) {
         return _clGetPlatformInfo(
                 platform,
@@ -373,6 +374,7 @@ public class CL {
       @Nullable ByteBuffer p_errcode_ret
     );
 
+    @Deprecated(since = "OpenCL 2.0")
     public static long clCreateCommandQueue(
             long context,
             long device,
@@ -387,6 +389,7 @@ public class CL {
         );
     }
 
+    @Deprecated(since = "OpenCL 2.0")
     private static native long _clCreateCommandQueue(
       long context,
       long device,
@@ -494,7 +497,7 @@ public class CL {
             @NotNull ByteBuffer p_ptr,
             int num_events_in_wait_list,
             @Nullable ByteBuffer p_event_wait_list,
-            @Nullable ByteBuffer event
+            @Nullable ByteBuffer p_event
     );
 
     private static native int _clEnqueueWriteBuffer(
@@ -506,19 +509,21 @@ public class CL {
             @NotNull ByteBuffer p_ptr,
             int num_events_in_wait_list,
             @Nullable ByteBuffer p_event_wait_list,
-            @Nullable ByteBuffer event
+            @Nullable ByteBuffer p_event
     );
 
     public static long clCreateProgramWithSource(
             long context,
-            @NotNull String src,
-            @Nullable BBInt1 errCodeRet
+            @NotNull String src
     ) {
-        return _clCreateProgramWithSource(
+        BBInt1 errCodeRet = new BBInt1(true);
+        long pointer = _clCreateProgramWithSource(
                 context,
                 src,
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet.getByteBuf()
         );
+        check(errCodeRet.get());
+        return pointer;
     }
 
     private static native long _clCreateProgramWithSource(
@@ -560,5 +565,169 @@ public class CL {
             @Nullable String options,
             @Nullable Class<Program> callback,
             long user_data
+    );
+
+    public enum ProgramBuildInfo implements IntBitFieldValue {
+        CL_PROGRAM_BUILD_STATUS(0x1181),
+        CL_PROGRAM_BUILD_OPTIONS(0x1182),
+        CL_PROGRAM_BUILD_LOG(0x1183),
+
+        /**
+         * @since OpenCl 1.2
+         */
+        CL_PROGRAM_BINARY_TYPE(0x1184),
+
+        /**
+         * @since OpenCL 2.0
+         */
+        CL_PROGRAM_BUILD_GLOBAL_VARIABLE_TOTAL_SIZE(0x1185),
+        ;
+
+        private final int value;
+
+        ProgramBuildInfo(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum ProgramBinaryType implements IntBitFieldValue {
+        CL_PROGRAM_BINARY_TYPE_NONE(0x0),
+        CL_PROGRAM_BINARY_TYPE_COMPILED_OBJECT(0x1),
+        CL_PROGRAM_BINARY_TYPE_LIBRARY(0x2),
+        CL_PROGRAM_BINARY_TYPE_EXECUTABLE(0x4),
+        ;
+
+        private final int value;
+
+        ProgramBinaryType(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum BuildStatus implements IntBitFieldValue {
+        CL_BUILD_SUCCESS(0),
+        CL_BUILD_NONE(-1),
+        CL_BUILD_ERROR(-2),
+        CL_BUILD_IN_PROGRESS(-3),
+        ;
+        private final int value;
+
+        BuildStatus(int value) {
+            this.value = value;
+        }
+
+        public static @NotNull BuildStatus fromValue(int value) {
+            for(BuildStatus status : values()) {
+                if(status.value == value) return status;
+            }
+
+            throw new IllegalArgumentException("Unknown build status (" + value + ").");
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static int clGetProgramBuildInfoInt(
+            long program,
+            long device,
+            @NotNull ProgramBuildInfo param_name
+    ) {
+        BBInt1 paramValue = new BBInt1(true);
+
+        clGetProgramBuildInfo(
+                program,
+                device,
+                param_name,
+                paramValue.getByteBuf(),
+                null
+        );
+
+        return paramValue.get();
+    }
+
+    public static long clGetProgramBuildInfoLong(
+            long program,
+            long device,
+            @NotNull ProgramBuildInfo param_name
+    ) {
+        BBLong1 paramValue = new BBLong1(true);
+
+        clGetProgramBuildInfo(
+                program,
+                device,
+                param_name,
+                paramValue.getByteBuf(),
+                null
+        );
+
+        return paramValue.get();
+    }
+
+    public static String clGetProgramBuildInfoString(
+            long program,
+            long device,
+            @NotNull ProgramBuildInfo param_name
+    ) {
+        BBLong1 paramValueSizeRet = new BBLong1(true);
+
+        clGetProgramBuildInfo(
+                program,
+                device,
+                param_name,
+                null,
+                paramValueSizeRet
+        );
+
+        ByteBuffer paramValue = BufferUtils.createAlignedByteBuffer((int) paramValueSizeRet.get(), 8);
+
+        clGetProgramBuildInfo(
+                program,
+                device,
+                param_name,
+                paramValue,
+                null
+        );
+
+        paramValue.limit(paramValue.capacity() - 1); //remove '\0' from c-string
+        return StandardCharsets.UTF_8.decode(paramValue).toString();
+    }
+
+    public static void clGetProgramBuildInfo(
+            long program,
+            long device,
+            @NotNull ProgramBuildInfo param_name,
+            @Nullable ByteBuffer paramValue,
+            @Nullable BBLong1 paramValueSizeRet
+    ) {
+        check(_clGetProgramBuildInfo(
+                program,
+                device,
+                param_name.getValue(),
+                paramValue == null ? 0 : paramValue.capacity(),
+                paramValue,
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+        ));
+    }
+
+    private static native int _clGetProgramBuildInfo(
+            long program,
+            long device,
+            int param_name,
+            long param_value_size,
+            @Nullable ByteBuffer p_param_value,
+            @Nullable ByteBuffer p_param_value_size_ret
     );
 }

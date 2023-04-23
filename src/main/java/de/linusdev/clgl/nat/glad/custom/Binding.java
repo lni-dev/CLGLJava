@@ -17,7 +17,6 @@
 package de.linusdev.clgl.nat.glad.custom;
 
 import de.linusdev.clgl.nat.glad.listener.ReCreationListener;
-import de.linusdev.clgl.nat.glad.objects.GLNamedObject;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 

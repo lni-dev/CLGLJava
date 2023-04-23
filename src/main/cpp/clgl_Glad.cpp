@@ -115,7 +115,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteFramebuffer
  * Method:    _glNamedFramebufferRenderbuffer
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glNamedFramebufferRenderbuffer
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRenderbuffer
         (JNIEnv* env, jclass clazz, jint framebuffer, jint attachment, jint renderbuffertarget, jint renderbuffer) {
     glNamedFramebufferRenderbuffer(framebuffer, attachment, renderbuffertarget, renderbuffer);
 }
@@ -169,9 +169,54 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteRenderbuffer
  * Method:    _glNamedRenderbufferStorage
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glNamedRenderbufferStorage
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedRenderbufferStorage
         (JNIEnv* env, jclass clazz, jint renderbuffer, jint internalformat, jint width, jint height) {
     glRenderbufferStorage(renderbuffer, internalformat, width, height);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glBlitNamedFramebuffer
+ * Signature: (IIIIIIIIIIII)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBlitNamedFramebuffer(JNIEnv* env, jclass clazz,
+         jint readFramebuffer,
+         jint drawFramebuffer,
+         jint srcX0, jint srcY0,
+         jint srcX1, jint srcY1,
+         jint dstX0, jint dstY0,
+         jint dstX1, jint dstY1,
+         jint mask, jint filter
+) {
+    glBlitNamedFramebuffer(
+            readFramebuffer,
+            drawFramebuffer,
+            srcX0, srcY0,
+            srcX1, srcY1,
+            dstX0, dstY0,
+            dstX1, dstY1,
+            mask, filter
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glNamedFramebufferReadBuffer
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferReadBuffer
+        (JNIEnv* env, jclass clazz, jint framebuffer, jint mode) {
+    glNamedFramebufferReadBuffer(framebuffer, mode);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glNamedFramebufferDrawBuffer
+ * Signature: (II)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferDrawBuffer
+        (JNIEnv* env, jclass clazz, jint framebuffer, jint buf) {
+    glNamedFramebufferDrawBuffer(framebuffer, buf);
 }
 
 

@@ -20,22 +20,23 @@ import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
-import de.linusdev.clgl.nat.wgl.WGL;
+import de.linusdev.clgl.nat.cl.custom.StaticCallbackObject;
+import de.linusdev.clgl.nat.cl.custom.StaticCallbackObjects;
 import de.linusdev.clgl.nat.cl.listener.ContextOnError;
+import de.linusdev.clgl.nat.wgl.WGL;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import static de.linusdev.clgl.nat.cl.CLStatus.check;
 
 @SuppressWarnings("unused")
-public class Context implements AutoCloseable {
+public class Context implements AutoCloseable, StaticCallbackObject<Context> {
 
-    private static final @NotNull ArrayList<Context> contexts = new ArrayList<>(1);
+    private static final @NotNull StaticCallbackObjects<Context> contexts = new StaticCallbackObjects<>();
 
     private final int id;
     private final long pointer;
@@ -66,23 +67,7 @@ public class Context implements AutoCloseable {
 
         this.onErrorListener = onErrorListener;
 
-        synchronized (contexts) {
-            int id = -1;
-            for(int i = 0; i < contexts.size(); i++) {
-                if(contexts.get(i) == null) {
-                    id = i;
-                    contexts.set(i, this);
-                    break;
-                }
-            }
-
-            if(id == -1) {
-                this.id = contexts.size();
-                contexts.add(this);
-            } else {
-                this.id = id;
-            }
-        }
+        this.id = contexts.add(this);
 
         PrimitiveTypeArray<Long> props = null;
         if(properties != null) {
@@ -102,13 +87,13 @@ public class Context implements AutoCloseable {
             devices.set(i, devs[i].getPointer());
 
         BBInt1 errCodeRet = new BBInt1(true);
-        pointer = CL.clCreateContext(props, devices, id + 1, errCodeRet);
+        pointer = CL.clCreateContext(props, devices, id, errCodeRet);
         check(errCodeRet.get());
     }
 
     @SuppressWarnings("unused") //Called natively only
     private static void onErrorStatic(String errinfo, ByteBuffer private_info, long user_data) {
-        contexts.get((int) user_data - 1).onError(errinfo, private_info);
+        contexts.get(user_data).onError(errinfo, private_info);
     }
 
     public void onError(String info, ByteBuffer privateInfo) {
@@ -122,8 +107,12 @@ public class Context implements AutoCloseable {
 
     @Override
     public void close() {
-        //noinspection resource: contexts[id] == this
-        contexts.set(id, null);
+        contexts.remove(this);
         CL.clReleaseContext(pointer);
+    }
+
+    @Override
+    public int getId() {
+        return id;
     }
 }

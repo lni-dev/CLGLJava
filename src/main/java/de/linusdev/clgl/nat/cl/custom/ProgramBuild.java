@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.listener;
+package de.linusdev.clgl.nat.cl.custom;
 
-import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
+import de.linusdev.clgl.nat.cl.objects.Device;
+import de.linusdev.clgl.nat.cl.objects.Program;
 import org.jetbrains.annotations.NotNull;
 
-public interface ReCreationListener<T extends GLNamedObject<T>> {
+public class ProgramBuild {
 
-    void afterReCreation(@NotNull T obj);
+    private final @NotNull Program program;
+    private final @NotNull Device @NotNull [] devices;
 
+    public ProgramBuild(@NotNull Program program, @NotNull Device @NotNull [] devices) {
+        this.program = program;
+        this.devices = devices;
+    }
 }

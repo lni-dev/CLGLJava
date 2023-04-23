@@ -17,23 +17,23 @@
 package de.linusdev.clgl.api.types.bytebuffer;
 
 import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.api.types.IntN;
+import de.linusdev.clgl.api.types.LongN;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.IntBuffer;
+import java.nio.LongBuffer;
 
 @SuppressWarnings("unused")
-public abstract class BBIntN extends Structure implements IntN {
+public abstract class BBLongN extends Structure implements LongN {
 
-    protected IntBuffer buf;
+    protected LongBuffer buf;
     protected final int memberCount;
 
-    public BBIntN(@NotNull Structure mostParentStructure, int offset, int count) {
+    public BBLongN(@NotNull Structure mostParentStructure, int offset, int count) {
         this.memberCount = count;
         useBuffer(mostParentStructure, offset);
     }
 
-    public BBIntN(int count, boolean allocateBuffer) {
+    public BBLongN(int count, boolean allocateBuffer) {
         this.memberCount = count;
         if(allocateBuffer)
             allocate();
@@ -42,7 +42,7 @@ public abstract class BBIntN extends Structure implements IntN {
     @Override
     public void useBuffer(@NotNull Structure mostParentStructure, int offset) {
         super.useBuffer(mostParentStructure, offset);
-        buf = byteBuf.asIntBuffer();
+        buf = byteBuf.asLongBuffer();
     }
 
     @Override
@@ -51,12 +51,12 @@ public abstract class BBIntN extends Structure implements IntN {
     }
 
     @Override
-    public int get(int index) {
+    public long get(int index) {
         return buf.get(index);
     }
 
     @Override
-    public void put(int index, int value) {
+    public void put(int index, long value) {
         buf.put(index, value);
     }
 
@@ -86,7 +86,6 @@ public abstract class BBIntN extends Structure implements IntN {
             sb.append(buf.get(i));
         }
 
-        return String.format("float%d(%s)", memberCount, sb);
+        return String.format("%s%d(%s)", "long", memberCount, sb);
     }
 }
-

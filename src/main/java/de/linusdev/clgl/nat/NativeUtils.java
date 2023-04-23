@@ -20,4 +20,9 @@ public class NativeUtils {
 
     public static native boolean isNull(long pointer);
 
+    private static final long nullPointer = _getNullPointer();
+    public static native long _getNullPointer();
+    public static long getNullPointer() {
+        return nullPointer;
+    }
 }

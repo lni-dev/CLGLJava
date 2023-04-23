@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glad.listener;
+package de.linusdev.clgl.nat.cl.custom;
 
-import de.linusdev.clgl.nat.glad.custom.GLNamedObject;
-import org.jetbrains.annotations.NotNull;
+@SuppressWarnings("unused")
+public interface StaticCallbackObject <SELF extends StaticCallbackObject<SELF>> {
 
-public interface ReCreationListener<T extends GLNamedObject<T>> {
-
-    void afterReCreation(@NotNull T obj);
+    int getId();
 
 }
