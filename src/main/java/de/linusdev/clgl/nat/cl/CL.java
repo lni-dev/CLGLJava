@@ -356,15 +356,18 @@ public class CL {
     public static long clCreateCommandQueueWithProperties(
             long context,
             long device,
-            @Nullable PrimitiveTypeArray<Long> properties,
-            @Nullable BBInt1 errCodeRet
+            @Nullable PrimitiveTypeArray<Long> properties
     ) {
-        return _clCreateCommandQueueWithProperties(
+        BBInt1 errCodeRet = new BBInt1(true);
+        long pointer = _clCreateCommandQueueWithProperties(
                 context,
                 device,
                 properties == null ? null : properties.getByteBuf(),
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet.getByteBuf()
         );
+
+        check(errCodeRet.get());
+        return pointer;
     }
 
     private static native long _clCreateCommandQueueWithProperties(
@@ -378,15 +381,18 @@ public class CL {
     public static long clCreateCommandQueue(
             long context,
             long device,
-            @Nullable LongBitfield<CLQueuePropertiesValue> properties,
-            @Nullable BBInt1 errCodeRet
+            @Nullable LongBitfield<CLQueuePropertiesValue> properties
     ) {
-        return _clCreateCommandQueue(
+        BBInt1 errCodeRet = new BBInt1(true);
+        long pointer = _clCreateCommandQueue(
                 context,
                 device,
                 properties == null ? 0 : properties.getValue(),
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet.getByteBuf()
         );
+
+        check(errCodeRet.get());
+        return pointer;
     }
 
     @Deprecated(since = "OpenCL 2.0")
@@ -440,32 +446,36 @@ public class CL {
 
     public static long clCreateBuffer(
             long context,
-            LongBitfield<CLMemFlag> clMemFlags,
-            long size,
-            @Nullable BBInt1 errCodeRet
+            @NotNull LongBitfield<CLMemFlag> clMemFlags,
+            long size
     ) {
-        return _clCreateBuffer(
+        BBInt1 errCodeRet = new BBInt1(true);
+        long pointer = _clCreateBuffer(
                 context,
                 clMemFlags.getValue(),
                 size,
                 null,
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet.getByteBuf()
         );
+        check(errCodeRet.get());
+        return pointer;
     }
 
     public static long clCreateBuffer(
             long context,
-            LongBitfield<CLMemFlag> clMemFlags,
-            @NotNull Structure hostPtr,
-            @Nullable BBInt1 errCodeRet
+            @NotNull LongBitfield<CLMemFlag> clMemFlags,
+            @NotNull Structure hostPtr
     ) {
-        return _clCreateBuffer(
+        BBInt1 errCodeRet = new BBInt1(true);
+        long pointer = _clCreateBuffer(
                 context,
                 clMemFlags.getValue(),
                 hostPtr.getSize(),
                 hostPtr.getByteBuf(),
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet.getByteBuf()
         );
+        check(errCodeRet.get());
+        return pointer;
     }
 
     private static native long _clCreateBuffer(
