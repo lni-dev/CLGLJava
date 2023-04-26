@@ -16,12 +16,19 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
+import de.linusdev.clgl.nat.cl.CL;
+import org.jetbrains.annotations.NotNull;
+
 public class Device {
 
     private final long pointer;
 
     Device(long pointer) {
         this.pointer = pointer;
+    }
+
+    public @NotNull String getName() {
+        return CL.getDeviceInfoString(pointer, CL.CLDeviceInfo.CL_DEVICE_NAME);
     }
 
     public long getPointer() {

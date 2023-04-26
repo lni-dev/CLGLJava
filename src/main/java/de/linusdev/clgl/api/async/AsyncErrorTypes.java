@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.cl.custom;
+package de.linusdev.clgl.api.async;
 
-import de.linusdev.clgl.nat.cl.objects.Device;
-import de.linusdev.clgl.nat.cl.objects.Program;
+import de.linusdev.lutils.async.error.ErrorType;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
-public class ProgramBuild {
+public enum AsyncErrorTypes implements ErrorType {
+    BUILD_ERROR,
+    ;
 
-    private final @NotNull Program program;
-    private final @NotNull Device @NotNull [] devices;
 
-    public ProgramBuild(@NotNull Program program, @NotNull Device @NotNull [] devices) {
-        this.program = program;
-        this.devices = devices;
+    @Override
+    public @NotNull String getName() {
+        return name();
     }
 
-    public @NotNull Device @NotNull [] getDevices() {
-        return devices;
-    }
-
-    public @NotNull Program getProgram() {
-        return program;
+    @Override
+    public @NotNull Object simplify() {
+        return getName();
     }
 }
