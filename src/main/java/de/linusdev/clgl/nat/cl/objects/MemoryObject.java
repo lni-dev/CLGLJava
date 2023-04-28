@@ -18,11 +18,31 @@ package de.linusdev.clgl.nat.cl.objects;
 
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
+import de.linusdev.lutils.bitfield.LongBitfield;
+import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("unused")
 public class MemoryObject implements AutoCloseable {
 
     protected long pointer;
     protected boolean closed = false;
+
+    protected MemoryObject(long pointer) {
+        this.pointer = pointer;
+    }
+
+    public static @NotNull MemoryObject fromGLRenderBuffer(
+            @NotNull Context context,
+            @NotNull LongBitfield<CL.CLMemFlag> memFlags,
+            @NotNull GLRenderBuffer renderBuffer
+    ) {
+        return new MemoryObject(CL.clCreateFromGLRenderbuffer(
+                context.getPointer(),
+                memFlags,
+                renderBuffer.getName()
+        ));
+    }
 
     @Override
     public void close() {
@@ -32,6 +52,10 @@ public class MemoryObject implements AutoCloseable {
             closed = true;
             pointer = NativeUtils.getNullPointer();
         }
+    }
+
+    public long getPointer() {
+        return pointer;
     }
 
     public boolean isClosed() {

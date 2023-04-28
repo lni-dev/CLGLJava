@@ -16,12 +16,15 @@
 
 package de.linusdev.clgl.nat.cl;
 
+import de.linusdev.clgl.api.structs.NativeArray;
 import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
+import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.objects.Context;
+import de.linusdev.clgl.nat.cl.objects.MemoryObject;
 import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitFieldValue;
@@ -32,6 +35,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import static de.linusdev.clgl.nat.NativeUtils.SIZE_OF_CL_MEM;
 import static de.linusdev.clgl.nat.cl.CLStatus.check;
 
 @SuppressWarnings("unused")
@@ -498,6 +502,28 @@ public class CL {
             long memobj
     );
 
+    public static void clEnqueueReadBuffer(
+            long command_queue,
+            long buffer,
+            boolean blocking,
+            long offset,
+            @NotNull ByteBuffer ptr,
+            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable BBLong1 event
+    ) {
+        check(_clEnqueueReadBuffer(
+                command_queue,
+                buffer,
+                blocking,
+                offset,
+                ptr.capacity() - offset,
+                ptr,
+                eventWaitList == null ? 0 : eventWaitList.length(),
+                eventWaitList == null ? null : eventWaitList.getByteBuffer(),
+                event == null ? null : event.getByteBuffer()
+        ));
+    }
+
     private static native int _clEnqueueReadBuffer(
             long command_queue,
             long buffer,
@@ -509,6 +535,28 @@ public class CL {
             @Nullable ByteBuffer p_event_wait_list,
             @Nullable ByteBuffer p_event
     );
+
+    public static void clEnqueueWriteBuffer(
+            long command_queue,
+            long buffer,
+            boolean blocking,
+            long offset,
+            @NotNull ByteBuffer ptr,
+            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable BBLong1 event
+    ) {
+        check(_clEnqueueWriteBuffer(
+                command_queue,
+                buffer,
+                blocking,
+                offset,
+                ptr.capacity() - offset,
+                ptr,
+                eventWaitList == null ? 0 : eventWaitList.length(),
+                eventWaitList == null ? null : eventWaitList.getByteBuffer(),
+                event == null ? null : event.getByteBuffer()
+        ));
+    }
 
     private static native int _clEnqueueWriteBuffer(
             long command_queue,
@@ -915,4 +963,276 @@ public class CL {
             @Nullable ByteBuffer p_param_value,
             @Nullable ByteBuffer p_param_value_size_ret
     );
+
+    public static long clCreateKernel(
+            long program,
+            @NotNull String kernelName
+    ) {
+        BBInt1 errCodeRet = new BBInt1(true);
+
+        long pointer = _clCreateKernel(
+                program,
+                kernelName,
+                errCodeRet.getByteBuf()
+        );
+
+        check(errCodeRet.get());
+        return pointer;
+    }
+
+    private static native long _clCreateKernel(
+            long program,
+            @NotNull String kernel_name,
+            @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static void clReleaseKernel(
+            long kernel
+    ) {
+        check(_clReleaseKernel(kernel));
+    }
+
+    private static native int _clReleaseKernel(
+            long kernel
+    );
+
+    public static void clSetKernelArg(
+            long kernel,
+            int argIndex,
+            @NotNull MemoryObject memoryObject
+    ) {
+        check(_clSetKernelArg(
+                kernel,
+                argIndex,
+                SIZE_OF_CL_MEM,
+                memoryObject.getPointer()
+        ));
+    }
+
+    public static void clSetKernelArg(
+            long kernel,
+            int argIndex,
+            @NotNull Structure value
+    ) {
+        check(_clSetKernelArg(
+                kernel,
+                argIndex,
+                value.getSize(),
+                BufferUtils.getHeapAddress(value.getByteBuf())
+        ));
+    }
+
+    private static native int _clSetKernelArg(
+            long kernel,
+            int arg_index,
+            long arg_size,
+            long p_arg_value
+    );
+
+    public enum KernelInfo implements IntBitFieldValue {
+        CL_KERNEL_FUNCTION_NAME(0x1190),
+        CL_KERNEL_NUM_ARGS(0x1191),
+        CL_KERNEL_REFERENCE_COUNT(0x1192),
+        CL_KERNEL_CONTEXT(0x1193),
+        CL_KERNEL_PROGRAM(0x1194),
+        CL_KERNEL_ATTRIBUTES(0x1195),
+        ;
+
+        private final int value;
+
+        KernelInfo(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static int GetKernelInfoInt(
+            long kernel,
+            @NotNull KernelInfo paramName
+    ) {
+        BBInt1 value = new BBInt1(true);
+        clGetKernelInfo(
+                kernel,
+                paramName,
+                value.getByteBuf(),
+                null
+        );
+
+        return value.get();
+    }
+
+    public static @NotNull String GetKernelInfoString(
+            long kernel,
+            @NotNull KernelInfo paramName
+    ) {
+        BBLong1 sizeRet = new BBLong1(true);
+
+        clGetKernelInfo(
+                kernel,
+                paramName,
+                null,
+                sizeRet
+        );
+
+        ByteBuffer paramValue = BufferUtils.createAlignedByteBuffer((int) sizeRet.get(), 8);
+
+        clGetKernelInfo(
+                kernel,
+                paramName,
+                paramValue,
+                null
+        );
+
+        paramValue.limit(paramValue.capacity() - 1); //remove '\0' from c-string
+        return StandardCharsets.UTF_8.decode(paramValue).toString();
+    }
+
+    public static void clGetKernelInfo(
+            long kernel,
+            @NotNull KernelInfo paramName,
+            @Nullable ByteBuffer paramValue,
+            @Nullable BBLong1 paramValueSizeRet
+    ) {
+        check(_clGetKernelInfo(
+                kernel,
+                paramName.getValue(),
+                paramValue == null ? 0 : paramValue.capacity(),
+                paramValue,
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+        ));
+    }
+
+    private static native int _clGetKernelInfo(
+            long kernel,
+            int param_name,
+            long param_value_size,
+            @Nullable ByteBuffer p_param_value,
+            @Nullable ByteBuffer p_param_value_size_ret
+    );
+
+    public static void clEnqueueNDRangeKernel(
+            long command_queue,
+            long kernel,
+            int work_dim,
+            @Nullable BBLongN globalWorkOffset,
+            @Nullable BBLongN globalWorkSize,
+            @Nullable BBLongN localWorkSize,
+            @Nullable NativeArray<Long> event_wait_list,
+            @Nullable BBLong1 event
+    ) {
+        check(_clEnqueueNDRangeKernel(
+                command_queue,
+                kernel,
+                work_dim,
+                globalWorkOffset == null ? null : globalWorkOffset.getByteBuf(),
+                globalWorkSize == null ? null : globalWorkSize.getByteBuf(),
+                localWorkSize == null ? null : localWorkSize.getByteBuf(),
+                event_wait_list == null ? 0 : event_wait_list.length(),
+                event_wait_list == null ? null : event_wait_list.getByteBuffer(),
+                event == null ? null : event.getByteBuffer()
+        ));
+    }
+
+    private static native int _clEnqueueNDRangeKernel(
+            long command_queue,
+            long kernel,
+            int work_dim,
+            @Nullable ByteBuffer p_global_work_offset,
+            @Nullable ByteBuffer p_global_work_size,
+            @Nullable ByteBuffer p_local_work_size,
+            int num_events_in_wait_list,
+            @Nullable ByteBuffer p_event_wait_list,
+            @Nullable ByteBuffer p_event
+    );
+
+    public static long clCreateFromGLRenderbuffer(
+            long context,
+            @NotNull LongBitfield<CLMemFlag> memFlags,
+            int renderbuffer
+    ) {
+        BBInt1 errCodeRet = new BBInt1(true);
+
+        long pointer = _clCreateFromGLRenderbuffer(
+                context,
+                memFlags.getValue(),
+                renderbuffer,
+                errCodeRet.getByteBuffer()
+        );
+
+        check(errCodeRet.get());
+        return pointer;
+    }
+
+    private static native long _clCreateFromGLRenderbuffer(
+            long context,
+            long cl_mem_flags,
+            int renderbuffer,
+            @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static void clEnqueueAcquireGLObjects(
+            long command_queue,
+            @NotNull NativeArray<Long> memObjects,
+            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable BBLong1 event
+    ) {
+        check(_clEnqueueAcquireGLObjects(
+                command_queue,
+                memObjects.length(),
+                memObjects.getByteBuffer(),
+                eventWaitList == null ? 0 : eventWaitList.length(),
+                eventWaitList == null ? null : eventWaitList.getByteBuffer(),
+                event == null ? null : event.getByteBuffer()
+        ));
+    }
+
+    private static native int _clEnqueueAcquireGLObjects(
+            long command_queue,
+            int num_objects,
+            @NotNull ByteBuffer p_mem_objects,
+            int num_events_in_wait_list,
+            @Nullable ByteBuffer p_event_wait_list,
+            @Nullable ByteBuffer p_event
+    );
+
+    public static void clEnqueueReleaseGLObjects(
+            long command_queue,
+            @NotNull NativeArray<Long> memObjects,
+            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable BBLong1 event
+    ) {
+        check(_clEnqueueReleaseGLObjects(
+                command_queue,
+                memObjects.length(),
+                memObjects.getByteBuffer(),
+                eventWaitList == null ? 0 : eventWaitList.length(),
+                eventWaitList == null ? null : eventWaitList.getByteBuffer(),
+                event == null ? null : event.getByteBuffer()
+        ));
+    }
+
+    private static native int _clEnqueueReleaseGLObjects(
+            long command_queue,
+            int num_objects,
+            @NotNull ByteBuffer p_mem_objects,
+            int num_events_in_wait_list,
+            @Nullable ByteBuffer p_event_wait_list,
+            @Nullable ByteBuffer p_event
+    );
+
+    public static void clFinish(long command_queue) {
+        check(_clFinish(command_queue));
+    }
+
+    private static native int _clFinish(long command_queue);
+
+    public static void clFlush(long command_queue) {
+        check(_clFlush(command_queue));
+    }
+
+    private static native int _clFlush(long command_queue);
 }

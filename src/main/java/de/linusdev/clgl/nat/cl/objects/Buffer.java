@@ -32,7 +32,7 @@ public class Buffer extends MemoryObject {
             @NotNull LongBitfield<CL.CLMemFlag> clMemFlags,
             @NotNull Structure hostPtr
     ) {
-        pointer = clCreateBuffer(context.getPointer(), clMemFlags, hostPtr);
+        super(clCreateBuffer(context.getPointer(), clMemFlags, hostPtr));
     }
 
     public Buffer(
@@ -40,7 +40,7 @@ public class Buffer extends MemoryObject {
             @NotNull LongBitfield<CL.CLMemFlag> clMemFlags,
             long size
     ) {
-        pointer = clCreateBuffer(context.getPointer(), clMemFlags, size);
+        super(clCreateBuffer(context.getPointer(), clMemFlags, size));
     }
 
     //TODO: enqueue read/write

@@ -13,7 +13,7 @@ extern "C" {
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwInit
-        (JNIEnv *, jclass);
+  (JNIEnv *, jclass);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -21,7 +21,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwInit
  * Signature: (II)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowHint
-        (JNIEnv *, jclass, jint, jint);
+  (JNIEnv *, jclass, jint, jint);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowHi
  * Signature: (Lde/linusdev/clgl/nat/glfw3/ErrorCallback;)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetErrorCallback
-        (JNIEnv *, jclass, jobject);
+  (JNIEnv *, jclass, jobject);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -37,7 +37,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetError
  * Signature: (IILjava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwCreateWindow
-        (JNIEnv *, jclass, jint, jint, jstring);
+  (JNIEnv *, jclass, jint, jint, jstring);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -45,7 +45,7 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwCreateW
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwTerminate
-        (JNIEnv *, jclass);
+  (JNIEnv *, jclass);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -53,7 +53,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwTerminat
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwPollEvents
-        (JNIEnv *, jclass);
+  (JNIEnv *, jclass);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -61,7 +61,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwPollEven
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwMakeContextCurrent
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -69,7 +69,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwMakeCont
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwDestroyWindow
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -77,7 +77,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwDestroyW
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwShowWindow
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -85,7 +85,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwShowWind
  * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSwapBuffers
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -93,7 +93,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSwapBuff
  * Signature: (JJ)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowUserPointer
-        (JNIEnv *, jclass, jlong, jlong);
+  (JNIEnv *, jclass, jlong, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -101,7 +101,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Signature: (JII)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetInputMode
-        (JNIEnv *, jclass, jlong, jint, jint);
+  (JNIEnv *, jclass, jlong, jint, jint);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -109,7 +109,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetInput
  * Signature: (JII)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowSize
-        (JNIEnv *, jclass, jlong, jint, jint);
+  (JNIEnv *, jclass, jlong, jint, jint);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -117,7 +117,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Signature: (JLjava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowTitle
-        (JNIEnv *, jclass, jlong, jstring);
+  (JNIEnv *, jclass, jlong, jstring);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -125,7 +125,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Signature: (JII)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowAttrib
-        (JNIEnv *, jclass, jlong, jint, jint);
+  (JNIEnv *, jclass, jlong, jint, jint);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -133,7 +133,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Signature: (J)J
  */
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwGetWindowUserPointer
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -141,7 +141,7 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwGetWind
  * Signature: (J)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowShouldClose
-        (JNIEnv *, jclass, jlong);
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

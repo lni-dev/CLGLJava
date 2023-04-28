@@ -23,6 +23,14 @@ JNIEXPORT jboolean JNICALL Java_de_linusdev_clgl_nat_NativeUtils_isNull
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils__1getNullPointer
   (JNIEnv *, jclass);
 
+/*
+ * Class:     de_linusdev_clgl_nat_NativeUtils
+ * Method:    sf_cl_mem
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils_sf_1cl_1mem
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

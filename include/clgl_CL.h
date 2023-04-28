@@ -135,6 +135,94 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clBuildProgram
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetProgramBuildInfo
   (JNIEnv *, jclass, jlong, jlong, jint, jlong, jobject, jobject);
 
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clGetDeviceInfo
+ * Signature: (JIJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetDeviceInfo
+  (JNIEnv *, jclass, jlong, jint, jlong, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateKernel
+ * Signature: (JLjava/lang/String;Ljava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateKernel
+  (JNIEnv *, jclass, jlong, jstring, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseKernel
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseKernel
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clSetKernelArg
+ * Signature: (JIJJ)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clSetKernelArg
+  (JNIEnv *, jclass, jlong, jint, jlong, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clGetKernelInfo
+ * Signature: (JIJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetKernelInfo
+  (JNIEnv *, jclass, jlong, jint, jlong, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueNDRangeKernel
+ * Signature: (JJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueNDRangeKernel
+  (JNIEnv *, jclass, jlong, jlong, jint, jobject, jobject, jobject, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateFromGLRenderbuffer
+ * Signature: (JJILjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateFromGLRenderbuffer
+  (JNIEnv *, jclass, jlong, jlong, jint, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueAcquireGLObjects
+ * Signature: (JILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueAcquireGLObjects
+  (JNIEnv *, jclass, jlong, jint, jobject, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueReleaseGLObjects
+ * Signature: (JILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReleaseGLObjects
+  (JNIEnv *, jclass, jlong, jint, jobject, jint, jobject, jobject);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clFinish
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFinish
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clFlush
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFlush
+  (JNIEnv *, jclass, jlong);
+
 #ifdef __cplusplus
 }
 #endif

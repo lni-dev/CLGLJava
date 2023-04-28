@@ -24,7 +24,7 @@ import java.util.function.IntFunction;
 import java.util.function.ObjIntConsumer;
 
 @SuppressWarnings("unused")
-public class PrimitiveTypeArray<T> extends Structure implements Iterable<T> {
+public class PrimitiveTypeArray<T> extends Structure implements NativeArray<T> {
 
     @SuppressWarnings("NotNullFieldNotInitialized") // initialized in calculateInfo()
     private @NotNull StructureInfo info;
@@ -100,6 +100,11 @@ public class PrimitiveTypeArray<T> extends Structure implements Iterable<T> {
 
     public void set(int index, T value) {
         set.accept(value, toByteIndex(index));
+    }
+
+    @Override
+    public int length() {
+        return size;
     }
 
     public int getInt(int index) {

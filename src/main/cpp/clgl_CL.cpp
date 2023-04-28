@@ -2,6 +2,7 @@
 #include "clgl_CL.h"
 
 #include "CL/cl.h"
+#include "CL/cl_gl.h"
 
 #include "JniUtils.h"
 
@@ -384,6 +385,256 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetProgramBuildInfo
             reinterpret_cast<size_t*>(param_value_size_ret)
     );
 
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clGetDeviceInfo
+ * Signature: (JIJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetDeviceInfo(
+        JNIEnv* env, jclass clazz,
+        jlong device,
+        jint param_name,
+        jlong param_value_size, jobject p_param_value,
+        jobject p_param_value_size_ret
+) {
+    void* param_value = GET_BUF_ADDRESS_NULLABLE(p_param_value);
+    void* param_value_size_ret = GET_BUF_ADDRESS_NULLABLE(p_param_value_size_ret);
+
+    return clGetDeviceInfo(
+            reinterpret_cast<cl_device_id>(device),
+            param_name,
+            param_value_size,
+            param_value,
+            reinterpret_cast<size_t*>(param_value_size_ret)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateKernel
+ * Signature: (JLjava/lang/String;Ljava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateKernel(
+        JNIEnv* env, jclass clazz,
+        jlong program,
+        jstring kernel_name,
+        jobject p_errcode_ret
+) {
+    const char* cKernel_name = env->GetStringUTFChars(kernel_name, nullptr);
+    void* errcode_ret = GET_BUF_ADDRESS_NULLABLE(p_errcode_ret);
+
+    auto ret = clCreateKernel(
+            reinterpret_cast<cl_program>(program),
+            cKernel_name,
+            reinterpret_cast<cl_int*>(errcode_ret)
+    );
+
+    return reinterpret_cast<jlong>(ret);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clReleaseKernel
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseKernel(
+        JNIEnv* env, jclass clazz, jlong kernel) {
+    return clReleaseKernel(
+            reinterpret_cast<cl_kernel>(kernel)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clSetKernelArg
+ * Signature: (JIJJ)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clSetKernelArg(
+        JNIEnv* env, jclass clazz,
+        jlong kernel,
+        jint arg_index,
+        jlong arg_size,
+        jlong p_arg_value
+) {
+    return clSetKernelArg(
+            reinterpret_cast<cl_kernel>(kernel),
+            arg_index,
+            arg_size,
+            reinterpret_cast<void*>(p_arg_value)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clGetKernelInfo
+ * Signature: (JIJLjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clGetKernelInfo(
+        JNIEnv* env, jclass clazz,
+        jlong kernel,
+        jint param_name,
+        jlong param_value_size,
+        jobject p_param_value,
+        jobject p_param_value_size_ret
+) {
+
+    void* param_value = GET_BUF_ADDRESS_NULLABLE(p_param_value);
+    void* param_value_size_ret = GET_BUF_ADDRESS_NULLABLE(p_param_value_size_ret);
+
+    return clGetKernelInfo(
+            reinterpret_cast<cl_kernel>(kernel),
+            param_name,
+            param_value_size,
+            param_value,
+            reinterpret_cast<size_t*>(param_value_size_ret)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueNDRangeKernel
+ * Signature: (JJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;Ljava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueNDRangeKernel(
+        JNIEnv * env, jclass clazz,
+        jlong command_queue,
+        jlong kernel,
+        jint work_dim,
+        jobject p_global_work_offset,
+        jobject p_global_work_size,
+        jobject p_local_work_size,
+        jint num_events_in_wait_list,
+        jobject p_event_wait_list,
+        jobject p_event
+        ) {
+
+    void* global_work_offset = GET_BUF_ADDRESS_NULLABLE(p_global_work_offset);
+    void* global_work_size = GET_BUF_ADDRESS_NULLABLE(p_global_work_size);
+    void* local_work_size = GET_BUF_ADDRESS_NULLABLE(p_local_work_size);
+
+    void* event_wait_list = GET_BUF_ADDRESS_NULLABLE(p_event_wait_list);
+    void* event = GET_BUF_ADDRESS_NULLABLE(p_event);
+
+    return clEnqueueNDRangeKernel(
+            reinterpret_cast<cl_command_queue>(command_queue),
+            reinterpret_cast<cl_kernel>(kernel),
+            work_dim,
+            reinterpret_cast<size_t*>(global_work_offset),
+            reinterpret_cast<size_t*>(global_work_size),
+            reinterpret_cast<size_t*>(local_work_size),
+            num_events_in_wait_list,
+            reinterpret_cast<cl_event*>(event_wait_list),
+            reinterpret_cast<cl_event*>(event)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateFromGLRenderbuffer
+ * Signature: (JJILjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateFromGLRenderbuffer(
+        JNIEnv* env, jclass clazz,
+        jlong context,
+        jlong cl_mem_flags,
+        jint renderbuffer,
+        jobject p_errcode_ret
+) {
+
+    void* errcode_ret = GET_BUF_ADDRESS_NULLABLE(p_errcode_ret);
+
+    auto pointer = clCreateFromGLRenderbuffer(
+            reinterpret_cast<cl_context>(context),
+            cl_mem_flags,
+            renderbuffer,
+            reinterpret_cast<cl_int*>(errcode_ret)
+    );
+
+    return reinterpret_cast<jlong>(pointer);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueAcquireGLObjects
+ * Signature: (JILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueAcquireGLObjects(
+        JNIEnv* env, jclass clazz,
+        jlong command_queue,
+        jint num_objects,
+        jobject p_mem_objects,
+        jint num_events_in_wait_list,
+        jobject p_event_wait_list,
+        jobject p_event
+) {
+
+    void* mem_objects = GET_BUF_ADDRESS_NULLABLE(p_mem_objects);
+    void* event_wait_list = GET_BUF_ADDRESS_NULLABLE(p_event_wait_list);
+    void* event = GET_BUF_ADDRESS_NULLABLE(p_event);
+
+    return clEnqueueAcquireGLObjects(
+            reinterpret_cast<cl_command_queue>(command_queue),
+            num_objects,
+            reinterpret_cast<cl_mem*>(mem_objects),
+            num_events_in_wait_list,
+            reinterpret_cast<cl_event*>(event_wait_list),
+            reinterpret_cast<cl_event*>(event)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clEnqueueReleaseGLObjects
+ * Signature: (JILjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReleaseGLObjects(
+        JNIEnv* env, jclass clazz,
+        jlong command_queue,
+        jint num_objects,
+        jobject p_mem_objects,
+        jint num_events_in_wait_list,
+        jobject p_event_wait_list,
+        jobject p_event
+) {
+
+    void* mem_objects = GET_BUF_ADDRESS_NULLABLE(p_mem_objects);
+    void* event_wait_list = GET_BUF_ADDRESS_NULLABLE(p_event_wait_list);
+    void* event = GET_BUF_ADDRESS_NULLABLE(p_event);
+
+    return clEnqueueReleaseGLObjects(
+            reinterpret_cast<cl_command_queue>(command_queue),
+            num_objects,
+            reinterpret_cast<cl_mem*>(mem_objects),
+            num_events_in_wait_list,
+            reinterpret_cast<cl_event*>(event_wait_list),
+            reinterpret_cast<cl_event*>(event)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clFinish
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFinish(
+        JNIEnv* env, jclass clazz,
+        jlong command_queue
+) {
+    return clFinish(reinterpret_cast<cl_command_queue>(command_queue));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clFlush
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFlush(
+        JNIEnv* env, jclass clazz,
+        jlong command_queue
+) {
+    return clFlush(reinterpret_cast<cl_command_queue>(command_queue));
 }
 
 

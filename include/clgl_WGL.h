@@ -23,7 +23,6 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_wgl_WGL__1wglGetCurrentContext
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_wgl_WGL__1wglGetCurrentDC
   (JNIEnv *, jclass);
 
-
 #ifdef __cplusplus
 }
 #endif

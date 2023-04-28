@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat;
+package de.linusdev.clgl.api.structs;
 
-public class NativeUtils {
+import org.jetbrains.annotations.NotNull;
 
-    public static native boolean isNull(long pointer);
+import java.nio.ByteBuffer;
 
-    private static final long C_NULL_POINTER = _getNullPointer();
-    public static native long _getNullPointer();
-    public static long getNullPointer() {
-        return C_NULL_POINTER;
-    }
+public interface NativeParsable {
+    @NotNull ByteBuffer getByteBuffer();
 
-    public static final long SIZE_OF_CL_MEM = sf_cl_mem();
-    private static native long sf_cl_mem();
 }

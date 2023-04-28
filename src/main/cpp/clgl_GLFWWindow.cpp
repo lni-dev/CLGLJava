@@ -144,6 +144,23 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSwapBuff
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
+ * Method:    _glfwSetWindowUserPointer
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowUserPointer(
+        JNIEnv* env, jclass clazz,
+        jlong pointer,
+        jlong userPointer
+) {
+    auto* win = reinterpret_cast<GLFWwindow*>(pointer);
+    glfwSetWindowUserPointer(
+            win,
+            reinterpret_cast<void*>(userPointer)
+    );
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
  * Method:    _glfwSetInputMode
  * Signature: (JII)V
  */

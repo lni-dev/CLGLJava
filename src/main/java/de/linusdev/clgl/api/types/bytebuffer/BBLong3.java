@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat;
+package de.linusdev.clgl.api.types.bytebuffer;
 
-public class NativeUtils {
+import de.linusdev.clgl.api.structs.StructureInfo;
+import de.linusdev.clgl.api.types.Long3;
+import org.jetbrains.annotations.NotNull;
 
-    public static native boolean isNull(long pointer);
+@SuppressWarnings("unused")
+public class BBLong3 extends BBLongN implements Long3 {
+    public static StructureInfo INFO = new StructureInfo(8, false, 0, 24, 0);
 
-    private static final long C_NULL_POINTER = _getNullPointer();
-    public static native long _getNullPointer();
-    public static long getNullPointer() {
-        return C_NULL_POINTER;
+    public BBLong3(boolean allocateBuffer) {
+        super(3, allocateBuffer);
     }
 
-    public static final long SIZE_OF_CL_MEM = sf_cl_mem();
-    private static native long sf_cl_mem();
+    @Override
+    protected @NotNull StructureInfo getInfo() {
+        return INFO;
+    }
 }

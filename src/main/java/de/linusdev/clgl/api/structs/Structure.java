@@ -26,7 +26,7 @@ import java.nio.ByteOrder;
 import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings("unused")
-public abstract class Structure implements Sizeable {
+public abstract class Structure implements Sizeable, NativeParsable {
 
     protected Structure mostParentStructure;
     protected ByteBuffer byteBuf;
@@ -103,6 +103,11 @@ public abstract class Structure implements Sizeable {
      * @return {@link ByteBuffer} of this {@link Structure}
      */
     public ByteBuffer getByteBuf() {
+        return byteBuf;
+    }
+
+    @Override
+    public @NotNull ByteBuffer getByteBuffer() {
         return byteBuf;
     }
 

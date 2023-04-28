@@ -1,5 +1,6 @@
 
 #include "clgl_NativeUtils.h"
+#include "CL/cl.h"
 
 /*
  * Class:     de_linusdev_clgl_nat_NativeUtils
@@ -19,6 +20,11 @@ JNIEXPORT jboolean JNICALL Java_de_linusdev_clgl_nat_NativeUtils_isNull
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils__1getNullPointer
         (JNIEnv *, jclass) {
     return reinterpret_cast<jlong>(nullptr);
+}
+
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils_sf_1cl_1mem
+        (JNIEnv *, jclass) {
+    return sizeof(cl_mem);
 }
 
 

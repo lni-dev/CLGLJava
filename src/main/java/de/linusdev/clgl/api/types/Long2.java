@@ -14,18 +14,29 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat;
+package de.linusdev.clgl.api.types;
 
-public class NativeUtils {
+@SuppressWarnings("unused")
+public interface Long2 extends LongN {
 
-    public static native boolean isNull(long pointer);
-
-    private static final long C_NULL_POINTER = _getNullPointer();
-    public static native long _getNullPointer();
-    public static long getNullPointer() {
-        return C_NULL_POINTER;
+    default long x() {
+        return get(0);
     }
 
-    public static final long SIZE_OF_CL_MEM = sf_cl_mem();
-    private static native long sf_cl_mem();
+    default long y() {
+        return get(1);
+    }
+
+    default void x(long f) {
+        put(0, f);
+    }
+
+    default void y(long f) {
+        put(1, f);
+    }
+
+    default void xy(long x, long y) {
+        put(0, x);
+        put(1, y);
+    }
 }

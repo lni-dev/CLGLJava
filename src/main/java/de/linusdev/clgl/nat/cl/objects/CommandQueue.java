@@ -31,6 +31,14 @@ public class CommandQueue implements AutoCloseable {
         pointer = clCreateCommandQueueWithProperties(context.getPointer(), device.getPointer(), null);
     }
 
+    public void flush() {
+        clFlush(pointer);
+    }
+
+    public void finish() {
+        clFinish(pointer);
+    }
+
     @Override
     public void close() {
         try {
