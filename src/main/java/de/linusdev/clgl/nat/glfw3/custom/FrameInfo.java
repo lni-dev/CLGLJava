@@ -14,8 +14,20 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glfw3;
+package de.linusdev.clgl.nat.glfw3.custom;
 
-public interface ErrorCallback {
-    void onError(int error, String description);
+@SuppressWarnings("unused")
+public interface FrameInfo {
+
+    /**
+     * average FPS
+     */
+    double getFPS();
+
+    /**
+     * Time between the last and this frame
+     */
+    double getDeltaTime();
+
+    double getAverageMillisBetweenFrames();
 }

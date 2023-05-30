@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "clgl_GLFWWindow.h"
+#include "clgl_GLFW.h"
 #include "GLFW/glfw3.h"
 #include "JniUtils.h"
 
@@ -21,7 +21,7 @@
  * Method:    _glfwInit
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwInit
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwInit
   (JNIEnv* env, jclass clazz) {
     return glfwInit();
 }
@@ -31,7 +31,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwInit
  * Method:    _glfwWindowHint
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowHint
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwWindowHint
   (JNIEnv* env, jclass clazz, jint hint, jint value) {
     glfwWindowHint(hint, value);
 }
@@ -44,7 +44,7 @@ static jmethodID onErrorMethodId = nullptr;
  * Method:    _glfwSetErrorCallback
  * Signature: (Lde/linusdev/clgl/nat/glfw3/ErrorCallback;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetErrorCallback
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetErrorCallback
   (JNIEnv* env, jclass clazz, jobject callback) {
 
     if(globalRefErrorCallback)
@@ -70,7 +70,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetError
  * Method:    _glfwCreateWindow
  * Signature: (IILjava/lang/String;)J
  */
-JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwCreateWindow
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwCreateWindow
   (JNIEnv* env, jclass clazz, jint width, jint height, jstring title) {
     const char* cTitle = env->GetStringUTFChars(title, nullptr);
     GLFWwindow* pointer = glfwCreateWindow(width, height, cTitle, nullptr, nullptr);
@@ -83,7 +83,7 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwCreateW
  * Method:    _glfwTerminate
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwTerminate
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwTerminate
   (JNIEnv* env, jclass clazz) {
     glfwTerminate();
 }
@@ -93,7 +93,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwTerminat
  * Method:    _glfwPollEvents
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwPollEvents
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwPollEvents
         (JNIEnv* env, jclass clazz) {
     glfwPollEvents();
 }
@@ -103,7 +103,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwPollEven
  * Method:    _glfwMakeContextCurrent
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwMakeContextCurrent
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwMakeContextCurrent
   (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwMakeContextCurrent(win);
@@ -114,7 +114,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwMakeCont
  * Method:    _glfwDestroyWindow
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwDestroyWindow
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwDestroyWindow
   (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwDestroyWindow(win);
@@ -125,7 +125,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwDestroyW
  * Method:    _glfwShowWindow
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwShowWindow
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwShowWindow
   (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwShowWindow(win);
@@ -136,7 +136,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwShowWind
  * Method:    _glfwSwapBuffers
  * Signature: (J)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSwapBuffers
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSwapBuffers
   (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwSwapBuffers(win);
@@ -147,7 +147,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSwapBuff
  * Method:    _glfwSetWindowUserPointer
  * Signature: (JJ)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowUserPointer(
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetWindowUserPointer(
         JNIEnv* env, jclass clazz,
         jlong pointer,
         jlong userPointer
@@ -164,7 +164,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Method:    _glfwSetInputMode
  * Signature: (JII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetInputMode
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetInputMode
         (JNIEnv* env, jclass clazz, jlong pointer, jint mode, jint value) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwSetInputMode(win, mode, value);
@@ -175,7 +175,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetInput
  * Method:    _glfwSetWindowSize
  * Signature: (JII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowSize
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetWindowSize
         (JNIEnv* env, jclass clazz, jlong pointer, jint width, jint height) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwSetWindowSize(win, width, height);
@@ -186,7 +186,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Method:    _glfwSetWindowTitle
  * Signature: (JLjava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowTitle
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetWindowTitle
         (JNIEnv* env, jclass clazz, jlong pointer, jstring title) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
 
@@ -200,7 +200,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Method:    _glfwSetWindowAttrib
  * Signature: (JII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindowAttrib
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwSetWindowAttrib
         (JNIEnv* env, jclass clazz, jlong pointer, jint attr, jint value) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     glfwSetWindowAttrib(win, attr, value);
@@ -211,7 +211,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwSetWindo
  * Method:    _glfwGetWindowUserPointer
  * Signature: (J)J
  */
-JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwGetWindowUserPointer
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetWindowUserPointer
         (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     return reinterpret_cast<jlong>(glfwGetWindowUserPointer(win));
@@ -222,7 +222,7 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwGetWind
  * Method:    _glfwWindowShouldClose
  * Signature: (J)I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFWWindow__1glfwWindowShouldClose
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwWindowShouldClose
         (JNIEnv* env, jclass clazz, jlong pointer) {
     auto* win = reinterpret_cast<GLFWwindow*>(pointer);
     return glfwWindowShouldClose(win);

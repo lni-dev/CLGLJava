@@ -14,24 +14,8 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl;
+package de.linusdev.clgl.nat.glfw3.custom;
 
-import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
-import org.junit.jupiter.api.Test;
-
-@SuppressWarnings("RedundantThrows")
-public class MainTest {
-
-    @Test
-    void test() throws InterruptedException {
-
-        GLFWWindow window = new GLFWWindow();
-
-        window.setSize(800, 500);
-        window.setTitle("Nice");
-        window.show((window1, frameInfo) -> {
-
-        });
-        window.close();
-    }
+public interface ErrorCallback {
+    void onError(int error, String description);
 }

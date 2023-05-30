@@ -14,24 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl;
+package de.linusdev.clgl.window.queue;
 
-import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
-import org.junit.jupiter.api.Test;
+import de.linusdev.clgl.window.CLGLWindow;
+import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("RedundantThrows")
-public class MainTest {
+public interface UIRunnable<T> {
 
-    @Test
-    void test() throws InterruptedException {
+    T run(@NotNull CLGLWindow window);
 
-        GLFWWindow window = new GLFWWindow();
-
-        window.setSize(800, 500);
-        window.setTitle("Nice");
-        window.show((window1, frameInfo) -> {
-
-        });
-        window.close();
-    }
 }

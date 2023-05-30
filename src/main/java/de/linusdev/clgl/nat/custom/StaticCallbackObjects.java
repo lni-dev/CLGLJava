@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.cl.custom;
+package de.linusdev.clgl.nat.custom;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;

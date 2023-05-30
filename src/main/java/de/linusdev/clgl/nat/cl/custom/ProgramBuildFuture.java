@@ -18,6 +18,8 @@ package de.linusdev.clgl.nat.cl.custom;
 
 import de.linusdev.clgl.api.async.GlobalAsyncManager;
 import de.linusdev.clgl.nat.cl.objects.Program;
+import de.linusdev.clgl.nat.custom.StaticCallbackObject;
+import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.completeable.CompletableTask;
 import de.linusdev.lutils.async.error.AsyncError;

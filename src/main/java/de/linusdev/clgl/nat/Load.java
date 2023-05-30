@@ -36,8 +36,18 @@ public class Load {
 
     }
 
-    public static native void _init();
+    protected static boolean init = false;
 
-    public static native void _close();
+    public static void init() {
+        if(!init) {
+            init = true;
+            _init();
+            Runtime.getRuntime().addShutdownHook(new Thread(Load::_close));
+        }
+    }
+
+    protected static native void _init();
+
+    protected static native void _close();
 
 }

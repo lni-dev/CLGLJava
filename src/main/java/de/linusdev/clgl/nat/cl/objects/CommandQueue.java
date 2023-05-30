@@ -16,8 +16,12 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
+import de.linusdev.clgl.api.structs.NativeArray;
+import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
+import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.nat.NativeUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.clgl.nat.cl.CL.*;
 
@@ -29,6 +33,22 @@ public class CommandQueue implements AutoCloseable {
 
     public CommandQueue(@NotNull Context context, @NotNull Device device) {
         pointer = clCreateCommandQueueWithProperties(context.getPointer(), device.getPointer(), null);
+    }
+
+    public void enqueueNDRangeKernel(
+            @NotNull Kernel kernel, int workDim,
+            @Nullable BBLongN globalWorkOffset,
+            @Nullable BBLongN globalWorkSize,
+            @Nullable BBLongN localWorkSize,
+            @Nullable NativeArray<Long> event_wait_list,
+            @Nullable BBLong1 event
+    ) {
+        clEnqueueNDRangeKernel(pointer, kernel.getPointer(), workDim,
+                globalWorkOffset,
+                globalWorkSize,
+                localWorkSize,
+                event_wait_list,
+                event);
     }
 
     public void flush() {

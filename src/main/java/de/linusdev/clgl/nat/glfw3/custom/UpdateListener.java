@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.cl.custom;
+package de.linusdev.clgl.nat.glfw3.custom;
 
-@SuppressWarnings("unused")
-public interface StaticCallbackObject <SELF extends StaticCallbackObject<SELF>> {
+import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
+import org.jetbrains.annotations.NotNull;
 
-    int getId();
+public interface UpdateListener {
+
+    void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo);
 
 }
