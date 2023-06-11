@@ -228,3 +228,11 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwWindowShouldCl
     return glfwWindowShouldClose(win);
 }
 
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetFramebufferSize
+        (JNIEnv* env, jclass clazz, jlong pointer, jobject p_width_height) {
+    int* width_height = reinterpret_cast<int*>(env->GetDirectBufferAddress(p_width_height));
+    auto* win = reinterpret_cast<GLFWwindow*>(pointer);
+
+    glfwGetFramebufferSize(win, width_height, &(width_height[1]));
+}
+

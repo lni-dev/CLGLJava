@@ -17,34 +17,28 @@
 package de.linusdev.clgl.nat.cl.objects;
 
 import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.nat.cl.CL;
-import de.linusdev.lutils.bitfield.LongBitfield;
+import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import org.jetbrains.annotations.NotNull;
 
-import static de.linusdev.clgl.nat.cl.CL.*;
-
 @SuppressWarnings("unused")
-public class Buffer extends MemoryObject {
+public class Event extends BBLong1 {
 
-
-    public Buffer(
-            @NotNull Context context,
-            @NotNull LongBitfield<CL.CLMemFlag> clMemFlags,
-            @NotNull Structure hostPtr
-    ) {
+    public Event() {
         super(true);
-        set(clCreateBuffer(context.getPointer(), clMemFlags, hostPtr));
     }
 
-    public Buffer(
-            @NotNull Context context,
-            @NotNull LongBitfield<CL.CLMemFlag> clMemFlags,
-            long size
-    ) {
-        super(true);
-        set(clCreateBuffer(context.getPointer(), clMemFlags, size));
+    public Event(@NotNull Structure parent, int offset) {
+        super(false);
+        useBuffer(parent, offset);
     }
 
-    //TODO: enqueue read/write
+    public long getPointer() {
+        return get();
+    }
+
+    public boolean isEmpty() {
+        return getPointer() == 0L;
+    }
+
 
 }

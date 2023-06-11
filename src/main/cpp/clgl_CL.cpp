@@ -449,20 +449,24 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseKernel(
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clSetKernelArg
- * Signature: (JIJJ)I
+ * Signature: (JIJJZ)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clSetKernelArg(
         JNIEnv* env, jclass clazz,
         jlong kernel,
         jint arg_index,
         jlong arg_size,
-        jlong p_arg_value
+        jlong p_arg_value,
+        jboolean passPointerToPointer
 ) {
+
+    void* p = reinterpret_cast<void*>(p_arg_value);
+
     return clSetKernelArg(
             reinterpret_cast<cl_kernel>(kernel),
             arg_index,
             arg_size,
-            reinterpret_cast<void*>(p_arg_value)
+            passPointerToPointer ? &p : p
     );
 }
 

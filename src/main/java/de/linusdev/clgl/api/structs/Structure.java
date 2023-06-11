@@ -134,4 +134,8 @@ public abstract class Structure implements Sizeable, NativeParsable {
     public void releaseModificationLock() {
         modificationLock.unlock();
     }
+
+    public Structure getMostParentStructure() {
+        return mostParentStructure;
+    }
 }

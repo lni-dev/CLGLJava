@@ -21,7 +21,7 @@ import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.custom.ProgramBuild;
 import de.linusdev.clgl.nat.cl.custom.ProgramBuildFuture;
 import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
-import de.linusdev.clgl.nat.cl.listener.ProgramOnBuildFinished;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,12 +33,12 @@ public class Program implements AutoCloseable {
     public static final @NotNull StaticCallbackObjects<ProgramBuildFuture> buildFutures = new StaticCallbackObjects<>();
 
     protected final long pointer;
-    protected @Nullable ProgramOnBuildFinished buildFinishListener;
 
     public Program(@NotNull Context context, @NotNull String source) {
         pointer = clCreateProgramWithSource(context.getPointer(), source);
     }
 
+    @Contract("_, false, _ -> null; _, true, _ -> !null")
     public @Nullable ProgramBuildFuture build(@NotNull String options, boolean async, @NotNull Device @NotNull ... devs) {
         PrimitiveTypeArray<Long> devices = new PrimitiveTypeArray<>(Long.class, devs.length, true);
 
@@ -66,11 +66,9 @@ public class Program implements AutoCloseable {
 
     @SuppressWarnings("unused") //called natively only
     private static void onProgramBuildFinishedStatic(long program, long user_data) {
-        buildFutures.get(user_data).complete();
-    }
-
-    public void setBuildFinishListener(@Nullable ProgramOnBuildFinished listener) {
-        this.buildFinishListener = listener;
+        var future = buildFutures.get(user_data);
+        if(future != null)
+            future.complete();
     }
 
     public long getPointer() {

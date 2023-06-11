@@ -4,7 +4,7 @@ project(CLGLJava VERSION 1.0.0 DESCRIPTION "OpenCL Rendering Library")
 include(FetchContent)
 include(UseJava)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 option(BUILD_SHARED_LIBS ON)
 
 add_link_options(-static-libgcc -static-libstdc++ -static)

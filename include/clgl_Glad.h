@@ -65,6 +65,14 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenFramebuffer
 
 /*
  * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glCreateFramebuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateFramebuffer
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
  * Method:    _glDeleteFramebuffers
  * Signature: (ILjava/nio/ByteBuffer;)V
  */
@@ -101,6 +109,14 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenRenderbuffers
  * Signature: ()I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenRenderbuffer
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glCreateRenderbuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateRenderbuffer
   (JNIEnv *, jclass);
 
 /*
@@ -150,6 +166,38 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRea
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferDrawBuffer
   (JNIEnv *, jclass, jint, jint);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glGetString
+ * Signature: (I)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGetString
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glEnable
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glEnable
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDisable
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDisable
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDebugMessageCallback
+ * Signature: (Lde/linusdev/clgl/nat/glad/custom/DebugMessageCallback;J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallback
+  (JNIEnv *, jclass, jobject, jlong);
 
 #ifdef __cplusplus
 }

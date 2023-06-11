@@ -32,7 +32,7 @@ public class GLFrameBuffer extends GLNamedObject<GLFrameBuffer> {
     public static final @NotNull GLFrameBuffer DEFAULT_FRAME_BUFFER = new GLFrameBuffer(0);
 
     public GLFrameBuffer() {
-        this.name = glGenFramebuffer();
+        this.name = glCreateFramebuffer();
     }
 
     protected GLFrameBuffer(int name) {
@@ -47,7 +47,7 @@ public class GLFrameBuffer extends GLNamedObject<GLFrameBuffer> {
     public void reCreate() {
         if(!isClosed())
             glDeleteFramebuffer(name);
-        this.name = glGenFramebuffer();
+        this.name = glCreateFramebuffer();
         callReCreationListener();
     }
 

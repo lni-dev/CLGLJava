@@ -17,6 +17,7 @@
 package de.linusdev.clgl.nat.glad;
 
 import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
+import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,6 +66,8 @@ public class Glad {
 
     public static native int glGenFramebuffer();
 
+    public static native int glCreateFramebuffer();
+
     public static void glDeleteFramebuffers(
             @NotNull PrimitiveTypeArray<Integer> framebuffers
     ) {
@@ -107,6 +110,8 @@ public class Glad {
     );
 
     public static native int glGenRenderbuffer();
+
+    public static native int glCreateRenderbuffer();
 
     public static void glDeleteRenderbuffers(
             @NotNull PrimitiveTypeArray<Integer> renderbuffers
@@ -175,6 +180,54 @@ public class Glad {
                     GL_COLOR_ATTACHMENT7, GL_COLOR_ATTACHMENT8, GL_COLOR_ATTACHMENT9, GL_COLOR_ATTACHMENT10
             })
             int buf
+    );
+
+    public static native String glGetString(
+            @MagicConstant(flags = {
+                    GL_VENDOR, GL_RENDERER, GL_VERSION, GL_SHADING_LANGUAGE_VERSION
+            })
+            int name
+    );
+
+    /**
+     * @see <a href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml" target="_TOP">reference page</a>
+     * @param cap the capability to enable.
+     */
+    public static native void glEnable(
+            @MagicConstant(flags = {
+                    GL_DEBUG_OUTPUT, GL_BLEND, GL_COLOR_LOGIC_OP, GL_CULL_FACE, GL_DEPTH_CLAMP,
+                    GL_DEPTH_TEST, GL_DITHER, GL_FRAMEBUFFER_SRGB, GL_LINE_SMOOTH,
+                    GL_DEBUG_OUTPUT_SYNCHRONOUS, GL_MULTISAMPLE, GL_POLYGON_OFFSET_FILL,
+                    GL_POLYGON_OFFSET_LINE, GL_POLYGON_OFFSET_POINT, GL_POLYGON_SMOOTH,
+                    GL_PRIMITIVE_RESTART, GL_PRIMITIVE_RESTART_FIXED_INDEX, GL_RASTERIZER_DISCARD,
+                    GL_SAMPLE_ALPHA_TO_COVERAGE, GL_SAMPLE_ALPHA_TO_ONE, GL_SAMPLE_COVERAGE,
+                    GL_SAMPLE_SHADING, GL_SAMPLE_MASK, GL_SCISSOR_TEST, GL_STENCIL_TEST,
+                    GL_TEXTURE_CUBE_MAP_SEAMLESS, GL_PROGRAM_POINT_SIZE
+            })
+            int cap
+    );
+
+    /**
+     * @see <a href="https://registry.khronos.org/OpenGL-Refpages/gl4/html/glEnable.xhtml" target="_TOP">reference page</a>
+     * @param cap the capability to enable.
+     */
+    public static native void glDisable(
+            @MagicConstant(flags = {
+                    GL_DEBUG_OUTPUT, GL_BLEND, GL_COLOR_LOGIC_OP, GL_CULL_FACE, GL_DEPTH_CLAMP,
+                    GL_DEPTH_TEST, GL_DITHER, GL_FRAMEBUFFER_SRGB, GL_LINE_SMOOTH,
+                    GL_DEBUG_OUTPUT_SYNCHRONOUS, GL_MULTISAMPLE, GL_POLYGON_OFFSET_FILL,
+                    GL_POLYGON_OFFSET_LINE, GL_POLYGON_OFFSET_POINT, GL_POLYGON_SMOOTH,
+                    GL_PRIMITIVE_RESTART, GL_PRIMITIVE_RESTART_FIXED_INDEX, GL_RASTERIZER_DISCARD,
+                    GL_SAMPLE_ALPHA_TO_COVERAGE, GL_SAMPLE_ALPHA_TO_ONE, GL_SAMPLE_COVERAGE,
+                    GL_SAMPLE_SHADING, GL_SAMPLE_MASK, GL_SCISSOR_TEST, GL_STENCIL_TEST,
+                    GL_TEXTURE_CUBE_MAP_SEAMLESS, GL_PROGRAM_POINT_SIZE
+            })
+            int cap
+    );
+
+    public static native void glDebugMessageCallback(
+            DebugMessageCallback callback,
+            long userParam
     );
 
 }

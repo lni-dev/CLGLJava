@@ -162,10 +162,10 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseKernel
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clSetKernelArg
- * Signature: (JIJJ)I
+ * Signature: (JIJJZ)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clSetKernelArg
-  (JNIEnv *, jclass, jlong, jint, jlong, jlong);
+  (JNIEnv *, jclass, jlong, jint, jlong, jlong, jboolean);
 
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL

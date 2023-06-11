@@ -22,6 +22,8 @@
 #include <jni.h>
 
 #define GET_BUF_ADDRESS_NULLABLE(OBJ) (OBJ == nullptr ? nullptr : env->GetDirectBufferAddress(OBJ))
+#define DEBUG_MSG(...)
+//#define DEBUG_MSG(...)  char buff_uhiihoiol[5000];snprintf(buff_uhiihoiol, sizeof(buff_uhiihoiol), __VA_ARGS__);JNI_UTILS->printInJava(buff_uhiihoiol);
 
 class JniUtils {
 private:
@@ -35,10 +37,16 @@ public:
     JavaVM* getVM();
     void getEnv(JNIEnv** pToEnvP);
 
+    void printInJava(const char* str);
+
 
 };
 
-static JniUtils* JNI_UTILS;
+extern JniUtils* JNI_UTILS;
+extern jclass loadClass;
+extern jmethodID printMethodId;
+
+
 
 
 #endif //CLGLJAVA_JNIUTILS_H

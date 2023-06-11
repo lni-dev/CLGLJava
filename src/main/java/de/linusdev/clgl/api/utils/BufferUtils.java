@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 
 public class BufferUtils {
 
@@ -47,6 +48,13 @@ public class BufferUtils {
 
     public static long getHeapAddress(@NotNull ByteBuffer buffer) {
         return Utils.UNSAFE.getLong(buffer, BUFFER_VARIABLE_ADDRESS_OFFSET);
+    }
+
+    public static String byteBufferToString(@NotNull ByteBuffer str, boolean endsWithZero) {
+        if (endsWithZero) {
+            str = str.slice(0, str.limit() - 1);
+        }
+        return StandardCharsets.UTF_8.decode(str).toString();
     }
 
 }

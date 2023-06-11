@@ -46,6 +46,11 @@ public class Load {
         }
     }
 
+    @SuppressWarnings("unused") //called natively only
+    protected static void printInJava(String str) {
+        System.out.println(str);
+    }
+
     protected static native void _init();
 
     protected static native void _close();

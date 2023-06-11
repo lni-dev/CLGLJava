@@ -43,6 +43,7 @@ public class StaticCallbackObjects<T extends StaticCallbackObject<T>> {
     }
 
     public synchronized T get(long id) {
+        if(id <= 0) return null;
         return instances.get((int) (id - 1));
     }
 

@@ -16,9 +16,12 @@
 
 package de.linusdev.clgl.window;
 
+import de.linusdev.clgl.api.structs.StructureArray;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
+import de.linusdev.clgl.api.types.bytebuffer.BBLong2;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.objects.*;
+import de.linusdev.clgl.nat.glad.Glad;
 import de.linusdev.clgl.nat.glad.objects.GLFrameBuffer;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
@@ -63,16 +66,20 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected final Device clDevice;
     protected final CommandQueue clQueue;
     protected @Nullable Kernel renderKernel;
+    protected final @NotNull BBLong2 globalWorkSize;
 
     //Shared framebuffer
     protected GLFrameBuffer glFrameBuffer;
     protected GLRenderBuffer glRenderBuffer;
     protected MemoryObject sharedRenderBuffer;
+    protected StructureArray<MemoryObject> glObjects;
 
 
     public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
         this.maxQueuedTaskMillisPerFrame = maxQueuedTaskMillisPerFrame;
         this.glfwWindow = new GLFWWindow();
+        this.glfwWindow.enableDebugMessageListener((source, type, id, severity, message, userParam) ->
+                System.out.println("OpenGl Debug Message: " + message));
         this.taskQueue = new ConcurrentLinkedQueue<>();
         this.wrappers = new AtomicReferenceArray<>(256);
 
@@ -107,12 +114,23 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         }
 
 
-        //Create renderbuffer for rendering
+        //Create gl objects array
+        glObjects = new StructureArray<>(false, MemoryObject.INFO, 1, (parent, offset) -> null);
+
+        //Read window size
         size = glfwWindow.getFrameBufferSize(null);
+        globalWorkSize = new BBLong2(true);
+        globalWorkSize.xy(size.x(), size.y()); //always holds the same value as size but as long.
+
+        //Create renderbuffer for rendering
         glFrameBuffer = new GLFrameBuffer();
         glRenderBuffer = new GLRenderBuffer(GL_RGBA32F, size.x(), size.y());
         glFrameBuffer.addRenderBuffer(glRenderBuffer, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER);
-        sharedRenderBuffer = MemoryObject.fromGLRenderBuffer(
+        Glad.glFinish();
+
+        sharedRenderBuffer = new MemoryObject(false);
+        glObjects.set(0, sharedRenderBuffer);
+        sharedRenderBuffer.fromGLRenderBuffer(
                 clContext, new LongBitfield<>(CL.CLMemFlag.CL_MEM_WRITE_ONLY), glRenderBuffer);
     }
 
@@ -121,7 +139,13 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         runQueuedTasks();
 
         if(renderKernel != null) {
+            clQueue.enqueueAcquireGLObjects(glObjects, null, null);
+            clQueue.enqueueNDRangeKernel(renderKernel, 2, null, globalWorkSize,
+                    null, null, null);
+            clQueue.enqueueReleaseGLObjects(glObjects, null, null);
 
+            glFrameBuffer.blitInto(GLFrameBuffer.DEFAULT_FRAME_BUFFER, glRenderBuffer, glRenderBuffer,
+                    GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
 
     }
@@ -186,6 +210,14 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         QFuture<T> f = new QFuture<>(this, runnable);
         queue(id, f);
         return f;
+    }
+
+    public Context getClContext() {
+        return clContext;
+    }
+
+    public Device getClDevice() {
+        return clDevice;
     }
 
     @Override

@@ -15,6 +15,7 @@
 #include "clgl_Glad.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
+#include "JniUtils.h"
 
 /*
  * Class:     de_linusdev_clgl_nat_glad_Glad
@@ -86,6 +87,20 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenFramebuffer
         (JNIEnv* env, jclass clazz) {
     jint f;
     glGenFramebuffers(1, reinterpret_cast<GLuint*>(&f));
+    DEBUG_MSG("glGenFramebuffer: generated: %u", *((GLuint*)(&f)))
+    return f;
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glCreateFramebuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateFramebuffer
+        (JNIEnv *, jclass) {
+    jint f;
+    glCreateFramebuffers(1, reinterpret_cast<GLuint*>(&f));
+    DEBUG_MSG("glCreateFramebuffers: generated: %u", *((GLuint*)(&f)))
     return f;
 }
 
@@ -118,6 +133,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteFramebuffer
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRenderbuffer
         (JNIEnv* env, jclass clazz, jint framebuffer, jint attachment, jint renderbuffertarget, jint renderbuffer) {
     glNamedFramebufferRenderbuffer(framebuffer, attachment, renderbuffertarget, renderbuffer);
+    DEBUG_MSG("glNamedFramebufferRenderbuffer: framebuffer: %u, renderbuffer: %u", *((GLuint*)(&framebuffer)), *((GLuint*)(&renderbuffer)))
 }
 
 /*
@@ -140,6 +156,20 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenRenderbuffer
         (JNIEnv *, jclass) {
     jint r;
     glGenRenderbuffers(1, reinterpret_cast<GLuint*>(&r));
+    DEBUG_MSG("glGenRenderbuffer: generated: %u", *((GLuint*)(&r)))
+    return r;
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glCreateRenderbuffer
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateRenderbuffer
+        (JNIEnv *, jclass) {
+    jint r;
+    glCreateRenderbuffers(1, reinterpret_cast<GLuint*>(&r));
+    DEBUG_MSG("glCreateRenderbuffers: generated: %u", *((GLuint*)(&r)))
     return r;
 }
 
@@ -171,7 +201,8 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteRenderbuffer
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedRenderbufferStorage
         (JNIEnv* env, jclass clazz, jint renderbuffer, jint internalformat, jint width, jint height) {
-    glRenderbufferStorage(renderbuffer, internalformat, width, height);
+    DEBUG_MSG("glNamedRenderbufferStorage: renderbuffer: %u", *((GLuint*)(&renderbuffer)))
+    glNamedRenderbufferStorage(renderbuffer, internalformat, width, height);
 }
 
 /*
@@ -217,6 +248,81 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRea
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferDrawBuffer
         (JNIEnv* env, jclass clazz, jint framebuffer, jint buf) {
     glNamedFramebufferDrawBuffer(framebuffer, buf);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glGetString
+ * Signature: (I)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGetString
+        (JNIEnv* env, jclass clazz, jint name) {
+    const GLubyte* str = glGetString(name);
+
+    jstring jStr = env->NewStringUTF(reinterpret_cast<const char*>(str));
+    return jStr;
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glEnable
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glEnable
+        (JNIEnv* env, jclass clazz, jint cap) {
+    glEnable(cap);
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDisable
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDisable
+        (JNIEnv* env, jclass clazz, jint cap) {
+    glDisable(cap);
+}
+
+
+static jobject globalRefDebugMessageCallback = nullptr;
+static jmethodID messageMethodId = nullptr;
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glDebugMessageCallback
+ * Signature: (Lde/linusdev/clgl/nat/glad/custom/DebugMessageCallback;J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallback
+        (JNIEnv* env, jclass clazz, jobject callback, jlong userParam) {
+    if(globalRefDebugMessageCallback)
+        env->DeleteGlobalRef(globalRefDebugMessageCallback);
+
+    globalRefDebugMessageCallback = env->NewGlobalRef(callback);
+    messageMethodId = env->GetMethodID(env->GetObjectClass(callback), "message", "(IIIILjava/nio/ByteBuffer;J)V");
+
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+    glDebugMessageCallback(
+            [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+                JNIEnv* env;
+                JNI_UTILS->getEnv(&env);
+
+                jobject msgBuffer = env->NewDirectByteBuffer(reinterpret_cast<void*>(const_cast<GLchar*>(message)), length);
+
+                env->CallVoidMethod(
+                        globalRefDebugMessageCallback,
+                        messageMethodId,
+                        source,
+                        type,
+                        id,
+                        severity,
+                        msgBuffer,
+                        userParam
+                );
+
+                env->DeleteLocalRef(msgBuffer);
+            },
+            reinterpret_cast<const void*>(userParam)
+    );
 }
 
 

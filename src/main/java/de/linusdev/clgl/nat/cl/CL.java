@@ -24,6 +24,7 @@ import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.objects.Context;
+import de.linusdev.clgl.nat.cl.objects.Event;
 import de.linusdev.clgl.nat.cl.objects.MemoryObject;
 import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
@@ -508,7 +509,7 @@ public class CL {
             boolean blocking,
             long offset,
             @NotNull ByteBuffer ptr,
-            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
         check(_clEnqueueReadBuffer(
@@ -542,7 +543,7 @@ public class CL {
             boolean blocking,
             long offset,
             @NotNull ByteBuffer ptr,
-            @Nullable NativeArray<Long> eventWaitList,
+            @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
         check(_clEnqueueWriteBuffer(
@@ -1005,7 +1006,8 @@ public class CL {
                 kernel,
                 argIndex,
                 SIZE_OF_CL_MEM,
-                memoryObject.getPointer()
+                memoryObject.getPointer(),
+                true
         ));
     }
 
@@ -1018,7 +1020,8 @@ public class CL {
                 kernel,
                 argIndex,
                 value.getSize(),
-                BufferUtils.getHeapAddress(value.getByteBuf())
+                BufferUtils.getHeapAddress(value.getByteBuf()),
+                false
         ));
     }
 
@@ -1026,7 +1029,8 @@ public class CL {
             long kernel,
             int arg_index,
             long arg_size,
-            long p_arg_value
+            long p_arg_value,
+            boolean passPointerToPointer
     );
 
     public enum KernelInfo implements IntBitFieldValue {
@@ -1121,7 +1125,7 @@ public class CL {
             @Nullable BBLongN globalWorkOffset,
             @Nullable BBLongN globalWorkSize,
             @Nullable BBLongN localWorkSize,
-            @Nullable NativeArray<Long> event_wait_list,
+            @Nullable NativeArray<Event> event_wait_list,
             @Nullable BBLong1 event
     ) {
         check(_clEnqueueNDRangeKernel(
@@ -1176,8 +1180,8 @@ public class CL {
 
     public static void clEnqueueAcquireGLObjects(
             long command_queue,
-            @NotNull NativeArray<Long> memObjects,
-            @Nullable NativeArray<Long> eventWaitList,
+            @NotNull NativeArray<MemoryObject> memObjects,
+            @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
         check(_clEnqueueAcquireGLObjects(
@@ -1201,8 +1205,8 @@ public class CL {
 
     public static void clEnqueueReleaseGLObjects(
             long command_queue,
-            @NotNull NativeArray<Long> memObjects,
-            @Nullable NativeArray<Long> eventWaitList,
+            @NotNull NativeArray<MemoryObject> memObjects,
+            @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
         check(_clEnqueueReleaseGLObjects(

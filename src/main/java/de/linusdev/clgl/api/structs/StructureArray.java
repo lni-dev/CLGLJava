@@ -17,6 +17,7 @@
 package de.linusdev.clgl.api.structs;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class StructureArray<T extends Structure> extends ComplexStructure implements NativeArray<T> {
@@ -24,14 +25,19 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
     private final @NotNull Sizeable type;
     @SuppressWarnings("NotNullFieldNotInitialized") // initialized in calculateInfo()
     private @NotNull StructureInfo info;
+    private final @NotNull ElementCreator<T> creator;
 
     private final int size;
 
-    public StructureArray(boolean trackModifications, @NotNull Sizeable type, int size) {
+    public StructureArray(
+            boolean trackModifications, @NotNull Sizeable type, int size,
+            @NotNull ElementCreator<T> creator
+    ) {
         super(trackModifications);
         this.type = type;
         this.size = size;
         this.items = new Structure[size];
+        this.creator = creator;
         calculateInfo();
         allocate();
     }
@@ -50,6 +56,8 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
 
     @SuppressWarnings("unchecked")
     public T get(int index) {
+        if(items[index] == null)
+            items[index] = creator.create(this, type.getRequiredSize() * index);
         return (T) items[index];
     }
 
@@ -60,5 +68,11 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
     @Override
     protected @NotNull StructureInfo getInfo() {
         return info;
+    }
+
+
+    @FunctionalInterface
+    public interface ElementCreator<T extends Structure> {
+        @Nullable T create(@NotNull StructureArray<T> parent, int offset);
     }
 }

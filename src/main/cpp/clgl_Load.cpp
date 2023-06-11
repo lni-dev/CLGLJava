@@ -17,6 +17,8 @@
 
 #include "JniUtils.h"
 
+
+
 /*
  * Class:     de_linusdev_clgl_nat_Load
  * Method:    _test
@@ -26,6 +28,8 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
     (JNIEnv* env, jclass clazz)
 {
     JNI_UTILS = new JniUtils(env);
+    printMethodId = env->GetStaticMethodID(clazz, "printInJava", "(Ljava/lang/String;)V");
+    loadClass = clazz;
 }
 
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1close

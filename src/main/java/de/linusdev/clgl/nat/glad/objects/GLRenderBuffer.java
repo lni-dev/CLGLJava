@@ -33,7 +33,7 @@ public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> implements GlS
             @MagicConstant(valuesFromClass = GLConstants.class) int colorFormat,
             int width, int height
     ) {
-        this.name = Glad.glGenRenderbuffer();
+        this.name = Glad.glCreateRenderbuffer();
         this.colorFormat = colorFormat;
         this.width = width;
         this.height = height;
@@ -47,7 +47,7 @@ public class GLRenderBuffer extends GLNamedObject<GLRenderBuffer> implements GlS
     public void reCreate() {
         Glad.glDeleteRenderbuffer(name);
         this.name = 0;
-        this.name = Glad.glGenRenderbuffer();
+        this.name = Glad.glCreateRenderbuffer();
         createStorage();
         callReCreationListener();
     }

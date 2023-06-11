@@ -16,6 +16,7 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
+import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
@@ -23,21 +24,21 @@ import de.linusdev.lutils.bitfield.LongBitfield;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")
-public class MemoryObject implements AutoCloseable {
+public class MemoryObject extends BBLong1 implements AutoCloseable {
 
-    protected long pointer;
+
     protected boolean closed = false;
 
-    protected MemoryObject(long pointer) {
-        this.pointer = pointer;
+    public MemoryObject(boolean allocateBuffer) {
+        super(allocateBuffer);
     }
 
-    public static @NotNull MemoryObject fromGLRenderBuffer(
+    public void fromGLRenderBuffer(
             @NotNull Context context,
             @NotNull LongBitfield<CL.CLMemFlag> memFlags,
             @NotNull GLRenderBuffer renderBuffer
     ) {
-        return new MemoryObject(CL.clCreateFromGLRenderbuffer(
+        set(CL.clCreateFromGLRenderbuffer(
                 context.getPointer(),
                 memFlags,
                 renderBuffer.getName()
@@ -47,15 +48,15 @@ public class MemoryObject implements AutoCloseable {
     @Override
     public void close() {
         try {
-            CL.clReleaseMemObject(pointer);
+            CL.clReleaseMemObject(getPointer());
         } finally {
             closed = true;
-            pointer = NativeUtils.getNullPointer();
+            set(NativeUtils.getNullPointer());
         }
     }
 
     public long getPointer() {
-        return pointer;
+        return get();
     }
 
     public boolean isClosed() {

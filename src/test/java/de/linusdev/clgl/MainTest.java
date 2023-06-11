@@ -16,15 +16,53 @@
 
 package de.linusdev.clgl;
 
+import de.linusdev.clgl.nat.cl.objects.Kernel;
+import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.clgl.window.CLGLWindow;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 @SuppressWarnings("RedundantThrows")
 public class MainTest {
 
+    static @NotNull String readFromResourceFile(@NotNull String file) throws IOException {
+        InputStream in =  MainTest.class.getClassLoader().getResourceAsStream(file);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+
+        StringBuilder text = new StringBuilder();
+        String line;
+        while((line = reader.readLine()) != null) {
+            text.append(line).append("\n");
+        }
+
+        return text.toString();
+    }
+
+    @Test
+    void testCLGLWindow() throws IOException, InterruptedException {
+        CLGLWindow window = new CLGLWindow(10);
+
+        Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
+        var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
+        fut.getResult();
+        System.out.println("Build finished: " + program.getBuildLog(window.getClDevice()));
+        Kernel kernel = new Kernel(program, "render");
+
+        window.setRenderKernel(kernel);
+
+        window.show();
+
+        window.close();
+    }
+
     @Test
     void test() throws InterruptedException {
-
         GLFWWindow window = new GLFWWindow();
 
         window.setSize(800, 500);

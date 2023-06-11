@@ -16,7 +16,12 @@
 // Created by Linus on 16/04/2023.
 //
 
+#include <iostream>
 #include "JniUtils.h"
+
+JniUtils* JNI_UTILS = nullptr;
+jclass loadClass = nullptr;
+jmethodID printMethodId = nullptr;
 
 JniUtils::JniUtils(JNIEnv* env) {
     env->GetJavaVM(&jvm);
@@ -27,11 +32,23 @@ JavaVM* JniUtils::getVM() {
 }
 
 void JniUtils::getEnv(JNIEnv** pToEnvP) {
-    if(jvm->GetEnv(reinterpret_cast<void**>(pToEnvP), JNI_VERSION_10) == JNI_EDETACHED) {
+    if(jvm->GetEnv(reinterpret_cast<void**>(pToEnvP), JNI_VERSION_19) == JNI_EDETACHED) {
         JavaVMAttachArgs args;
-        args.version = JNI_VERSION_10;
+        args.version = JNI_VERSION_19;
         args.name = nullptr;
         args.group = nullptr;
         jvm->AttachCurrentThread(reinterpret_cast<void**>(pToEnvP), &args);
     }
 }
+
+void JniUtils::printInJava(const char* str) {
+    JNIEnv* env;
+    getEnv(&env);
+    jstring jStr = env->NewStringUTF(str);
+    env->CallStaticVoidMethod(loadClass, printMethodId, jStr);
+    env->DeleteLocalRef(jStr);
+}
+
+
+
+

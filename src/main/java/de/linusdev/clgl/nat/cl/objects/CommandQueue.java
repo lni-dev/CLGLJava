@@ -17,9 +17,9 @@
 package de.linusdev.clgl.nat.cl.objects;
 
 import de.linusdev.clgl.api.structs.NativeArray;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.nat.NativeUtils;
+import de.linusdev.clgl.nat.cl.custom.EventWaitList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,15 +40,31 @@ public class CommandQueue implements AutoCloseable {
             @Nullable BBLongN globalWorkOffset,
             @Nullable BBLongN globalWorkSize,
             @Nullable BBLongN localWorkSize,
-            @Nullable NativeArray<Long> event_wait_list,
-            @Nullable BBLong1 event
+            @Nullable EventWaitList eventWaitList,
+            @Nullable Event event
     ) {
         clEnqueueNDRangeKernel(pointer, kernel.getPointer(), workDim,
                 globalWorkOffset,
                 globalWorkSize,
                 localWorkSize,
-                event_wait_list,
+                eventWaitList,
                 event);
+    }
+
+    public void enqueueAcquireGLObjects(
+            @NotNull NativeArray<MemoryObject> memoryObjects,
+            @Nullable EventWaitList eventWaitList,
+            @Nullable Event event
+    ) {
+        clEnqueueAcquireGLObjects(pointer, memoryObjects, eventWaitList, event                                                                                                                                                                                                                                                                                                                                                                                                                                                          );
+    }
+
+    public void enqueueReleaseGLObjects(
+            @NotNull NativeArray<MemoryObject> memoryObjects,
+            @Nullable EventWaitList eventWaitList,
+            @Nullable Event event
+    ) {
+        clEnqueueReleaseGLObjects(pointer, memoryObjects, eventWaitList, event);
     }
 
     public void flush() {

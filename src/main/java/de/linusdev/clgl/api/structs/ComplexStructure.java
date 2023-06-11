@@ -17,10 +17,11 @@
 package de.linusdev.clgl.api.structs;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class ComplexStructure extends Structure {
 
-    protected @NotNull Structure [] items;
+    protected Structure [] items;
 
     protected final boolean trackModifications;
     protected final int modificationSplitOffset = 128;
@@ -30,7 +31,7 @@ public abstract class ComplexStructure extends Structure {
         this.trackModifications = trackModifications;
     }
 
-    public void init(boolean allocateBuffer, @NotNull Structure @NotNull ... items) {
+    public void init(boolean allocateBuffer, @Nullable Structure @NotNull ... items) {
         this.items = items;
         if(allocateBuffer)
             allocate();
@@ -74,7 +75,8 @@ public abstract class ComplexStructure extends Structure {
         int position = 0;
         for(int i = 0; i < items.length ; i++) {
             position += sizes[i * 2];
-            items[i].useBuffer(mostParentStructure, offset + position);
+            if(items[i] != null)
+                items[i].useBuffer(mostParentStructure, offset + position);
             position += sizes[i * 2 + 1];
         }
 

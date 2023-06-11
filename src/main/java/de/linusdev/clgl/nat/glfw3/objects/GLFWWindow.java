@@ -17,22 +17,26 @@
 package de.linusdev.clgl.nat.glfw3.objects;
 
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
+import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.Load;
 import de.linusdev.clgl.nat.custom.StaticCallbackObject;
 import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
+import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
+import de.linusdev.clgl.nat.glad.custom.DebugMessageListener;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfoImpl;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static de.linusdev.clgl.nat.glad.GLConstants.GL_COLOR_BUFFER_BIT;
-import static de.linusdev.clgl.nat.glad.Glad.glClear;
-import static de.linusdev.clgl.nat.glad.Glad.gladLoadGL;
+import java.nio.ByteBuffer;
+
+import static de.linusdev.clgl.nat.glad.GLConstants.*;
+import static de.linusdev.clgl.nat.glad.Glad.*;
 import static de.linusdev.clgl.nat.glfw3.GLFW.*;
 
 @SuppressWarnings("unused")
-public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindow> {
+public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindow>, DebugMessageCallback {
 
     private static final @NotNull StaticCallbackObjects<GLFWWindow> windows = new StaticCallbackObjects<>();
 
@@ -41,6 +45,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
     protected final int id;
 
     protected final @NotNull FrameInfoImpl frameInfo = new FrameInfoImpl(100);
+    protected @Nullable DebugMessageListener debugMessageListener;
 
     public GLFWWindow() {
         Load.init();
@@ -55,6 +60,13 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
 
     public void makeGLContextCurrent() {
         glfwMakeContextCurrent(pointer);
+    }
+
+    public void enableDebugMessageListener(@NotNull DebugMessageListener listener) {
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        this.debugMessageListener = listener;
+        glDebugMessageCallback(this, 0);
     }
 
     public void setSize(int width, int height) {
@@ -107,5 +119,13 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
     @Override
     public int getId() {
         return id;
+    }
+
+    @Override
+    public void message(int source, int type, int id, int severity, ByteBuffer message, long userParam) {
+        if(debugMessageListener != null) {
+            String msg = BufferUtils.byteBufferToString(message, false);
+            debugMessageListener.onMessage(source, type, id, severity, msg, userParam);
+        }
     }
 }
