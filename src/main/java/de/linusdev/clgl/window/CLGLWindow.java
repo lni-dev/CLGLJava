@@ -16,6 +16,8 @@
 
 package de.linusdev.clgl.window;
 
+import de.linusdev.clgl.api.misc.annos.CallFromAnyThread;
+import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.clgl.api.structs.StructureArray;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong2;
@@ -33,10 +35,12 @@ import de.linusdev.clgl.window.queue.QFuture;
 import de.linusdev.clgl.window.queue.UIRunnable;
 import de.linusdev.clgl.window.queue.Wrapper;
 import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,7 +88,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
         this.maxQueuedTaskMillisPerFrame = maxQueuedTaskMillisPerFrame;
         this.glfwWindow = new GLFWWindow();
-        this.glfwWindow.enableDebugMessageListener((source, type, id, severity, message, userParam) ->
+        this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
         this.taskQueue = new ConcurrentLinkedQueue<>();
         this.wrappers = new AtomicReferenceArray<>(256);
@@ -154,6 +158,14 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
                 new LongBitfield<>(CL.CLMemFlag.CL_MEM_READ_WRITE, CL.CLMemFlag.CL_MEM_HOST_NO_ACCESS),
                 format, desc, null
         );
+
+        glfwWindow.addFramebufferSizeListener((window, width, height) ->
+                queueForExecution(1, window1 ->
+                        {
+                            window1.updateSharedFramebuffer();
+                            return Nothing.INSTANCE;
+                        }
+                ));
     }
 
     @Override
@@ -219,10 +231,39 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     }
 
+    @CallOnlyFromUIThread("glfw-thread")
     protected void updateSharedFramebuffer() {
+        glfwWindow.getFrameBufferSize(size);
+        globalWorkSize.xy(size.x(), size.y()); //always holds the same value as size but as long.
+        glRenderBuffer.changeSize(size.x(), size.y());
 
+        sharedRenderBuffer.close();
+        sharedRenderBuffer.fromGLRenderBuffer(
+                clContext, new LongBitfield<>(CL.CLMemFlag.CL_MEM_WRITE_ONLY), glRenderBuffer);
+
+        //TODO: delete old uiImageBuffer, store format and desc
+        CLImageFormat format = new CLImageFormat(CL.CLChannelOrder.CL_RGBA, CL.CLChannelType.CL_FLOAT);
+        CLImageDesc desc = new CLImageDesc(
+                CL.CLMemoryObjectType.CL_MEM_OBJECT_IMAGE2D,
+                globalWorkSize.x(), globalWorkSize.y(),
+                0L, 0L, 0L, 0L, 0, 0, null
+        );
+
+        uiImageBuffer = new MemoryObject(true);
+        uiImageBuffer.newCLImage(clContext,
+                new LongBitfield<>(CL.CLMemFlag.CL_MEM_READ_WRITE, CL.CLMemFlag.CL_MEM_HOST_NO_ACCESS),
+                format, desc, null
+        );
+
+        if(renderKernel != null)
+            setRenderKernel(renderKernel);
+
+        if(uiKernel != null)
+            setUiKernel(uiKernel);
     }
 
+    @CallFromAnyThread
+    @NonBlocking
     protected void queue(int id, @NotNull QFuture<?> future) {
         if(id > 0 && id < wrappers.length()) {
             wrappers.get(id).queueIfNull(future, taskQueue);
@@ -244,6 +285,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         throwable.printStackTrace();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public <T> @NotNull QFuture<T> queueForExecution(int id, @NotNull UIRunnable<T> runnable) {
         QFuture<T> f = new QFuture<>(this, runnable);
         queue(id, f);

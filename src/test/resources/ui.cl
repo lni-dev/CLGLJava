@@ -22,7 +22,7 @@ float4 mainImage(const float2 uv, const int2 pixel, const int2 resolution) {
         return toFloat4(0.f);
     }
 
-    return float4(0.7f, 0.2f, 0.5f, 1.f - absolute(uv.x));
+    return float4(0.65f, 0.0f, 0.96f, min(1.f, 1.f - absolute(uv.x)));
 }
 
 __kernel void render(

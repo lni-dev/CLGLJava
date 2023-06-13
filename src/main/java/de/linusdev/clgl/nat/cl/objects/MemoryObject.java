@@ -47,6 +47,7 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
                 memFlags,
                 renderBuffer.getName()
         ));
+        closed = false;
     }
 
     public void newCLImage(
@@ -63,6 +64,7 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
            imageDesc,
            imageData == null ? NativeUtils.getNullPointer() : imageData.getPointer()
         ));
+        closed = false;
     }
 
     @Override

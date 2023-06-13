@@ -236,3 +236,58 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetFramebuffer
     glfwGetFramebufferSize(win, width_height, &(width_height[1]));
 }
 
+static jclass javaGLFWWindowClass = nullptr;
+static jmethodID windowSizeCallbackMethodId = nullptr;
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetWindowSizeCallback
+ * Signature: (JLjava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetWindowSizeCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window,
+        jclass callback_clazz
+) {
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    javaGLFWWindowClass = callback_clazz;
+    windowSizeCallbackMethodId = env->GetStaticMethodID(callback_clazz, "window_size_callback", "(JII)V");
+
+    glfwSetWindowSizeCallback(win, [](GLFWwindow* pointer, int width, int height) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, windowSizeCallbackMethodId,
+                  reinterpret_cast<jlong>(pointer),
+                  width, height
+        );
+    });
+}
+
+static jmethodID framebufferSizeCallbackMethodId = nullptr;
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetFramebufferSizeCallback
+ * Signature: (JLjava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetFramebufferSizeCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window,
+        jclass callback_clazz
+) {
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    javaGLFWWindowClass = callback_clazz;
+    framebufferSizeCallbackMethodId = env->GetStaticMethodID(callback_clazz, "framebuffer_size_callback", "(JII)V");
+
+    glfwSetFramebufferSizeCallback(win, [](GLFWwindow* pointer, int width, int height) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, framebufferSizeCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  width, height
+        );
+    });
+}
+

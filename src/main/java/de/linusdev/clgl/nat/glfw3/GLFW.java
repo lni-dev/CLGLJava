@@ -18,6 +18,7 @@ package de.linusdev.clgl.nat.glfw3;
 
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.nat.glfw3.custom.ErrorCallback;
+import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.lutils.llist.LLinkedList;
 import org.jetbrains.annotations.NotNull;
 
@@ -171,6 +172,16 @@ public class GLFW {
     protected static native void _glfwGetFramebufferSize(
             long pointer,
             @NotNull ByteBuffer p_width_height
+    );
+
+    public static native void glfwSetWindowSizeCallback(
+            long pointer,
+            Class<GLFWWindow> clazz
+    );
+
+    public static native void glfwSetFramebufferSizeCallback(
+            long pointer,
+            Class<GLFWWindow> clazz
     );
 
 }
