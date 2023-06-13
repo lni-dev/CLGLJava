@@ -459,7 +459,6 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clSetKernelArg(
         jlong p_arg_value,
         jboolean passPointerToPointer
 ) {
-
     void* p = reinterpret_cast<void*>(p_arg_value);
 
     return clSetKernelArg(
@@ -639,6 +638,32 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFlush(
         jlong command_queue
 ) {
     return clFlush(reinterpret_cast<cl_command_queue>(command_queue));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateImage
+ * Signature: (JJJJJLjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateImage(
+        JNIEnv* env, jclass clazz,
+        jlong context,
+        jlong cl_mem_flags,
+        jlong p_image_format,
+        jlong p_image_desc,
+        jlong host_ptr,
+        jobject p_errcode_ret
+) {
+
+    void* errcode_ret = GET_BUF_ADDRESS_NULLABLE(p_errcode_ret);
+    return reinterpret_cast<jlong>(clCreateImage(
+            reinterpret_cast<cl_context>(context),
+            cl_mem_flags,
+            reinterpret_cast<cl_image_format*>(p_image_format),
+            reinterpret_cast<cl_image_desc*>(p_image_desc),
+            reinterpret_cast<void*>(host_ptr),
+            reinterpret_cast<cl_int*>(errcode_ret)
+    ));
 }
 
 

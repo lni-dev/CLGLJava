@@ -23,10 +23,9 @@ import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.api.utils.BufferUtils;
-import de.linusdev.clgl.nat.cl.objects.Context;
-import de.linusdev.clgl.nat.cl.objects.Event;
-import de.linusdev.clgl.nat.cl.objects.MemoryObject;
-import de.linusdev.clgl.nat.cl.objects.Program;
+import de.linusdev.clgl.nat.cl.objects.*;
+import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
+import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitfield;
@@ -1239,4 +1238,127 @@ public class CL {
     }
 
     private static native int _clFlush(long command_queue);
+
+    public enum CLChannelOrder implements IntBitFieldValue {
+        CL_R(0x10B0),
+        CL_A(0x10B1),
+        CL_RG(0x10B2),
+        CL_RA(0x10B3),
+        CL_RGB(0x10B4),
+        CL_RGBA(0x10B5),
+        CL_BGRA(0x10B6),
+        CL_ARGB(0x10B7),
+        CL_INTENSITY(0x10B8),
+        CL_LUMINANCE(0x10B9),
+        CL_Rx(0x10BA),
+        CL_RGx(0x10BB),
+        CL_RGBx(0x10BC),
+        CL_DEPTH(0x10BD),
+        CL_DEPTH_STENCIL(0x10BE),
+        CL_sRGB(0x10BF),
+        CL_sRGBx(0x10C0),
+        CL_sRGBA(0x10C1),
+        CL_sBGRA(0x10C2),
+        CL_ABGR(0x10C3),
+        ;
+
+        private final int value;
+
+        CLChannelOrder(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum CLChannelType implements IntBitFieldValue {
+        CL_SNORM_INT8(0x10D0),
+        CL_SNORM_INT16(0x10D1),
+        CL_UNORM_INT8(0x10D2),
+        CL_UNORM_INT16(0x10D3),
+        CL_UNORM_SHORT_565(0x10D4),
+        CL_UNORM_SHORT_555(0x10D5),
+        CL_UNORM_INT_101010(0x10D6),
+        CL_SIGNED_INT8(0x10D7),
+        CL_SIGNED_INT16(0x10D8),
+        CL_SIGNED_INT32(0x10D9),
+        CL_UNSIGNED_INT8(0x10DA),
+        CL_UNSIGNED_INT16(0x10DB),
+        CL_UNSIGNED_INT32(0x10DC),
+        CL_HALF_FLOAT(0x10DD),
+        CL_FLOAT(0x10DE),
+        CL_UNORM_INT24(0x10DF),
+        CL_UNORM_INT_101010_2(0x10E0),
+        ;
+
+        private final int value;
+
+        CLChannelType(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public enum CLMemoryObjectType implements IntBitFieldValue {
+        CL_MEM_OBJECT_BUFFER(0x10F0),
+        CL_MEM_OBJECT_IMAGE2D(0x10F1),
+        CL_MEM_OBJECT_IMAGE3D(0x10F2),
+
+        CL_MEM_OBJECT_IMAGE2D_ARRAY(0x10F3),
+        CL_MEM_OBJECT_IMAGE1D(0x10F4),
+        CL_MEM_OBJECT_IMAGE1D_ARRAY(0x10F5),
+        CL_MEM_OBJECT_IMAGE1D_BUFFER(0x10F6),
+        CL_MEM_OBJECT_PIPE(0x10F7),
+        ;
+
+        private final int value;
+
+        CLMemoryObjectType(int value) {
+            this.value = value;
+        }
+
+        @Override
+        public int getValue() {
+            return value;
+        }
+    }
+
+    public static long clCreateImage(
+            long context,
+            @NotNull LongBitfield<CLMemFlag> memFlags,
+            @NotNull CLImageFormat imageFormat,
+            @NotNull CLImageDesc imageDesc,
+            long hostPointer
+    ) {
+        BBInt1 errCodeRet = new BBInt1(true);
+
+        long pointer = _clCreateImage(
+                context,
+                memFlags.getValue(),
+                imageFormat.getPointer(),
+                imageDesc.getPointer(),
+                hostPointer,
+                errCodeRet.getByteBuffer()
+        );
+
+        check(errCodeRet.get());
+
+        return pointer;
+    }
+
+    protected static native long _clCreateImage(
+            long context,
+            long cl_mem_flags,
+            long p_image_format,
+            long p_image_desc,
+            long host_ptr,
+            @Nullable ByteBuffer p_errcode_ret
+    );
 }

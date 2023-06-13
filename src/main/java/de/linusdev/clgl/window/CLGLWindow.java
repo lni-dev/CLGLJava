@@ -21,6 +21,8 @@ import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong2;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.objects.*;
+import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
+import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.clgl.nat.glad.Glad;
 import de.linusdev.clgl.nat.glad.objects.GLFrameBuffer;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
@@ -66,6 +68,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected final Device clDevice;
     protected final CommandQueue clQueue;
     protected @Nullable Kernel renderKernel;
+    protected @Nullable Kernel uiKernel;
     protected final @NotNull BBLong2 globalWorkSize;
 
     //Shared framebuffer
@@ -73,6 +76,9 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected GLRenderBuffer glRenderBuffer;
     protected MemoryObject sharedRenderBuffer;
     protected StructureArray<MemoryObject> glObjects;
+
+    //UI image
+    protected MemoryObject uiImageBuffer;
 
 
     public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
@@ -117,10 +123,12 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         //Create gl objects array
         glObjects = new StructureArray<>(false, MemoryObject.INFO, 1, (parent, offset) -> null);
 
+
         //Read window size
         size = glfwWindow.getFrameBufferSize(null);
         globalWorkSize = new BBLong2(true);
         globalWorkSize.xy(size.x(), size.y()); //always holds the same value as size but as long.
+
 
         //Create renderbuffer for rendering
         glFrameBuffer = new GLFrameBuffer();
@@ -132,6 +140,20 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         glObjects.set(0, sharedRenderBuffer);
         sharedRenderBuffer.fromGLRenderBuffer(
                 clContext, new LongBitfield<>(CL.CLMemFlag.CL_MEM_WRITE_ONLY), glRenderBuffer);
+
+        //Create ui image buffer
+        CLImageFormat format = new CLImageFormat(CL.CLChannelOrder.CL_RGBA, CL.CLChannelType.CL_FLOAT);
+        CLImageDesc desc = new CLImageDesc(
+                CL.CLMemoryObjectType.CL_MEM_OBJECT_IMAGE2D,
+                globalWorkSize.x(), globalWorkSize.y(),
+                0L, 0L, 0L, 0L, 0, 0, null
+        );
+
+        uiImageBuffer = new MemoryObject(true);
+        uiImageBuffer.newCLImage(clContext,
+                new LongBitfield<>(CL.CLMemFlag.CL_MEM_READ_WRITE, CL.CLMemFlag.CL_MEM_HOST_NO_ACCESS),
+                format, desc, null
+        );
     }
 
     @Override
@@ -144,8 +166,17 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
                     null, null, null);
             clQueue.enqueueReleaseGLObjects(glObjects, null, null);
 
+            clQueue.finish();
+
+            if(uiKernel != null) {
+                clQueue.enqueueNDRangeKernel(uiKernel, 2, null, globalWorkSize,
+                        null, null, null);
+            }
+
             glFrameBuffer.blitInto(GLFrameBuffer.DEFAULT_FRAME_BUFFER, glRenderBuffer, glRenderBuffer,
                     GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+            clQueue.finish();
         }
 
     }
@@ -155,7 +186,14 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
         kernel.setKernelArg(0, sharedRenderBuffer);
         kernel.setKernelArg(1, size);
+        kernel.setKernelArg(2, uiImageBuffer);
+    }
 
+    public void setUiKernel(@NotNull Kernel kernel) {
+        this.uiKernel = kernel;
+
+        kernel.setKernelArg(0, uiImageBuffer);
+        kernel.setKernelArg(1, size);
     }
 
     public void show() {
@@ -227,5 +265,8 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         glRenderBuffer.close();
         glFrameBuffer.close();
         glfwWindow.close();
+
+        uiImageBuffer.close();
+        sharedRenderBuffer.close();
     }
 }

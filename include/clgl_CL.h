@@ -223,6 +223,14 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFinish
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFlush
   (JNIEnv *, jclass, jlong);
 
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clCreateImage
+ * Signature: (JJJJJLjava/nio/ByteBuffer;)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateImage
+  (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jlong, jobject);
+
 #ifdef __cplusplus
 }
 #endif

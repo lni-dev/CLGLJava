@@ -14,22 +14,17 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.structs;
+package de.linusdev.clgl.nat.cl.structs;
 
-import de.linusdev.clgl.api.utils.BufferUtils;
+import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
+import de.linusdev.clgl.nat.cl.CL;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
-
-public interface NativeParsable {
-    @NotNull ByteBuffer getByteBuffer();
-
-    /**
-     * Get the pointer to the buffer of this NativeParsable as long.
-     * @return pointer to {@link #getByteBuffer()}
-     */
-    default long getPointer() {
-        return BufferUtils.getHeapAddress(getByteBuffer());
+public class CLImageFormat extends BBInt2 {
+    public CLImageFormat(@NotNull CL.CLChannelOrder order, @NotNull CL.CLChannelType type) {
+        super(true);
+        x(order.getValue());
+        y(type.getValue());
     }
 
 }

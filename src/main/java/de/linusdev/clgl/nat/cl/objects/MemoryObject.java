@@ -16,12 +16,16 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
+import de.linusdev.clgl.api.structs.NativeParsable;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
+import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.lutils.bitfield.LongBitfield;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("unused")
 public class MemoryObject extends BBLong1 implements AutoCloseable {
@@ -42,6 +46,22 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
                 context.getPointer(),
                 memFlags,
                 renderBuffer.getName()
+        ));
+    }
+
+    public void newCLImage(
+            @NotNull Context context,
+            @NotNull LongBitfield<CL.CLMemFlag> memFlags,
+            @NotNull CLImageFormat imageFormat,
+            @NotNull CLImageDesc imageDesc,
+            @Nullable NativeParsable imageData
+    ) {
+        set(CL.clCreateImage(
+           context.getPointer(),
+           memFlags,
+           imageFormat,
+           imageDesc,
+           imageData == null ? NativeUtils.getNullPointer() : imageData.getPointer()
         ));
     }
 

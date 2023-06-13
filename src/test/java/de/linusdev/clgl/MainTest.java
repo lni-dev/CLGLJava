@@ -48,13 +48,23 @@ public class MainTest {
     void testCLGLWindow() throws IOException, InterruptedException {
         CLGLWindow window = new CLGLWindow(10);
 
-        Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
-        var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
-        fut.getResult();
-        System.out.println("Build finished: " + program.getBuildLog(window.getClDevice()));
-        Kernel kernel = new Kernel(program, "render");
+        {
+            Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
+            var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
+            fut.getResult();
+            System.out.println("Build finished: " + program.getBuildLog(window.getClDevice()));
+            Kernel kernel = new Kernel(program, "render");
+            window.setRenderKernel(kernel);
+        }
 
-        window.setRenderKernel(kernel);
+        {
+            Program program = new Program(window.getClContext(), readFromResourceFile("ui.cl"));
+            var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
+            fut.getResult();
+            System.out.println("Build finished (UI): " + program.getBuildLog(window.getClDevice()));
+            Kernel kernel = new Kernel(program, "render");
+            window.setUiKernel(kernel);
+        }
 
         window.show();
 

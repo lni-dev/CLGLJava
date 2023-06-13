@@ -1,5 +1,3 @@
-
-
 #define int2(X, Y) ((int2)(X, Y))
 #define int3(X, Y, Z) ((int3)(X, Y, Z))
 #define int4(X, Y, Z, W) ((int4)(X, Y, Z, W))
@@ -12,16 +10,24 @@
 #define float3(X, Y, Z) ((float3)(X, Y, Z))
 #define float4(X, Y, Z, W) ((float4)(X, Y, Z, W))
 
+/**
+ * absolute value of A
+ */
+#define absolute(A) (A * sign(A))
 
 
-float4 mainImage(float2 uv) {
-    return float4(uv.x, uv.y, uv.x * uv.y, 1.f);
+float4 mainImage(const float2 uv, const int2 pixel, const int2 resolution) {
+
+    if(pixel.y > 100) {
+        return toFloat4(0.f);
+    }
+
+    return float4(0.7f, 0.2f, 0.5f, 1.f - absolute(uv.x));
 }
 
 __kernel void render(
-    __write_only image2d_t img,
-    const int2 screenSize,
-    __read_only image2d_t ui
+    __write_only image2d_t ui,
+    const int2 screenSize
     )
 {
 
@@ -30,16 +36,6 @@ __kernel void render(
             ((float) (cordi.x - (screenSize.x / 2))) / ((float) screenSize.y),
             ((float) (cordi.y - (screenSize.y / 2))) / ((float) screenSize.y)
         );
-    
-    float4 uiColor = read_imagef(ui, cordi);
 
-    if(uiColor.w < 1.0f) {
-        float4 renderColor = mainImage(uv);
-        renderColor.xyz = mix(renderColor.xyz, uiColor.xyz, uiColor.w);
-        write_imagef(img, cordi, renderColor);
-    } else {
-        write_imagef(img, cordi, uiColor);
-    }
-
-    
+    write_imagef(ui, cordi, mainImage(uv, cordi, screenSize));
 }
