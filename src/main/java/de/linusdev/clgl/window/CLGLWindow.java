@@ -82,7 +82,9 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected StructureArray<MemoryObject> glObjects;
 
     //UI image
-    protected MemoryObject uiImageBuffer;
+    protected final @NotNull CLImageFormat uiImageFormat;
+    protected final @NotNull CLImageDesc uiImageDescription;
+    protected final @NotNull MemoryObject uiImageBuffer;
 
 
     public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
@@ -146,8 +148,8 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
                 clContext, new LongBitfield<>(CL.CLMemFlag.CL_MEM_WRITE_ONLY), glRenderBuffer);
 
         //Create ui image buffer
-        CLImageFormat format = new CLImageFormat(CL.CLChannelOrder.CL_RGBA, CL.CLChannelType.CL_FLOAT);
-        CLImageDesc desc = new CLImageDesc(
+        uiImageFormat = new CLImageFormat(CL.CLChannelOrder.CL_RGBA, CL.CLChannelType.CL_FLOAT);
+        uiImageDescription = new CLImageDesc(
                 CL.CLMemoryObjectType.CL_MEM_OBJECT_IMAGE2D,
                 globalWorkSize.x(), globalWorkSize.y(),
                 0L, 0L, 0L, 0L, 0, 0, null
@@ -156,7 +158,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         uiImageBuffer = new MemoryObject(true);
         uiImageBuffer.newCLImage(clContext,
                 new LongBitfield<>(CL.CLMemFlag.CL_MEM_READ_WRITE, CL.CLMemFlag.CL_MEM_HOST_NO_ACCESS),
-                format, desc, null
+                uiImageFormat, uiImageDescription, null
         );
 
         glfwWindow.addFramebufferSizeListener((window, width, height) ->
@@ -237,22 +239,15 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         globalWorkSize.xy(size.x(), size.y()); //always holds the same value as size but as long.
         glRenderBuffer.changeSize(size.x(), size.y());
 
-        sharedRenderBuffer.close();
         sharedRenderBuffer.fromGLRenderBuffer(
                 clContext, new LongBitfield<>(CL.CLMemFlag.CL_MEM_WRITE_ONLY), glRenderBuffer);
 
-        //TODO: delete old uiImageBuffer, store format and desc
-        CLImageFormat format = new CLImageFormat(CL.CLChannelOrder.CL_RGBA, CL.CLChannelType.CL_FLOAT);
-        CLImageDesc desc = new CLImageDesc(
-                CL.CLMemoryObjectType.CL_MEM_OBJECT_IMAGE2D,
-                globalWorkSize.x(), globalWorkSize.y(),
-                0L, 0L, 0L, 0L, 0, 0, null
-        );
+        uiImageDescription.image_width.set(globalWorkSize.x());
+        uiImageDescription.image_height.set(globalWorkSize.y());
 
-        uiImageBuffer = new MemoryObject(true);
         uiImageBuffer.newCLImage(clContext,
                 new LongBitfield<>(CL.CLMemFlag.CL_MEM_READ_WRITE, CL.CLMemFlag.CL_MEM_HOST_NO_ACCESS),
-                format, desc, null
+                uiImageFormat, uiImageDescription, null
         );
 
         if(renderKernel != null)

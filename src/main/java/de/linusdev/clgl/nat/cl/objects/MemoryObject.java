@@ -30,8 +30,7 @@ import org.jetbrains.annotations.Nullable;
 @SuppressWarnings("unused")
 public class MemoryObject extends BBLong1 implements AutoCloseable {
 
-
-    protected boolean closed = false;
+    protected boolean closed = true;
 
     public MemoryObject(boolean allocateBuffer) {
         super(allocateBuffer);
@@ -42,6 +41,7 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
             @NotNull LongBitfield<CL.CLMemFlag> memFlags,
             @NotNull GLRenderBuffer renderBuffer
     ) {
+        close(); //delete old
         set(CL.clCreateFromGLRenderbuffer(
                 context.getPointer(),
                 memFlags,
@@ -57,6 +57,7 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
             @NotNull CLImageDesc imageDesc,
             @Nullable NativeParsable imageData
     ) {
+        close(); //delete old
         set(CL.clCreateImage(
            context.getPointer(),
            memFlags,
@@ -69,6 +70,9 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
 
     @Override
     public void close() {
+        if(closed)
+            return;
+
         try {
             CL.clReleaseMemObject(getPointer());
         } finally {
