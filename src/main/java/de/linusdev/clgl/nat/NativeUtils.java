@@ -16,6 +16,10 @@
 
 package de.linusdev.clgl.nat;
 
+import org.jetbrains.annotations.NotNull;
+
+import java.nio.ByteBuffer;
+
 public class NativeUtils {
 
     public static native boolean isNull(long pointer);
@@ -28,4 +32,12 @@ public class NativeUtils {
 
     public static final long SIZE_OF_CL_MEM = sf_cl_mem();
     private static native long sf_cl_mem();
+
+    /**
+     * If the string ends with '\0', it will be removed.
+     * @param pointer pointer of the native data
+     * @param capacity capacity of the buffer or 0 if the pointer points to a string ending with 0
+     * @return direct {@link ByteBuffer} pointing to the native data
+     */
+    public static native @NotNull ByteBuffer getBufferFromPointer(long pointer, int capacity);
 }

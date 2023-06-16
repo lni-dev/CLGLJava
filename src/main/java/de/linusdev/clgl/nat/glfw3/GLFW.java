@@ -35,11 +35,18 @@ public class GLFW {
             callback.onError(error, description);
     };
 
-    public static void glfwInit() {
+    public synchronized static void glfwInit() {
         if(!init) {
             _glfwInit();
-            _glfwSetErrorCallback(staticErrorCallback);
+
             Runtime.getRuntime().addShutdownHook(new Thread(GLFW::_glfwTerminate));
+
+            setJavaGLFWWindowClass(GLFWWindow.class);
+
+            //Callbacks
+            _glfwSetErrorCallback(staticErrorCallback);
+            glfwSetJoystickCallback();
+
             init = true;
         }
     }
@@ -174,14 +181,46 @@ public class GLFW {
             @NotNull ByteBuffer p_width_height
     );
 
-    public static native void glfwSetWindowSizeCallback(
-            long pointer,
+    public static native void setJavaGLFWWindowClass(
             Class<GLFWWindow> clazz
     );
 
+    public static native void glfwSetWindowSizeCallback(
+            long pointer
+    );
+
     public static native void glfwSetFramebufferSizeCallback(
-            long pointer,
-            Class<GLFWWindow> clazz
+            long pointer
+    );
+
+    public static native void glfwSetKeyCallback(
+            long pointer
+    );
+
+    public static native void glfwSetCharCallback(
+            long pointer
+    );
+
+    public static native void glfwSetCursorPosCallback(
+            long pointer
+    );
+
+    public static native void glfwSetCursorEnterCallback(
+            long pointer
+    );
+
+    public static native void glfwSetMouseButtonCallback(
+            long pointer
+    );
+
+    public static native void glfwSetScrollCallback(
+            long pointer
+    );
+
+    public static native void glfwSetJoystickCallback();
+
+    public static native void glfwSetDropCallback(
+            long pointer
     );
 
 }

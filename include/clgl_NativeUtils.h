@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (J)Z
  */
 JNIEXPORT jboolean JNICALL Java_de_linusdev_clgl_nat_NativeUtils_isNull
-  (JNIEnv *, jclass, jlong);
+        (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_NativeUtils
@@ -21,7 +21,7 @@ JNIEXPORT jboolean JNICALL Java_de_linusdev_clgl_nat_NativeUtils_isNull
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils__1getNullPointer
-  (JNIEnv *, jclass);
+        (JNIEnv *, jclass);
 
 /*
  * Class:     de_linusdev_clgl_nat_NativeUtils
@@ -29,7 +29,15 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils__1getNullPointer
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_NativeUtils_sf_1cl_1mem
-  (JNIEnv *, jclass);
+        (JNIEnv *, jclass);
+
+/*
+ * Class:     de_linusdev_clgl_nat_NativeUtils
+ * Method:    getBufferFromPointer
+ * Signature: (JI)Ljava/nio/ByteBuffer;
+ */
+JNIEXPORT jobject JNICALL Java_de_linusdev_clgl_nat_NativeUtils_getBufferFromPointer
+        (JNIEnv *, jclass, jlong, jint);
 
 #ifdef __cplusplus
 }

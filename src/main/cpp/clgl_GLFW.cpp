@@ -237,7 +237,29 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetFramebuffer
 }
 
 static jclass javaGLFWWindowClass = nullptr;
+
 static jmethodID windowSizeCallbackMethodId = nullptr;
+static jmethodID framebufferSizeCallbackMethodId = nullptr;
+static jmethodID keyCallbackMethodId = nullptr;
+static jmethodID charCallbackMethodId = nullptr;
+static jmethodID cursorPosCallbackMethodId = nullptr;
+static jmethodID cursorEnterCallbackMethodId = nullptr;
+static jmethodID mouseButtonCallbackMethodId = nullptr;
+static jmethodID scrollCallbackMethodId = nullptr;
+static jmethodID joystickCallbackMethodId = nullptr;
+static jmethodID dropCallbackMethodId = nullptr;
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    setJavaGLFWWindowClass
+ * Signature: (Ljava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_setJavaGLFWWindowClass(
+        JNIEnv* env, jclass clazz,
+        jclass callbackClass
+) {
+    javaGLFWWindowClass = (jclass)(env->NewGlobalRef(callbackClass));
+}
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
@@ -246,12 +268,10 @@ static jmethodID windowSizeCallbackMethodId = nullptr;
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetWindowSizeCallback(
         JNIEnv* env, jclass clazz,
-        jlong p_window,
-        jclass callback_clazz
+        jlong p_window
 ) {
     auto* win = reinterpret_cast<GLFWwindow*>(p_window);
-    javaGLFWWindowClass = callback_clazz;
-    windowSizeCallbackMethodId = env->GetStaticMethodID(callback_clazz, "window_size_callback", "(JII)V");
+    windowSizeCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "window_size_callback", "(JII)V");
 
     glfwSetWindowSizeCallback(win, [](GLFWwindow* pointer, int width, int height) {
         JNIEnv* env;
@@ -264,8 +284,6 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetWindowSizeCal
     });
 }
 
-static jmethodID framebufferSizeCallbackMethodId = nullptr;
-
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
  * Method:    glfwSetFramebufferSizeCallback
@@ -273,12 +291,10 @@ static jmethodID framebufferSizeCallbackMethodId = nullptr;
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetFramebufferSizeCallback(
         JNIEnv* env, jclass clazz,
-        jlong p_window,
-        jclass callback_clazz
+        jlong p_window
 ) {
     auto* win = reinterpret_cast<GLFWwindow*>(p_window);
-    javaGLFWWindowClass = callback_clazz;
-    framebufferSizeCallbackMethodId = env->GetStaticMethodID(callback_clazz, "framebuffer_size_callback", "(JII)V");
+    framebufferSizeCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "framebuffer_size_callback", "(JII)V");
 
     glfwSetFramebufferSizeCallback(win, [](GLFWwindow* pointer, int width, int height) {
         JNIEnv* env;
@@ -288,6 +304,192 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetFramebufferSi
                                   reinterpret_cast<jlong>(pointer),
                                   width, height
         );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetKeyCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetKeyCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    keyCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "key_callback", "(JIIII)V");
+
+    glfwSetKeyCallback(win, [](GLFWwindow* pointer, int key, int scancode, int action, int mods) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, keyCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  key, scancode, action, mods
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCharCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCharCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    charCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "character_callback", "(JI)V");
+
+    glfwSetCharCallback(win, [](GLFWwindow* pointer, unsigned int codepoint) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, charCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  codepoint
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCursorPosCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCursorPosCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    cursorPosCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "cursor_position_callback", "(JDD)V");
+
+    glfwSetCursorPosCallback(win, [](GLFWwindow* pointer, double xpos, double ypos) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, cursorPosCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  xpos, ypos
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCursorEnterCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCursorEnterCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    cursorEnterCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "cursor_enter_callback", "(JZ)V");
+
+    glfwSetCursorEnterCallback(win, [](GLFWwindow* pointer, int entered) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, cursorEnterCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  entered ? JNI_TRUE : JNI_FALSE
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetMouseButtonCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetMouseButtonCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    mouseButtonCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "mouse_button_callback", "(JIII)V");
+
+    glfwSetMouseButtonCallback(win, [](GLFWwindow* pointer, int button, int action, int mods) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, mouseButtonCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  button, action, mods
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetScrollCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetScrollCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    scrollCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "scroll_callback", "(JDD)V");
+
+    glfwSetScrollCallback(win, [](GLFWwindow* pointer, double xoffset, double yoffset) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, scrollCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  xoffset, yoffset
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetJoystickCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetJoystickCallback(
+        JNIEnv* env, jclass clazz
+){
+    joystickCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "joystick_callback", "(II)V");
+
+    glfwSetJoystickCallback([](int jid, int event) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, joystickCallbackMethodId,
+                                  jid, event
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetDropCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetDropCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+){
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    dropCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "drop_callback", "(JILjava/nio/ByteBuffer;)V");
+
+    glfwSetDropCallback(win, [](GLFWwindow* pointer, int count, const char** paths) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        jobject pathsBuffer = env->NewDirectByteBuffer(paths, sizeof(char*) * count);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, dropCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer),
+                                  count,
+                                  pathsBuffer
+        );
+
+        env->DeleteLocalRef(pathsBuffer);
     });
 }
 

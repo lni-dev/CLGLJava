@@ -153,19 +153,91 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetFramebuffer
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    setJavaGLFWWindowClass
+ * Signature: (Ljava/lang/Class;)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_setJavaGLFWWindowClass
+        (JNIEnv *, jclass, jclass);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
  * Method:    glfwSetWindowSizeCallback
- * Signature: (JLjava/lang/Class;)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetWindowSizeCallback
-        (JNIEnv *, jclass, jlong, jclass);
+        (JNIEnv *, jclass, jlong);
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
  * Method:    glfwSetFramebufferSizeCallback
- * Signature: (JLjava/lang/Class;)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetFramebufferSizeCallback
-        (JNIEnv *, jclass, jlong, jclass);
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetKeyCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetKeyCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCharCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCharCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCursorPosCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCursorPosCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetCursorEnterCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetCursorEnterCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetMouseButtonCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetMouseButtonCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetScrollCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetScrollCallback
+        (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetJoystickCallback
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetJoystickCallback
+        (JNIEnv *, jclass);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSetDropCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetDropCallback
+        (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }
