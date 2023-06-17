@@ -16,8 +16,10 @@
 
 package de.linusdev.clgl;
 
+import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.cl.objects.Program;
+import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.clgl.window.CLGLWindow;
 import org.jetbrains.annotations.NotNull;
@@ -65,6 +67,12 @@ public class MainTest {
             Kernel kernel = new Kernel(program, "render");
             window.setUiKernel(kernel);
         }
+
+        InputManger m = window.getInputManger();
+
+        m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_E).addReleaseListener(() -> {
+            System.out.println("E released :)");
+        });
 
         window.show();
 

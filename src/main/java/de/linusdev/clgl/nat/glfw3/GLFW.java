@@ -20,7 +20,9 @@ import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.nat.glfw3.custom.ErrorCallback;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.lutils.llist.LLinkedList;
+import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 
@@ -221,6 +223,18 @@ public class GLFW {
 
     public static native void glfwSetDropCallback(
             long pointer
+    );
+
+    /**
+     * @see <a href="https://www.glfw.org/docs/3.3/group__input.html#gaeaed62e69c3bd62b7ff8f7b19913ce4f">glfw doc</a>
+     */
+    public static native @Nullable String _glfwGetKeyName(
+            @MagicConstant(valuesFromClass = GLFWValues.Keys_US.class) int key,
+            int scancode
+    );
+
+    public static native int glfwGetKeyScancode(
+            @MagicConstant(valuesFromClass = GLFWValues.Keys_US.class) int key
     );
 
 }

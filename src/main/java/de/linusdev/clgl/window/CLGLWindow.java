@@ -16,7 +16,6 @@
 
 package de.linusdev.clgl.window;
 
-import de.linusdev.clgl.api.misc.annos.CallFromAnyThread;
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.clgl.api.structs.StructureArray;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
@@ -31,30 +30,29 @@ import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.clgl.window.queue.QFuture;
-import de.linusdev.clgl.window.queue.UIRunnable;
-import de.linusdev.clgl.window.queue.Wrapper;
+import de.linusdev.clgl.window.input.InputManagerImpl;
+import de.linusdev.clgl.window.input.InputManger;
+import de.linusdev.clgl.window.queue.UITaskQueue;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.bitfield.LongBitfield;
-import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 import static de.linusdev.clgl.nat.glad.GLConstants.*;
 
 @SuppressWarnings("unused")
 public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
+    public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = UITaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
+
     protected final @NotNull GLFWWindow glfwWindow;
+    protected final @NotNull InputManger inputManger;
 
     //Window stuff
     protected final @NotNull BBInt2 size;
@@ -62,9 +60,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected @Nullable Thread uiThread = null;
 
     //Task queue
-    protected final @NotNull AtomicReferenceArray<Wrapper<QFuture<?>>> wrappers;
-    protected final @NotNull Queue<Wrapper<QFuture<?>>> taskQueue;
-    protected final long maxQueuedTaskMillisPerFrame;
+    protected final @NotNull UITaskQueue uiTaskQueue;
 
     //OpenCL
     protected final int openClVersion; //1,2 or 3
@@ -88,15 +84,15 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
 
     public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
-        this.maxQueuedTaskMillisPerFrame = maxQueuedTaskMillisPerFrame;
         this.glfwWindow = new GLFWWindow();
         this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
-        this.taskQueue = new ConcurrentLinkedQueue<>();
-        this.wrappers = new AtomicReferenceArray<>(256);
 
-        for(int i = 0; i < wrappers.length(); i++)
-            wrappers.set(i, new Wrapper<>(i));
+        //Task queue
+        this.uiTaskQueue = new UITaskQueue(this, maxQueuedTaskMillisPerFrame);
+
+        //Input manager
+        this.inputManger = new InputManagerImpl(glfwWindow);
 
         //Create OpenCL Context
         {
@@ -162,7 +158,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         );
 
         glfwWindow.addFramebufferSizeListener((window, width, height) ->
-                queueForExecution(1, window1 ->
+                uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, window1 ->
                         {
                             window1.updateSharedFramebuffer();
                             return Nothing.INSTANCE;
@@ -172,7 +168,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     @Override
     public void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo) {
-        runQueuedTasks();
+        uiTaskQueue.runQueuedTasks();
 
         if(renderKernel != null) {
             clQueue.enqueueAcquireGLObjects(glObjects, null, null);
@@ -210,30 +206,12 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         kernel.setKernelArg(1, size);
     }
 
+    @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     public void show() {
         glfwWindow.show(this);
     }
 
-    protected void runQueuedTasks() {
-        final long startTime = System.currentTimeMillis();
-        int taskCount = 0;
-
-        Wrapper<QFuture<?>> wrapper;
-        QFuture<?> future;
-        while (
-                (System.currentTimeMillis() - startTime) < maxQueuedTaskMillisPerFrame &&
-                        (wrapper = taskQueue.poll()) != null
-        ) {
-            future = wrapper.getItemAndSetToNull();
-            if(future != null) {
-                future.run(this);
-                taskCount++;
-            }
-        }
-
-    }
-
-    @CallOnlyFromUIThread("glfw-thread")
+    @CallOnlyFromUIThread("glfw")
     protected void updateSharedFramebuffer() {
         glfwWindow.getFrameBufferSize(size);
         globalWorkSize.xy(size.x(), size.y()); //always holds the same value as size but as long.
@@ -257,17 +235,6 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
             setUiKernel(uiKernel);
     }
 
-    @CallFromAnyThread
-    @NonBlocking
-    protected void queue(int id, @NotNull QFuture<?> future) {
-        if(id > 0 && id < wrappers.length()) {
-            wrappers.get(id).queueIfNull(future, taskQueue);
-        } else {
-            taskQueue.offer(new Wrapper<>(id, future));
-        }
-
-    }
-
     @Override
     public void checkThread() throws NonBlockingThreadException {
         if(Thread.currentThread() == uiThread)
@@ -280,21 +247,6 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         throwable.printStackTrace();
     }
 
-    @SuppressWarnings("UnusedReturnValue")
-    public <T> @NotNull QFuture<T> queueForExecution(int id, @NotNull UIRunnable<T> runnable) {
-        QFuture<T> f = new QFuture<>(this, runnable);
-        queue(id, f);
-        return f;
-    }
-
-    public Context getClContext() {
-        return clContext;
-    }
-
-    public Device getClDevice() {
-        return clDevice;
-    }
-
     @Override
     public void close() {
         clContext.close();
@@ -305,5 +257,27 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
         uiImageBuffer.close();
         sharedRenderBuffer.close();
+    }
+
+    //Getter
+
+    public Context getClContext() {
+        return clContext;
+    }
+
+    public Device getClDevice() {
+        return clDevice;
+    }
+
+    public @NotNull GLFWWindow getGlfwWindow() {
+        return glfwWindow;
+    }
+
+    public @NotNull InputManger getInputManger() {
+        return inputManger;
+    }
+
+    public @NotNull UITaskQueue getUiTaskQueue() {
+        return uiTaskQueue;
     }
 }

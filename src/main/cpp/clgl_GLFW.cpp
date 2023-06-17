@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include "clgl_GLFW.h"
 #include "GLFW/glfw3.h"
 #include "JniUtils.h"
@@ -491,5 +492,30 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSetDropCallback(
 
         env->DeleteLocalRef(pathsBuffer);
     });
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    _glfwGetKeyName
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetKeyName(
+        JNIEnv* env, jclass clazz,
+        jint key,
+        jint scancode
+) {
+    return env->NewStringUTF(glfwGetKeyName(key, scancode));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwGetKeyScancode
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwGetKeyScancode(
+        JNIEnv* env, jclass clazz,
+        jint key
+) {
+    return glfwGetKeyScancode(key);
 }
 

@@ -137,7 +137,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         return size;
     }
 
-    @CallOnlyFromUIThread(value = "glfw-thread", creates = true, claims = true)
+    @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     @Blocking
     public void show(@NotNull UpdateListener updateListener) {
         glfwShowWindow(pointer);
