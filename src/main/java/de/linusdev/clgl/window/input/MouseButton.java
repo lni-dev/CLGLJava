@@ -16,38 +16,34 @@
 
 package de.linusdev.clgl.window.input;
 
-import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import static de.linusdev.clgl.nat.glfw3.GLFW._glfwGetKeyName;
+public class MouseButton extends PressableImpl {
 
-@SuppressWarnings("unused")
-public class Key extends PressableImpl {
+    final int button;
+    final @Nullable StandardMouseButton name;
 
-    final int scancode;
-    final String name;
-
-    Key(
-            @NotNull InputManger manger,
-            int scancode
-    ) {
-        super(manger, InputType.KEYBOARD_KEY);
-        this.scancode = scancode;
-        this.name = _glfwGetKeyName(GLFWValues.Keys_US.GLFW_KEY_UNKNOWN, scancode);
+    public MouseButton(@NotNull InputManger manger, int button) {
+        super(manger, InputType.MOUSE_BUTTON);
+        this.button = button;
+        this.name = StandardMouseButton.translate(button);
     }
 
-    @Override
-    public String toString() {
-        return name + "(" + scancode + ")";
+    @SuppressWarnings("unused")
+    public MouseButton(@NotNull InputManger manger, StandardMouseButton button) {
+        super(manger, InputType.MOUSE_BUTTON);
+        this.button = button.getValue();
+        this.name = button;
     }
 
     @Override
     public boolean isPressed() {
-        return manager.isKeyPressed(scancode);
+        return manager.isMouseButtonPressed(this);
     }
 
     @Override
     public @NotNull Serializable toSerializable() {
-        return new Serializable(scancode, getType());
+        return new Serializable(button, getType());
     }
 }

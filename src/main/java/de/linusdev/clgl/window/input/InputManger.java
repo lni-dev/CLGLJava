@@ -25,16 +25,35 @@ import static de.linusdev.clgl.nat.glfw3.GLFW.glfwGetKeyScancode;
 @SuppressWarnings("unused")
 public interface InputManger {
 
-    boolean isPressed(int scancode);
+    boolean isKeyPressed(int scancode);
 
-    default boolean isPressed(@NotNull Key key) {
-        return isPressed(key.scancode);
+    default boolean isKeyPressed(@NotNull Key key) {
+        return isKeyPressed(key.scancode);
+    }
+
+    boolean isMouseButtonPressed(int button);
+
+    default boolean isMouseButtonPressed(@NotNull MouseButton button) {
+        return isMouseButtonPressed(button.button);
     }
 
     @NotNull Key getKey(int scancode);
 
     default @NotNull Key getUSKey(@MagicConstant(valuesFromClass = GLFWValues.Keys_US.class) int key) {
         return getKey(glfwGetKeyScancode(key));
+    }
+
+    default @NotNull MouseButton getMouseButton(@NotNull StandardMouseButton button) {
+        return getMouseButton(button.getValue());
+    }
+
+    @NotNull MouseButton getMouseButton(int button);
+
+    default @NotNull Pressable ofSerialized(@NotNull Pressable.Serializable serialized) {
+        return switch (serialized.type()) {
+            case KEYBOARD_KEY -> getKey(serialized.value());
+            case MOUSE_BUTTON -> getMouseButton(serialized.value());
+        };
     }
 
 }

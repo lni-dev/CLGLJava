@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glfw3.custom;
+package de.linusdev.clgl.window.input;
 
-import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
-import org.jetbrains.annotations.NotNull;
+public interface PressListener {
 
-public interface UpdateListener<W> {
-
-    @CallOnlyFromUIThread("glfw")
-    void update(@NotNull W window, @NotNull FrameInfo frameInfo);
+    void onPress();
 
 }

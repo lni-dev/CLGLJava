@@ -139,7 +139,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     @Blocking
-    public void show(@NotNull UpdateListener updateListener) {
+    public void show(@NotNull UpdateListener<GLFWWindow> updateListener) {
         glfwShowWindow(pointer);
 
         long frameStartMillis = System.currentTimeMillis();

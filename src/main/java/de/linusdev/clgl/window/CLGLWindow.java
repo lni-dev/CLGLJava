@@ -47,7 +47,7 @@ import java.util.List;
 import static de.linusdev.clgl.nat.glad.GLConstants.*;
 
 @SuppressWarnings("unused")
-public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
+public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, AutoCloseable {
 
     public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = UITaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
 
@@ -58,6 +58,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected final @NotNull BBInt2 size;
 
     protected @Nullable Thread uiThread = null;
+    protected @NotNull UpdateListener<CLGLWindow> updateListener;
 
     //Task queue
     protected final @NotNull UITaskQueue uiTaskQueue;
@@ -83,10 +84,12 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected final @NotNull MemoryObject uiImageBuffer;
 
 
-    public CLGLWindow(long maxQueuedTaskMillisPerFrame) {
+    public CLGLWindow(@NotNull UpdateListener<CLGLWindow> updateListener, long maxQueuedTaskMillisPerFrame) {
         this.glfwWindow = new GLFWWindow();
         this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
+
+        this.updateListener = updateListener;
 
         //Task queue
         this.uiTaskQueue = new UITaskQueue(this, maxQueuedTaskMillisPerFrame);
@@ -170,6 +173,8 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     public void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo) {
         uiTaskQueue.runQueuedTasks();
 
+        updateListener.update(this, frameInfo);
+
         if(renderKernel != null) {
             clQueue.enqueueAcquireGLObjects(glObjects, null, null);
             clQueue.enqueueNDRangeKernel(renderKernel, 2, null, globalWorkSize,
@@ -191,6 +196,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     }
 
+    @CallOnlyFromUIThread("glfw")
     public void setRenderKernel(@NotNull Kernel kernel) {
         this.renderKernel = kernel;
 
@@ -199,6 +205,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         kernel.setKernelArg(2, uiImageBuffer);
     }
 
+    @CallOnlyFromUIThread("glfw")
     public void setUiKernel(@NotNull Kernel kernel) {
         this.uiKernel = kernel;
 

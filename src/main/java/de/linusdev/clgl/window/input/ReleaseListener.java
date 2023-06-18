@@ -16,8 +16,8 @@
 
 package de.linusdev.clgl.window.input;
 
-public interface KeyPressListener {
+public interface ReleaseListener {
 
-    void onPress();
+    void onRelease();
 
 }

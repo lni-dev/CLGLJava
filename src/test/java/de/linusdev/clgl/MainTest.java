@@ -22,6 +22,7 @@ import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.clgl.window.CLGLWindow;
+import de.linusdev.clgl.window.input.Key;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
@@ -48,7 +49,7 @@ public class MainTest {
 
     @Test
     void testCLGLWindow() throws IOException, InterruptedException {
-        CLGLWindow window = new CLGLWindow(10);
+        CLGLWindow window = new CLGLWindow((window1, frameInfo) -> {}, 10);
 
         {
             Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
@@ -69,6 +70,9 @@ public class MainTest {
         }
 
         InputManger m = window.getInputManger();
+
+        Key key = m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_W);
+
 
         m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_E).addReleaseListener(() -> {
             System.out.println("E released :)");

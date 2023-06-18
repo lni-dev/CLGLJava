@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.input;
+package de.linusdev.clgl.window.ticker;
 
-public interface KeyReleaseListener {
-
-    void onRelease();
-
+public interface Tickable {
+    void tick();
 }

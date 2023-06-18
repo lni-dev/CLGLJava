@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glfw3.custom;
+package de.linusdev.clgl.window.input;
 
-import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import org.jetbrains.annotations.NotNull;
 
-public interface UpdateListener<W> {
+@SuppressWarnings("unused")
+public interface Pressable {
 
-    @CallOnlyFromUIThread("glfw")
-    void update(@NotNull W window, @NotNull FrameInfo frameInfo);
+    @NotNull InputManger getInputManager();
+
+    @NotNull InputType getType();
+
+    boolean isPressed();
+
+    void addPressListener(@NotNull PressListener listener);
+    void removePressListener(@NotNull PressListener listener);
+    void addReleaseListener(@NotNull ReleaseListener listener);
+    void removeReleaseListener(@NotNull ReleaseListener listener);
+
+    @NotNull Serializable toSerializable();
+
+    record Serializable (int value, @NotNull InputType type) implements java.io.Serializable {
+
+    }
 
 }
