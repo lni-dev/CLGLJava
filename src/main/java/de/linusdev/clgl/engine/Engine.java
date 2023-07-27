@@ -14,13 +14,27 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.queue;
+package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.window.CLGLWindow;
+import de.linusdev.clgl.window.queue.ReturnRunnable;
+import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.manager.AsyncManager;
 import org.jetbrains.annotations.NotNull;
 
-public interface UIRunnable<T> {
+@SuppressWarnings("unused")
+public interface Engine<GAME extends Game> {
 
-    T run(@NotNull CLGLWindow window);
+    void loadScene(@NotNull Scene<GAME> scene);
+
+    @NotNull GAME getGame();
+
+    @NotNull CLGLWindow getWindow();
+
+    @NotNull AsyncManager getAsyncManager();
+
+    <R> @NotNull Future<R, Engine<GAME>> runSupervised(@NotNull ReturnRunnable<R> runnable);
+
+    void runSupervised(@NotNull Runnable runnable);
 
 }

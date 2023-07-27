@@ -58,7 +58,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     protected final @NotNull BBInt2 size;
 
     protected @Nullable Thread uiThread = null;
-    protected @NotNull UpdateListener<CLGLWindow> updateListener;
+    protected @NotNull Handler handler;
 
     //Task queue
     protected final @NotNull UITaskQueue uiTaskQueue;
@@ -84,12 +84,12 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     protected final @NotNull MemoryObject uiImageBuffer;
 
 
-    public CLGLWindow(@NotNull UpdateListener<CLGLWindow> updateListener, long maxQueuedTaskMillisPerFrame) {
+    public CLGLWindow(@NotNull Handler handler, long maxQueuedTaskMillisPerFrame) {
         this.glfwWindow = new GLFWWindow();
         this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
 
-        this.updateListener = updateListener;
+        this.handler = handler;
 
         //Task queue
         this.uiTaskQueue = new UITaskQueue(this, maxQueuedTaskMillisPerFrame);
@@ -161,9 +161,9 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
         );
 
         glfwWindow.addFramebufferSizeListener((window, width, height) ->
-                uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, window1 ->
+                uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, () ->
                         {
-                            window1.updateSharedFramebuffer();
+                            this.updateSharedFramebuffer();
                             return Nothing.INSTANCE;
                         }
                 ));
@@ -173,7 +173,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     public void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo) {
         uiTaskQueue.runQueuedTasks();
 
-        updateListener.update(this, frameInfo);
+        handler.update0(this, frameInfo);
 
         if(renderKernel != null) {
             clQueue.enqueueAcquireGLObjects(glObjects, null, null);
@@ -197,20 +197,26 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     }
 
     @CallOnlyFromUIThread("glfw")
-    public void setRenderKernel(@NotNull Kernel kernel) {
+    public void setRenderKernel(@Nullable Kernel kernel) {
         this.renderKernel = kernel;
+        if(kernel == null) return;
 
         kernel.setKernelArg(0, sharedRenderBuffer);
         kernel.setKernelArg(1, size);
         kernel.setKernelArg(2, uiImageBuffer);
+
+        handler.setRenderKernelArgs(renderKernel);
     }
 
     @CallOnlyFromUIThread("glfw")
-    public void setUiKernel(@NotNull Kernel kernel) {
+    public void setUiKernel(@Nullable Kernel kernel) {
         this.uiKernel = kernel;
+        if(kernel == null) return;
 
         kernel.setKernelArg(0, uiImageBuffer);
         kernel.setKernelArg(1, size);
+
+        handler.setUIKernelArgs(uiKernel);
     }
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)

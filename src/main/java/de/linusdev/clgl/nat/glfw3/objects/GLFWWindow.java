@@ -148,7 +148,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
             //clear screen
             glClear(GL_COLOR_BUFFER_BIT);
 
-            updateListener.update(this, frameInfo);
+            updateListener.update0(this, frameInfo);
 
             //swap buffers and poll for events
             glfwSwapBuffers(pointer);

@@ -16,9 +16,14 @@
 
 package de.linusdev.clgl.api.misc.annos;
 
+import java.lang.annotation.*;
+
 /**
  * This Function may only be called from the ui thread.
  */
+@Documented
+@Retention(RetentionPolicy.CLASS)
+@Target({ElementType.METHOD})
 public @interface CallOnlyFromUIThread {
 
     /**

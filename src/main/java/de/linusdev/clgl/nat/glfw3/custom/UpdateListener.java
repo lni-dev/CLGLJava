@@ -17,11 +17,24 @@
 package de.linusdev.clgl.nat.glfw3.custom;
 
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.MustBeInvokedByOverriders;
+import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
 public interface UpdateListener<W> {
 
     @CallOnlyFromUIThread("glfw")
+    @ApiStatus.Internal
+    @MustBeInvokedByOverriders
+    @NonBlocking
+    default void update0(@NotNull W window, @NotNull FrameInfo frameInfo) {
+        update(window, frameInfo);
+    }
+
+    @CallOnlyFromUIThread("glfw")
+    @ApiStatus.OverrideOnly
+    @NonBlocking
     void update(@NotNull W window, @NotNull FrameInfo frameInfo);
 
 }

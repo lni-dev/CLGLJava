@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.ticker;
+package de.linusdev.clgl.engine.ticker;
+
+import org.jetbrains.annotations.NonBlocking;
 
 public interface Tickable {
+
+    @NonBlocking
     void tick();
 }

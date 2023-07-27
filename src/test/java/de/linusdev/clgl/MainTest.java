@@ -16,6 +16,8 @@
 
 package de.linusdev.clgl;
 
+import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
+import de.linusdev.clgl.window.Handler;
 import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.cl.objects.Program;
@@ -49,7 +51,22 @@ public class MainTest {
 
     @Test
     void testCLGLWindow() throws IOException, InterruptedException {
-        CLGLWindow window = new CLGLWindow((window1, frameInfo) -> {}, 10);
+        CLGLWindow window = new CLGLWindow(new Handler() {
+            @Override
+            public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
+
+            }
+
+            @Override
+            public void setUIKernelArgs(@NotNull Kernel uiKernel) {
+
+            }
+
+            @Override
+            public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
+
+            }
+        }, 10);
 
         {
             Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));

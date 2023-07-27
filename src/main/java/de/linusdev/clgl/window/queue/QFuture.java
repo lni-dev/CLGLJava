@@ -25,16 +25,16 @@ import org.jetbrains.annotations.NotNull;
 
 public class QFuture<T> extends CompletableFuture<T, CLGLWindow, CompletableTask<T, CLGLWindow>> {
 
-    protected final @NotNull UIRunnable<T> runnable;
+    protected final @NotNull ReturnRunnable<T> runnable;
 
-    public QFuture(@NotNull AsyncManager asyncManager, @NotNull UIRunnable<T> runnable) {
+    public QFuture(@NotNull AsyncManager asyncManager, @NotNull ReturnRunnable<T> runnable) {
         super(asyncManager);
         this.runnable = runnable;
     }
 
     public void run(@NotNull CLGLWindow window) {
         try {
-            T ret = runnable.run(window);
+            T ret = runnable.run();
             complete(ret, window, null);
         } catch (Throwable t) {
             complete(null, window, new ThrowableAsyncError(t));

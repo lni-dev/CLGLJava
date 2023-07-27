@@ -98,7 +98,7 @@ public class UITaskQueue {
     @SuppressWarnings("UnusedReturnValue")
     @CallFromAnyThread
     @NonBlocking
-    public <T> @NotNull QFuture<T> queueForExecution(int id, @NotNull UIRunnable<T> runnable) {
+    public <T> @NotNull QFuture<T> queueForExecution(int id, @NotNull ReturnRunnable<T> runnable) {
         QFuture<T> f = new QFuture<>(window, runnable);
         queue(id, f);
         return f;
