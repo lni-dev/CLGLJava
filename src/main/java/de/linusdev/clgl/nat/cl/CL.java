@@ -511,6 +511,8 @@ public class CL {
             @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
+        //TODO: size is actually wrong. offset is only used for the reading from the cl mem
+        //TODO: Just use a long instead for ptr
         check(_clEnqueueReadBuffer(
                 command_queue,
                 buffer,
@@ -545,6 +547,7 @@ public class CL {
             @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
+        //TODO: size is actually wrong. offset is only used for the writing to the cl mem
         check(_clEnqueueWriteBuffer(
                 command_queue,
                 buffer,

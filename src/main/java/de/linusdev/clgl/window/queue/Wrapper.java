@@ -50,10 +50,13 @@ public class Wrapper<T> {
         this.item = item;
     }
 
-    public synchronized void queueIfNull(@NotNull T item, @NotNull Queue<Wrapper<T>> queue) {
+    public synchronized boolean queueIfNull(@NotNull T item, @NotNull Queue<Wrapper<T>> queue) {
         if(this.item == null) {
             setItem(item);
             queue.offer(this);
+            return true;
         }
+
+        return false;
     }
 }

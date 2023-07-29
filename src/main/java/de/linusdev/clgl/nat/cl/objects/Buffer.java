@@ -18,8 +18,13 @@ package de.linusdev.clgl.nat.cl.objects;
 
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.clgl.nat.cl.custom.EventWaitList;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.nio.ByteBuffer;
 
 import static de.linusdev.clgl.nat.cl.CL.*;
 
@@ -45,6 +50,50 @@ public class Buffer extends MemoryObject {
         set(clCreateBuffer(context.getPointer(), clMemFlags, size));
     }
 
-    //TODO: enqueue read/write
+    @Contract("_, true, _, _, _, -> null; _, false, _, _, _, -> !null")
+    public @Nullable Event enqueueWriteBuffer(
+            @NotNull CommandQueue queue,
+            boolean blocking,
+            long offset,
+            @NotNull ByteBuffer data,
+            @Nullable EventWaitList eventWaitList
+            ) {
 
+        Event event = blocking ? null : new Event();
+
+        clEnqueueWriteBuffer(
+                queue.getPointer(),
+                get(),
+                blocking,
+                offset,
+                data,
+                eventWaitList,
+                event
+        );
+
+        return event;
+    }
+
+    @Contract("_, true, _, _, _, -> null; _, false, _, _, _, -> !null")
+    public @Nullable Event enqueueReadBuffer(
+            @NotNull CommandQueue queue,
+            boolean blocking,
+            long offset,
+            @NotNull ByteBuffer data,
+            @Nullable EventWaitList eventWaitList
+    ) {
+        Event event = blocking ? null : new Event();
+
+        clEnqueueReadBuffer(
+                queue.getPointer(),
+                get(),
+                blocking,
+                offset,
+                data,
+                eventWaitList,
+                event
+        );
+
+        return event;
+    }
 }

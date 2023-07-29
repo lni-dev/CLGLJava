@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.queue;
+package de.linusdev.clgl.engine;
 
-public interface ReturnRunnable<T> {
+import org.junit.jupiter.api.Test;
 
-    T run() throws Throwable;
+class EngineTest {
+
+    @Test
+    public void test() throws InterruptedException {
+        Engine<TestGame> engine = new EngineImpl<>(new TestGame());
+
+        engine.loadScene(new TestScene(engine));
+
+        Thread.sleep(10000);
+    }
 
 }

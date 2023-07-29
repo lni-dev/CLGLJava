@@ -27,6 +27,8 @@ import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
 import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
 import de.linusdev.clgl.nat.glad.custom.DebugMessageListener;
 import de.linusdev.clgl.nat.glfw3.custom.*;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.llist.LLinkedList;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NonBlocking;
@@ -46,6 +48,8 @@ import static de.linusdev.clgl.nat.glfw3.GLFW.*;
 
 @SuppressWarnings("unused")
 public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindow>, DebugMessageCallback {
+
+    private static final @NotNull LogInstance log = LLog.getLogInstance();
 
     private static final @NotNull StaticCallbackObjects<GLFWWindow> windows = new StaticCallbackObjects<>();
 

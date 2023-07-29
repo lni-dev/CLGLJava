@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.queue;
+package de.linusdev.clgl.api.misc.interfaces;
 
-public interface ReturnRunnable<T> {
+public interface TRunnable {
 
-    T run() throws Throwable;
-
+    void run() throws Throwable;
 }

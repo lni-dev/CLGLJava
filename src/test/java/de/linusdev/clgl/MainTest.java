@@ -51,53 +51,66 @@ public class MainTest {
 
     @Test
     void testCLGLWindow() throws IOException, InterruptedException {
-        CLGLWindow window = new CLGLWindow(new Handler() {
-            @Override
-            public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
+        var t = new Thread(() -> {
+            try {
+                CLGLWindow window = new CLGLWindow(new Handler() {
+                    @Override
+                    public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
 
+                    }
+
+                    @Override
+                    public void setUIKernelArgs(@NotNull Kernel uiKernel) {
+
+                    }
+
+                    @Override
+                    public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
+
+                    }
+                }, 10);
+
+                {
+                    Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
+                    var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
+                    fut.getResult();
+                    System.out.println("Build finished: " + program.getBuildLog(window.getClDevice()));
+                    Kernel kernel = new Kernel(program, "render");
+                    window.setRenderKernel(kernel);
+                }
+
+                {
+                    Program program = new Program(window.getClContext(), readFromResourceFile("ui.cl"));
+                    var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
+                    fut.getResult();
+                    System.out.println("Build finished (UI): " + program.getBuildLog(window.getClDevice()));
+                    Kernel kernel = new Kernel(program, "render");
+                    window.setUiKernel(kernel);
+                }
+
+                InputManger m = window.getInputManger();
+
+                Key key = m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_W);
+
+
+                m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_E).addReleaseListener(() -> {
+                    System.out.println("E released :)");
+                });
+
+                window.show();
+
+                window.close();
+            } catch (Throwable tt) {
+                tt.printStackTrace();
             }
 
-            @Override
-            public void setUIKernelArgs(@NotNull Kernel uiKernel) {
-
-            }
-
-            @Override
-            public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
-
-            }
-        }, 10);
-
-        {
-            Program program = new Program(window.getClContext(), readFromResourceFile("test.cl"));
-            var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
-            fut.getResult();
-            System.out.println("Build finished: " + program.getBuildLog(window.getClDevice()));
-            Kernel kernel = new Kernel(program, "render");
-            window.setRenderKernel(kernel);
-        }
-
-        {
-            Program program = new Program(window.getClContext(), readFromResourceFile("ui.cl"));
-            var fut = program.build("-cl-std=CL2.0", true, window.getClDevice());
-            fut.getResult();
-            System.out.println("Build finished (UI): " + program.getBuildLog(window.getClDevice()));
-            Kernel kernel = new Kernel(program, "render");
-            window.setUiKernel(kernel);
-        }
-
-        InputManger m = window.getInputManger();
-
-        Key key = m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_W);
-
-
-        m.getUSKey(GLFWValues.Keys_US.GLFW_KEY_E).addReleaseListener(() -> {
-            System.out.println("E released :)");
         });
 
-        window.show();
+        t.setDaemon(false);
+        t.start();
 
-        window.close();
+        Thread.sleep(5000);
+
     }
 
     @Test

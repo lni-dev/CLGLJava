@@ -27,6 +27,8 @@
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
     (JNIEnv* env, jclass clazz)
 {
+    if(JNI_UTILS != nullptr) return;
+
     JNI_UTILS = new JniUtils(env);
     printMethodId = env->GetStaticMethodID(clazz, "printInJava", "(Ljava/lang/String;)V");
     loadClass = clazz;
@@ -35,8 +37,9 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1close
         (JNIEnv* env, jclass clazz)
 {
-    delete JNI_UTILS;
-    JNI_UTILS = nullptr;
+    //This causes problems, when some threads are still working while another already called the close method
+    //delete JNI_UTILS;
+    //JNI_UTILS = nullptr;
 }
 
 

@@ -16,7 +16,7 @@
 
 package de.linusdev.clgl.engine;
 
-import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
+import de.linusdev.clgl.api.misc.interfaces.TRunnable;
 import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.engine.ticker.Ticker;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
@@ -40,31 +40,40 @@ import org.jetbrains.annotations.Nullable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-@SuppressWarnings("unused")
-public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tickable {
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
+public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable {
 
     private final static @NotNull LogInstance log = LLog.getLogInstance();
 
     private static final int LOAD_SCENE_TASK_ID = UITaskQueue.getUniqueTaskId("LOAD_SCENE");
 
-    private final @NotNull GAME game;
-    private final CLGLWindow window;
+    private final @NotNull G game;
+    private final @NotNull UIThread<G> uiThread;
+    private final @NotNull CLGLWindow window;
     private final @NotNull Executor executor = Executors.newWorkStealingPool(4);
     private final @NotNull Ticker ticker;
 
 
-    private final @NotNull SyncVar<@Nullable Scene<GAME>> currentScene;
-    private final @NotNull SyncVar<@Nullable CompletableFuture<Void, Scene<GAME>, ?>> sceneLoaded;
+    private final @NotNull SyncVar<@Nullable Scene<G>> currentScene;
+    private final @NotNull SyncVar<@Nullable CompletableFuture<Nothing, Scene<G>, ?>> sceneLoaded;
 
-    public EngineImpl(@NotNull GAME game) {
+    public EngineImpl(@NotNull G game) {
         this.game = game;
-        this.window = new CLGLWindow(this, 5);
-        this.ticker = new Ticker(this, game.getMillisPerTick());
-        if(game.getMillisPerTick() >= 0L)
-            ticker.start();
 
         this.currentScene = SyncVar.createSyncVar();
         this.sceneLoaded = SyncVar.createSyncVar();
+
+        this.uiThread = new UIThread<>(this, this);
+
+        try {
+            this.window = this.uiThread.create().getResult();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.ticker = new Ticker(this, game.getMillisPerTick());
+        if(game.getMillisPerTick() >= 0L)
+            ticker.start();
     }
 
     /*
@@ -72,77 +81,91 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
      */
 
     @Override
-    public void loadScene(@NotNull Scene<GAME> scene) {
+    public @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene) {
         sceneLoaded.doSynchronised(sceneLoaded -> {
+
             var oldLoadFut = sceneLoaded.get();
 
             if(oldLoadFut != null && !oldLoadFut.isDone())
                 throw new IllegalStateException("A scene is already loading.");
 
-            var loadFut = CompletableFuture.<Void, Scene<GAME>>create(this.getAsyncManager());
+            var loadFut = CompletableFuture.<Nothing, Scene<G>>create(this.getAsyncManager());
             sceneLoaded.set(loadFut);
+        });
 
+        var loadFut = sceneLoaded.get();
+        assert loadFut != null;
 
-            KernelSourceInfo info;
-            Future<Kernel, Nothing> renderKernelFuture, uiKernelFuture;
+        loadFut.then((result, secondary, error) -> {
+            if(error != null)
+                log.logThrowable(error.asThrowable());
+        });
 
-            info = scene.getRenderKernelInfo();
-            renderKernelFuture = info != null ? info.loadKernel(this) : null;
+        Helper.loadKernels(this, scene.getLoadingRenderKernelInfo(), scene.getLoadingUIKernelInfo()).then(
+                (loadingKernels, secondary, error) -> {
 
-            info = scene.getUIKernelInfo();
-            uiKernelFuture = info != null ? info.loadKernel(this) : null;
+                    if (error != null) {
+                        loadFut.complete(null, scene, error);
+                        return;
+                    }
 
-
-            runSupervised(() -> {
-                try {
-                    Kernel renderKernel, uiKernel;
-                    if(renderKernelFuture != null) {
-                        var res = renderKernelFuture.get();
-                        if(res.hasError()) {
-                            loadFut.complete(null, scene, res.getError());
-                            return;
-                        }
-                        renderKernel = res.getResult();
-                    } else renderKernel = null;
-
-                    if(uiKernelFuture != null) {
-                        var res = uiKernelFuture.get();
-                        if(res.hasError()) {
-                            loadFut.complete(null, scene, res.getError());
-                            return;
-                        }
-                        uiKernel = res.getResult();
-                    } else uiKernel = null;
-
-                    window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
-                        //Set/Reset render kernel
-                        window.setRenderKernel(renderKernel);
-
-                        //Set/Reset ui kernel
-                        window.setUiKernel(uiKernel);
-
+                    var uiTaskFut = window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
                         //switch scene and unload old scene
                         currentScene.doSynchronised(v -> {
                             var oldScene = v.get();
                             v.set(scene);
 
-                            if(oldScene != null)
+                            if (oldScene != null)
                                 oldScene.unload0();
                         });
 
-                        // Load only after the kernels have been set.
-                        scene.load0().then(loadFut::complete).then((result, secondary, error) -> {
-                            scene.start();
-                            scene.loaded.set(true);
-                        });
+                        //Set/Reset loading kernels
+                        window.setRenderKernel(loadingKernels.renderKernel);
+                        window.setUiKernel(loadingKernels.uiKernel);
 
                         return null;
                     });
-                } catch (InterruptedException ignored) {
-                }
-            });
 
-        });
+                    var sceneLoadFut = scene.load0();
+
+                    // Start loading the normal kernels
+                    Helper.loadKernels(this, scene.getRenderKernelInfo(), scene.getUIKernelInfo())
+                            .then((normalKernels, secondary1, error1) -> {
+
+                                if (error1 != null) {
+                                    loadFut.complete(null, scene, error1);
+                                    return;
+                                }
+
+                                runSupervised(() -> {
+                                    uiTaskFut.get(); //make sure loading kernels are set
+
+                                    sceneLoadFut.then((result2, secondary2, error2) -> {
+                                        if (error2 != null) {
+                                            loadFut.complete(null, scene, error2);
+                                            return;
+                                        }
+
+                                        window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
+
+                                            //Set/Reset normal kernels
+                                            window.setRenderKernel(normalKernels.renderKernel);
+                                            window.setUiKernel(normalKernels.uiKernel);
+
+                                            scene.start();
+                                            scene.loaded.set(true);
+                                            loadFut.complete(Nothing.INSTANCE, scene, null);
+
+                                            return null;
+                                        });
+
+                                    });
+                                });
+                            });
+
+                });
+
+        return loadFut;
     }
 
     /*
@@ -152,7 +175,7 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
     @Override
     @NonBlocking
     public void tick() {
-        Scene<GAME> scene = currentScene.get();
+        Scene<G> scene = currentScene.get();
         if(scene != null && scene.loaded.get())
             scene.tick();
 
@@ -160,7 +183,7 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
 
     @Override
     public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
-        Scene<GAME> scene = currentScene.get();
+        Scene<G> scene = currentScene.get();
         if(scene != null) {
             scene.update0(this, frameInfo);
         }
@@ -169,23 +192,32 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
 
     @Override
     public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
-        Scene<GAME> scene = currentScene.get();
-        if(scene != null) {
+        Scene<G> scene = currentScene.get();
+        if(scene == null) return;
+
+        if(scene.loaded.get())
             scene.setRenderKernelArgs(renderKernel);
-        }
+        else
+            scene.setLoadingRenderKernelArgs(renderKernel);
+
     }
 
     @Override
     public void setUIKernelArgs(@NotNull Kernel uiKernel) {
-        Scene<GAME> scene = currentScene.get();
-        if(scene != null) {
+        log.logDebug("Set UI kernel args: scence: " + currentScene.get());
+        Scene<G> scene = currentScene.get();
+        if(scene == null) return;
+
+        if(scene.loaded.get())
             scene.setUIKernelArgs(uiKernel);
-        }
+        else
+            scene.setLoadingUIKernelArgs(uiKernel);
+
     }
 
     @Override
-    public @NotNull <R> Future<R, Engine<GAME>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
-        var future = CompletableFuture.<R, Engine<GAME>>create(getAsyncManager());
+    public @NotNull <R> Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
+        var future = CompletableFuture.<R, Engine<G>>create(getAsyncManager());
         executor.execute(() -> {
             try {
                 future.complete(runnable.run(), this, null);
@@ -198,7 +230,7 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
     }
 
     @Override
-    public void runSupervised(@NotNull Runnable runnable) {
+    public void runSupervised(@NotNull TRunnable runnable) {
         executor.execute(() -> {
             try {
                 runnable.run();
@@ -214,7 +246,7 @@ public class EngineImpl<GAME extends Game> implements Engine<GAME>, Handler, Tic
      */
 
     @Override
-    public @NotNull GAME getGame() {
+    public @NotNull G getGame() {
         return game;
     }
 

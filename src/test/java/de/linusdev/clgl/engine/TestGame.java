@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.queue;
+package de.linusdev.clgl.engine;
 
-public interface ReturnRunnable<T> {
-
-    T run() throws Throwable;
-
+public class TestGame implements Game {
+    @Override
+    public long getMillisPerTick() {
+        return 2000;
+    }
 }

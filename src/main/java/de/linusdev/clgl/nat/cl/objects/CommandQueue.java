@@ -85,4 +85,8 @@ public class CommandQueue implements AutoCloseable {
         }
 
     }
+
+    public long getPointer() {
+        return pointer;
+    }
 }

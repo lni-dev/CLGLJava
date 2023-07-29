@@ -17,13 +17,17 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
+import de.linusdev.clgl.api.types.bytebuffer.BBFloat1;
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
 import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.window.Handler;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import org.jetbrains.annotations.*;
 
@@ -35,12 +39,22 @@ public abstract class Scene<GAME extends Game> implements
         Tickable
 {
 
+    private final static LogInstance log = LLog.getLogInstance();
+
+    public static final KernelSourceInfo LOADING_UI_KERNEL_INFO = KernelSourceInfo.ofUTF8StringResource(KernelSourceInfo.class,
+            "kernels/loading-ui.cl", "render");
+
+    public static final KernelSourceInfo LOADING_RENDER_KERNEL_INFO = KernelSourceInfo.ofUTF8StringResource(KernelSourceInfo.class,
+            "kernels/loading-render.cl", "render");
+
     private final @NotNull Engine<GAME> engine;
 
     protected final @NotNull AtomicBoolean loaded = new AtomicBoolean(false);
+    protected final @NotNull BBFloat1 loadingPercent = new BBFloat1(true);
 
     protected Scene(@NotNull Engine<GAME> engine) {
         this.engine = engine;
+        this.loadingPercent.set(0.0f);
     }
 
 
@@ -49,6 +63,14 @@ public abstract class Scene<GAME extends Game> implements
     abstract @Nullable KernelSourceInfo getUIKernelInfo();
 
     abstract @Nullable KernelSourceInfo getRenderKernelInfo();
+
+    @NotNull KernelSourceInfo getLoadingUIKernelInfo() {
+        return LOADING_UI_KERNEL_INFO;
+    }
+
+    @NotNull KernelSourceInfo getLoadingRenderKernelInfo() {
+        return LOADING_RENDER_KERNEL_INFO;
+    }
 
     /**
      * @see Handler#setRenderKernelArgs(Kernel)
@@ -59,6 +81,23 @@ public abstract class Scene<GAME extends Game> implements
      * @see Handler#setUIKernelArgs(Kernel) (Kernel)
      */
     abstract void setUIKernelArgs(@NotNull Kernel uiKernel);
+
+    /**
+     * @see Handler#setRenderKernelArgs(Kernel)
+     */
+    @SuppressWarnings("unused")
+    void setLoadingRenderKernelArgs(@NotNull Kernel renderKernel) {
+
+    }
+
+    /**
+     * @see Handler#setUIKernelArgs(Kernel) (Kernel)
+     */
+    void setLoadingUIKernelArgs(@NotNull Kernel uiKernel) {
+        log.logDebug("setLoadingUIKernelArgs");
+        //TODO: percent must be updated when changed
+        uiKernel.setKernelArg(2, loadingPercent);
+    }
 
     /**
      * Load required resources, textures, etc for the current scene
@@ -103,13 +142,13 @@ public abstract class Scene<GAME extends Game> implements
 
     @ApiStatus.Internal
     @NonBlocking
-    @NotNull Future<Void, Scene<GAME>> load0() {
-        var future = CompletableFuture.<Void, Scene<GAME>>create(engine.getAsyncManager());
+    @NotNull Future<Nothing, Scene<GAME>> load0() {
+        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager());
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             load();
-            future.complete(null, this, null);
+            future.complete(Nothing.INSTANCE, this, null);
         });
 
         return future;
@@ -118,16 +157,22 @@ public abstract class Scene<GAME extends Game> implements
     @SuppressWarnings("UnusedReturnValue")
     @ApiStatus.Internal
     @NonBlocking
-    @NotNull Future<Void, Scene<GAME>> unload0() {
-        var future = CompletableFuture.<Void, Scene<GAME>>create(engine.getAsyncManager());
+    @NotNull Future<Nothing, Scene<GAME>> unload0() {
+        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager());
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             unload();
-            future.complete(null, this, null);
+            future.complete(Nothing.INSTANCE, this, null);
         });
 
         return future;
+    }
+
+    @Override
+    public void update0(@NotNull Engine<GAME> window, @NotNull FrameInfo frameInfo) {
+
+        UpdateListener.super.update0(window, frameInfo);
     }
 
     @NotNull

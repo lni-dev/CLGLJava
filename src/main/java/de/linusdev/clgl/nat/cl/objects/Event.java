@@ -23,6 +23,9 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings("unused")
 public class Event extends BBLong1 {
 
+    /**
+     * Constructor for {@link Event}. Automatically allocates a direct buffer.
+     */
     public Event() {
         super(true);
     }

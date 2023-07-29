@@ -19,6 +19,8 @@ package de.linusdev.clgl.window.queue;
 import de.linusdev.clgl.api.misc.annos.CallFromAnyThread;
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.clgl.window.CLGLWindow;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import org.jetbrains.annotations.*;
 
 import java.util.Queue;
@@ -26,6 +28,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public class UITaskQueue {
+
+    @SuppressWarnings("unused")
+    private final static LogInstance log = LLog.getLogInstance();
 
     public static final int NO_TASK_ID = -1;
     public static final int MAX_TASK_ID = 256;
@@ -65,7 +70,10 @@ public class UITaskQueue {
     @ApiStatus.Internal
     public void queue(int id, @NotNull QFuture<?> future) {
         if(id > 0 && id < wrappers.length()) {
-            wrappers.get(id).queueIfNull(future, taskQueue);
+            if(!wrappers.get(id).queueIfNull(future, taskQueue)) {
+                //the same task has already been queued. So cancel this future.
+                future.cancel();
+            }
         } else {
             taskQueue.offer(new Wrapper<>(id, future));
         }

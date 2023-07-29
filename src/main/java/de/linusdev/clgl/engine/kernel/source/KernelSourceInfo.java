@@ -17,6 +17,7 @@
 package de.linusdev.clgl.engine.kernel.source;
 
 import de.linusdev.clgl.engine.Engine;
+import de.linusdev.clgl.nat.cl.CLException;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.lutils.async.Future;
@@ -70,7 +71,7 @@ public interface KernelSourceInfo {
                 ) {
                     String line;
                     while ((line = reader.readLine()) != null)
-                        src.append(line);
+                        src.append(line).append("\n");
                 }
                 return src.toString();
             }
@@ -103,21 +104,26 @@ public interface KernelSourceInfo {
     default @NotNull Future<Kernel, Nothing> loadKernel(@NotNull Engine<?> engine) {
         var future = CompletableFuture.<Kernel, Nothing>create(engine.getAsyncManager());
 
-        new Thread(() -> {
+        engine.runSupervised(() -> {
             try {
                 if(isUTF8Format()) {
                     Program program = new Program(engine.getWindow().getClContext(), getSourceString());
                     //TODO: build options
-                    program.build("", false, engine.getWindow().getClDevice());
+                    try {
+                        program.build("-cl-std=CL2.0", false, engine.getWindow().getClDevice());
+                    } catch (CLException clException) {
+                        System.out.println(program.getBuildLog(engine.getWindow().getClDevice()));
+                        future.complete(null, Nothing.INSTANCE, new ThrowableAsyncError(clException));
+                        return;
+                    }
+
                     future.complete(new Kernel(program, getKernelName()), Nothing.INSTANCE, null);
                 }
-
-
 
             } catch (IOException e) {
                 future.complete(null, Nothing.INSTANCE, new ThrowableAsyncError(e));
             }
-        }).start();
+        });
 
         return future;
     }

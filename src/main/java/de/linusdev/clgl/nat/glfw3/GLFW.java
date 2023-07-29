@@ -19,6 +19,7 @@ package de.linusdev.clgl.nat.glfw3;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.nat.glfw3.custom.ErrorCallback;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.llog.LLog;
 import de.linusdev.lutils.llist.LLinkedList;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -33,6 +34,7 @@ public class GLFW {
 
     protected static final @NotNull LLinkedList<ErrorCallback> errorCallbacks = new LLinkedList<>();
     protected static final @NotNull ErrorCallback staticErrorCallback = (error, description) -> {
+        LLog.getLogInstance().logError(description);
         for(ErrorCallback callback : errorCallbacks)
             callback.onError(error, description);
     };

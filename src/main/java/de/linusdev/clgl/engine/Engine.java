@@ -16,25 +16,27 @@
 
 package de.linusdev.clgl.engine;
 
+import de.linusdev.clgl.api.misc.interfaces.TRunnable;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.queue.ReturnRunnable;
 import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
-public interface Engine<GAME extends Game> {
+@SuppressWarnings({"unused", "UnusedReturnValue"})
+public interface Engine<G extends Game> {
 
-    void loadScene(@NotNull Scene<GAME> scene);
+    @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene);
 
-    @NotNull GAME getGame();
+    @NotNull G getGame();
 
     @NotNull CLGLWindow getWindow();
 
     @NotNull AsyncManager getAsyncManager();
 
-    <R> @NotNull Future<R, Engine<GAME>> runSupervised(@NotNull ReturnRunnable<R> runnable);
+    <R> @NotNull Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable);
 
-    void runSupervised(@NotNull Runnable runnable);
+    void runSupervised(@NotNull TRunnable runnable);
 
 }
