@@ -28,7 +28,7 @@ public class QFuture<T> extends CompletableFuture<T, CLGLWindow, CompletableTask
     protected final @NotNull ReturnRunnable<T> runnable;
 
     public QFuture(@NotNull AsyncManager asyncManager, @NotNull ReturnRunnable<T> runnable) {
-        super(asyncManager);
+        super(asyncManager, false);
         this.runnable = runnable;
     }
 

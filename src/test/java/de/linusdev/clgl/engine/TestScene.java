@@ -17,15 +17,15 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
-import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
+import de.linusdev.clgl.window.args.KernelView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TestScene extends Scene<TestGame> {
     protected TestScene(@NotNull Engine<TestGame> engine) {
         super(engine);
-        loadingPercent.set(.5f);
+        loadingPercent.set(.0f);
     }
 
     @Override
@@ -39,12 +39,12 @@ public class TestScene extends Scene<TestGame> {
     }
 
     @Override
-    void setRenderKernelArgs(@NotNull Kernel renderKernel) {
+    void setRenderKernelArgs(@NotNull KernelView renderKernel) {
         System.out.println("setRenderKernelArgs");
     }
 
     @Override
-    void setUIKernelArgs(@NotNull Kernel uiKernel) {
+    void setUIKernelArgs(@NotNull KernelView uiKernel) {
         System.out.println("setUIKernelArgs");
     }
 
@@ -52,8 +52,13 @@ public class TestScene extends Scene<TestGame> {
     protected void load() {
         System.out.println("load");
         try {
-            Thread.sleep(2000);
-
+            final long step = 10L;
+            final long time = 1_000L;
+            for(long waited = 0; waited < time; waited+=step) {
+                Thread.sleep(step);
+                loadingPercent.set(((float) waited) / ((float) time));
+                loadingPercent.modified();
+            }
 
         } catch (Throwable t) {
             t.printStackTrace();

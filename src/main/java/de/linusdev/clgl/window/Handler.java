@@ -18,6 +18,7 @@ package de.linusdev.clgl.window;
 
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
+import de.linusdev.clgl.window.args.KernelView;
 import org.jetbrains.annotations.NotNull;
 
 public interface Handler extends UpdateListener<CLGLWindow> {
@@ -28,14 +29,14 @@ public interface Handler extends UpdateListener<CLGLWindow> {
      * @param renderKernel the render kernel
      * @see CLGLWindow#setRenderKernel(Kernel) 
      */
-    void setRenderKernelArgs(@NotNull Kernel renderKernel);
+    void setRenderKernelArgs(@NotNull KernelView renderKernel);
 
     /**
      * Called if the ui kernel args must be set (again). <br>
-     * Argument 0, 1 and 2 are already set.
+     * Argument 0 and 1 are already set.
      * @param uiKernel the ui kernel
      * @see CLGLWindow#setUiKernel(Kernel)
      */
-    void setUIKernelArgs(@NotNull Kernel uiKernel);
+    void setUIKernelArgs(@NotNull KernelView uiKernel);
     
 }

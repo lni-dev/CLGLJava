@@ -102,7 +102,7 @@ public interface KernelSourceInfo {
     @NotNull String getKernelName();
 
     default @NotNull Future<Kernel, Nothing> loadKernel(@NotNull Engine<?> engine) {
-        var future = CompletableFuture.<Kernel, Nothing>create(engine.getAsyncManager());
+        var future = CompletableFuture.<Kernel, Nothing>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             try {

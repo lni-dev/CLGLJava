@@ -39,7 +39,7 @@ public class ProgramBuildFuture
             @NotNull Program program,
             @NotNull ProgramBuild build
     ) {
-        super(GlobalAsyncManager.getInstance());
+        super(GlobalAsyncManager.getInstance(), false);
         this.id = buildFutures.add(this);
         this.program = program;
         this.build = build;

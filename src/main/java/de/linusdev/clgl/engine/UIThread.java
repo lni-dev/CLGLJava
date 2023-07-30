@@ -39,7 +39,7 @@ public class UIThread<G extends Game> extends Thread implements HasEngine<G> {
         setDaemon(false);
         this.engine = engine;
         this.handler = handler;
-        this.future = CompletableFuture.create(engine.getAsyncManager());
+        this.future = CompletableFuture.create(engine.getAsyncManager(), false);
     }
 
     public @NotNull Future<CLGLWindow, UIThread<G>> create() {

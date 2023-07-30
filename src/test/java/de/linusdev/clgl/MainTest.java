@@ -18,6 +18,7 @@ package de.linusdev.clgl;
 
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.Handler;
+import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.cl.objects.Program;
@@ -55,12 +56,12 @@ public class MainTest {
             try {
                 CLGLWindow window = new CLGLWindow(new Handler() {
                     @Override
-                    public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
+                    public void setRenderKernelArgs(@NotNull KernelView renderKernel) {
 
                     }
 
                     @Override
-                    public void setUIKernelArgs(@NotNull Kernel uiKernel) {
+                    public void setUIKernelArgs(@NotNull KernelView uiKernel) {
 
                     }
 

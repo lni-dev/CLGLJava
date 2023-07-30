@@ -20,10 +20,11 @@ import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.clgl.api.types.bytebuffer.BBFloat1;
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
 import de.linusdev.clgl.engine.ticker.Tickable;
-import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.window.Handler;
+import de.linusdev.clgl.window.args.KernelView;
+import de.linusdev.clgl.window.args.ModifiableStructArgument;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
@@ -39,6 +40,7 @@ public abstract class Scene<GAME extends Game> implements
         Tickable
 {
 
+    @SuppressWarnings("unused")
     private final static LogInstance log = LLog.getLogInstance();
 
     public static final KernelSourceInfo LOADING_UI_KERNEL_INFO = KernelSourceInfo.ofUTF8StringResource(KernelSourceInfo.class,
@@ -73,30 +75,28 @@ public abstract class Scene<GAME extends Game> implements
     }
 
     /**
-     * @see Handler#setRenderKernelArgs(Kernel)
+     * @see Handler#setRenderKernelArgs(KernelView)
      */
-    abstract void setRenderKernelArgs(@NotNull Kernel renderKernel);
+    abstract void setRenderKernelArgs(@NotNull KernelView renderKernel);
 
     /**
-     * @see Handler#setUIKernelArgs(Kernel) (Kernel)
+     * @see Handler#setUIKernelArgs(KernelView)
      */
-    abstract void setUIKernelArgs(@NotNull Kernel uiKernel);
+    abstract void setUIKernelArgs(@NotNull KernelView uiKernel);
 
     /**
-     * @see Handler#setRenderKernelArgs(Kernel)
+     * @see Handler#setRenderKernelArgs(KernelView)
      */
     @SuppressWarnings("unused")
-    void setLoadingRenderKernelArgs(@NotNull Kernel renderKernel) {
+    void setLoadingRenderKernelArgs(@NotNull KernelView renderKernel) {
 
     }
 
     /**
-     * @see Handler#setUIKernelArgs(Kernel) (Kernel)
+     * @see Handler#setUIKernelArgs(KernelView) (Kernel)
      */
-    void setLoadingUIKernelArgs(@NotNull Kernel uiKernel) {
-        log.logDebug("setLoadingUIKernelArgs");
-        //TODO: percent must be updated when changed
-        uiKernel.setKernelArg(2, loadingPercent);
+    void setLoadingUIKernelArgs(@NotNull KernelView uiKernel) {
+        uiKernel.setKernelArg(2, new ModifiableStructArgument(loadingPercent));
     }
 
     /**
@@ -143,7 +143,7 @@ public abstract class Scene<GAME extends Game> implements
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> load0() {
-        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager());
+        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
@@ -158,7 +158,7 @@ public abstract class Scene<GAME extends Game> implements
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> unload0() {
-        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager());
+        var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread

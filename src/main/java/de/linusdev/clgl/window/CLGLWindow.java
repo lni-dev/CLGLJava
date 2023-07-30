@@ -30,6 +30,8 @@ import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.clgl.window.args.AutoUpdateArgManager;
+import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.input.InputManagerImpl;
 import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.window.queue.UITaskQueue;
@@ -71,6 +73,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     protected @Nullable Kernel renderKernel;
     protected @Nullable Kernel uiKernel;
     protected final @NotNull BBLong2 globalWorkSize;
+    protected final @NotNull AutoUpdateArgManager argumentManager;
 
     //Shared framebuffer
     protected GLFrameBuffer glFrameBuffer;
@@ -167,11 +170,15 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
                             return Nothing.INSTANCE;
                         }
                 ));
+
+        argumentManager = new AutoUpdateArgManager();
     }
 
     @Override
     public void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo) {
         uiTaskQueue.runQueuedTasks();
+
+        argumentManager.check();
 
         handler.update0(this, frameInfo);
 
@@ -197,26 +204,49 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     }
 
     @CallOnlyFromUIThread("glfw")
-    public void setRenderKernel(@Nullable Kernel kernel) {
-        this.renderKernel = kernel;
-        if(kernel == null) return;
+    public void clearKernels() {
+        this.renderKernel = null;
+        this.uiKernel = null;
+        this.argumentManager.reset();
+    }
 
+    @CallOnlyFromUIThread("glfw")
+    public void setRenderKernel(@Nullable Kernel kernel) {
+        if(this.renderKernel != null)
+            throw new IllegalStateException("clearKernels must be called before setting the kernels again.");
+        if(kernel == null)
+            return;
+
+        this.renderKernel = kernel;
+
+        setBaseRenderKernelArgs(kernel);
+
+        handler.setRenderKernelArgs(new KernelView(renderKernel, this, argumentManager));
+    }
+
+    protected void setBaseRenderKernelArgs(@NotNull Kernel kernel) {
         kernel.setKernelArg(0, sharedRenderBuffer);
         kernel.setKernelArg(1, size);
         kernel.setKernelArg(2, uiImageBuffer);
-
-        handler.setRenderKernelArgs(renderKernel);
     }
 
     @CallOnlyFromUIThread("glfw")
     public void setUiKernel(@Nullable Kernel kernel) {
-        this.uiKernel = kernel;
-        if(kernel == null) return;
+        if(this.uiKernel != null)
+            throw new IllegalStateException("clearKernels must be called before setting the kernels again.");
+        if(kernel == null)
+            return;
 
+        this.uiKernel = kernel;
+
+        setBaseUIKernelArgs(kernel);
+
+        handler.setUIKernelArgs(new KernelView(uiKernel, this, argumentManager));
+    }
+
+    protected void setBaseUIKernelArgs(@NotNull Kernel kernel) {
         kernel.setKernelArg(0, uiImageBuffer);
         kernel.setKernelArg(1, size);
-
-        handler.setUIKernelArgs(uiKernel);
     }
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
@@ -242,10 +272,10 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
         );
 
         if(renderKernel != null)
-            setRenderKernel(renderKernel);
+            setBaseRenderKernelArgs(renderKernel);
 
         if(uiKernel != null)
-            setUiKernel(uiKernel);
+            setBaseUIKernelArgs(uiKernel);
     }
 
     @Override

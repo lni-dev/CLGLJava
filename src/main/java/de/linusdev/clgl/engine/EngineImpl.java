@@ -19,10 +19,10 @@ package de.linusdev.clgl.engine;
 import de.linusdev.clgl.api.misc.interfaces.TRunnable;
 import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.engine.ticker.Ticker;
-import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.Handler;
+import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.queue.ReturnRunnable;
 import de.linusdev.clgl.window.queue.UITaskQueue;
 import de.linusdev.llog.LLog;
@@ -89,7 +89,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
             if(oldLoadFut != null && !oldLoadFut.isDone())
                 throw new IllegalStateException("A scene is already loading.");
 
-            var loadFut = CompletableFuture.<Nothing, Scene<G>>create(this.getAsyncManager());
+            var loadFut = CompletableFuture.<Nothing, Scene<G>>create(this.getAsyncManager(), false);
             sceneLoaded.set(loadFut);
         });
 
@@ -120,6 +120,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                         });
 
                         //Set/Reset loading kernels
+                        window.clearKernels();
                         window.setRenderKernel(loadingKernels.renderKernel);
                         window.setUiKernel(loadingKernels.uiKernel);
 
@@ -149,6 +150,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                                         window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
 
                                             //Set/Reset normal kernels
+                                            window.clearKernels();
                                             window.setRenderKernel(normalKernels.renderKernel);
                                             window.setUiKernel(normalKernels.uiKernel);
 
@@ -191,7 +193,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     }
 
     @Override
-    public void setRenderKernelArgs(@NotNull Kernel renderKernel) {
+    public void setRenderKernelArgs(@NotNull KernelView renderKernel) {
         Scene<G> scene = currentScene.get();
         if(scene == null) return;
 
@@ -203,8 +205,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     }
 
     @Override
-    public void setUIKernelArgs(@NotNull Kernel uiKernel) {
-        log.logDebug("Set UI kernel args: scence: " + currentScene.get());
+    public void setUIKernelArgs(@NotNull KernelView uiKernel) {
         Scene<G> scene = currentScene.get();
         if(scene == null) return;
 
@@ -217,7 +218,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
 
     @Override
     public @NotNull <R> Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
-        var future = CompletableFuture.<R, Engine<G>>create(getAsyncManager());
+        var future = CompletableFuture.<R, Engine<G>>create(getAsyncManager(), false);
         executor.execute(() -> {
             try {
                 future.complete(runnable.run(), this, null);

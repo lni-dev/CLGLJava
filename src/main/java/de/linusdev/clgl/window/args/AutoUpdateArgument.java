@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.engine;
+package de.linusdev.clgl.window.args;
 
-import org.junit.jupiter.api.Test;
+import de.linusdev.clgl.nat.cl.objects.Kernel;
+import org.jetbrains.annotations.NonBlocking;
+import org.jetbrains.annotations.NotNull;
 
-class EngineTest {
+public interface AutoUpdateArgument {
 
-    @Test
-    public void test() throws InterruptedException {
-        Engine<TestGame> engine = new EngineImpl<>(new TestGame());
+    @NonBlocking
+    void check();
 
-        engine.loadScene(new TestScene(engine));
+    void setArgumentInfo(@NotNull ArgumentInfo info);
 
-        Thread.sleep(20000);
-    }
+    void applyToKernel(@NotNull Kernel kernel, int index);
 
 }
