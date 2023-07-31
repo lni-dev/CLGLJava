@@ -30,12 +30,18 @@ public class TestScene extends Scene<TestGame> {
 
     @Override
     @Nullable KernelSourceInfo getUIKernelInfo() {
-        return null;
+        return KernelSourceInfo.ofUTF8StringResource(TestScene.class,
+                "enginetest/ui.cl",
+                "render"
+        );
     }
 
     @Override
     @Nullable KernelSourceInfo getRenderKernelInfo() {
-        return null;
+        return KernelSourceInfo.ofUTF8StringResource(TestScene.class,
+                "enginetest/render.cl",
+                "render"
+        );
     }
 
     @Override

@@ -210,7 +210,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseMemObject
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clEnqueueReadBuffer
- * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JJZJJJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer(
         JNIEnv* env, jclass clazz,
@@ -219,13 +219,11 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer(
         jboolean blocking_read,
         jlong offset,
         jlong size,
-        jobject p_ptr,
+        jlong ptr,
         jint num_events_in_wait_list,
         jobject p_event_wait_list,
         jobject p_event
 ) {
-
-    void* ptr = env->GetDirectBufferAddress(p_ptr);
     void* event_wait_list = GET_BUF_ADDRESS_NULLABLE(p_event_wait_list);
     void* event = GET_BUF_ADDRESS_NULLABLE(p_event);
 
@@ -235,7 +233,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer(
             blocking_read == JNI_TRUE ? CL_TRUE : CL_FALSE,
             offset,
             size,
-            ptr,
+            reinterpret_cast<void*>(ptr),
             num_events_in_wait_list,
             reinterpret_cast<cl_event*>(event_wait_list),
             reinterpret_cast<cl_event*>(event)
@@ -245,21 +243,20 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer(
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clEnqueueWriteBuffer
- * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JJZJJJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueWriteBuffer(JNIEnv* env, jclass clazz,
-         jlong command_queue,
-         jlong buffer,
-         jboolean blocking_write,
-         jlong offset,
-         jlong size,
-         jobject p_ptr,
-         jint num_events_in_wait_list,
-         jobject p_event_wait_list,
-         jobject p_event
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueWriteBuffer(
+        JNIEnv * env, jclass clazz,
+        jlong command_queue,
+        jlong buffer,
+        jboolean blocking_write,
+        jlong offset,
+        jlong size,
+        jlong ptr,
+        jint num_events_in_wait_list,
+        jobject p_event_wait_list,
+        jobject p_event
 ) {
-
-    void* ptr = env->GetDirectBufferAddress(p_ptr);
     void* event_wait_list = GET_BUF_ADDRESS_NULLABLE(p_event_wait_list);
     void* event = GET_BUF_ADDRESS_NULLABLE(p_event);
 
@@ -269,7 +266,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueWriteBuffer(JN
             blocking_write == JNI_TRUE ? CL_TRUE : CL_FALSE,
             offset,
             size,
-            ptr,
+            reinterpret_cast<void*>(ptr),
             num_events_in_wait_list,
             reinterpret_cast<cl_event*>(event_wait_list),
             reinterpret_cast<cl_event*>(event)

@@ -90,18 +90,18 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clReleaseMemObject
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clEnqueueReadBuffer
- * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JJZJJJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueReadBuffer
-  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jobject, jint, jobject, jobject);
+  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jlong, jint, jobject, jobject);
 
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL
  * Method:    _clEnqueueWriteBuffer
- * Signature: (JJZJJLjava/nio/ByteBuffer;ILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
+ * Signature: (JJZJJJILjava/nio/ByteBuffer;Ljava/nio/ByteBuffer;)I
  */
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clEnqueueWriteBuffer
-  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jobject, jint, jobject, jobject);
+  (JNIEnv *, jclass, jlong, jlong, jboolean, jlong, jlong, jlong, jint, jobject, jobject);
 
 /*
  * Class:     de_linusdev_clgl_nat_cl_CL

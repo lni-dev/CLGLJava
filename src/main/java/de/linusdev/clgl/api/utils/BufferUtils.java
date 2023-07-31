@@ -42,7 +42,7 @@ public class BufferUtils {
         if((address % (alignment)) == 0)
             return buffer.slice(0, capacity).order(ByteOrder.nativeOrder());
 
-        System.out.printf("Buffer alignment (%d) fixed. Was %d. Moved by %d.\n", alignment, address, (alignment - (address % (alignment))));
+        //System.out.printf("Buffer alignment (%d) fixed. Was %d. Moved by %d.\n", alignment, address, (alignment - (address % (alignment))));
         return buffer.slice((int) (alignment - (address % (alignment))), capacity).order(ByteOrder.nativeOrder());
     }
 

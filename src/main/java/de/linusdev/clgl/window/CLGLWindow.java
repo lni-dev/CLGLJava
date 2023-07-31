@@ -67,9 +67,9 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
     //OpenCL
     protected final int openClVersion; //1,2 or 3
-    protected final Context clContext;
-    protected final Device clDevice;
-    protected final CommandQueue clQueue;
+    protected final @NotNull Context clContext;
+    protected final @NotNull Device clDevice;
+    protected final @NotNull CommandQueue clQueue;
     protected @Nullable Kernel renderKernel;
     protected @Nullable Kernel uiKernel;
     protected final @NotNull BBLong2 globalWorkSize;
@@ -304,16 +304,20 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
     //Getter
 
-    public Context getClContext() {
+    public @NotNull Context getClContext() {
         return clContext;
     }
 
-    public Device getClDevice() {
+    public @NotNull Device getClDevice() {
         return clDevice;
     }
 
     public @NotNull GLFWWindow getGlfwWindow() {
         return glfwWindow;
+    }
+
+    public @NotNull CommandQueue getClQueue() {
+        return clQueue;
     }
 
     public @NotNull InputManger getInputManger() {

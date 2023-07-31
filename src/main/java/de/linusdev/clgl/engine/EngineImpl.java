@@ -124,10 +124,9 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                         window.setRenderKernel(loadingKernels.renderKernel);
                         window.setUiKernel(loadingKernels.uiKernel);
 
-                        return null;
+                        //start loading after setting loading kernels
+                        return scene.load0();
                     });
-
-                    var sceneLoadFut = scene.load0();
 
                     // Start loading the normal kernels
                     Helper.loadKernels(this, scene.getRenderKernelInfo(), scene.getUIKernelInfo())
@@ -139,9 +138,14 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                                 }
 
                                 runSupervised(() -> {
-                                    uiTaskFut.get(); //make sure loading kernels are set
+                                    var uiTaskResult = uiTaskFut.get(); //make sure loading kernels are set
 
-                                    sceneLoadFut.then((result2, secondary2, error2) -> {
+                                    if(uiTaskResult.hasError()) {
+                                        loadFut.complete(null, scene, uiTaskResult.getError());
+                                        return;
+                                    }
+
+                                    uiTaskResult.getResult().then((result2, secondary2, error2) -> {
                                         if (error2 != null) {
                                             loadFut.complete(null, scene, error2);
                                             return;
@@ -154,8 +158,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                                             window.setRenderKernel(normalKernels.renderKernel);
                                             window.setUiKernel(normalKernels.uiKernel);
 
-                                            scene.start();
-                                            scene.loaded.set(true);
+                                            scene.start0();
                                             loadFut.complete(Nothing.INSTANCE, scene, null);
 
                                             return null;
@@ -178,18 +181,17 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     @NonBlocking
     public void tick() {
         Scene<G> scene = currentScene.get();
-        if(scene != null && scene.loaded.get())
-            scene.tick();
+        if(scene == null) return;
 
+        scene.getState().tick(scene);
     }
 
     @Override
     public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
         Scene<G> scene = currentScene.get();
-        if(scene != null) {
-            scene.update0(this, frameInfo);
-        }
+        if(scene == null) return;
 
+        scene.getState().update(scene, this, frameInfo);
     }
 
     @Override
@@ -197,10 +199,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
         Scene<G> scene = currentScene.get();
         if(scene == null) return;
 
-        if(scene.loaded.get())
-            scene.setRenderKernelArgs(renderKernel);
-        else
-            scene.setLoadingRenderKernelArgs(renderKernel);
+        scene.getState().setRenderKernelArgs(scene, renderKernel);
 
     }
 
@@ -209,10 +208,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
         Scene<G> scene = currentScene.get();
         if(scene == null) return;
 
-        if(scene.loaded.get())
-            scene.setUIKernelArgs(uiKernel);
-        else
-            scene.setLoadingUIKernelArgs(uiKernel);
+        scene.getState().setUIKernelArgs(scene, uiKernel);
 
     }
 

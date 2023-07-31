@@ -26,7 +26,11 @@ class EngineTest {
 
         engine.loadScene(new TestScene(engine));
 
-        Thread.sleep(20000);
+        Thread.sleep(3000);
+
+        engine.loadScene(new TestScene(engine));
+
+        Thread.sleep(3000);
     }
 
 }

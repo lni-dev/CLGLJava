@@ -16,6 +16,7 @@
 
 package de.linusdev.clgl.window.args;
 
+import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -32,10 +33,13 @@ public class AutoUpdateArgManager {
         this.arguments.add(argument);
     }
 
+    @CallOnlyFromUIThread("glfw")
     public void reset() {
+        System.out.println("clear");
         arguments.clear();
     }
 
+    @CallOnlyFromUIThread("glfw")
     public void check() {
         AutoUpdateArgument arg;
         //noinspection ForLoopReplaceableByForEach: performance

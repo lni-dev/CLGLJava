@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.window.args;
+package de.linusdev.clgl.window.args.impl;
 
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
+import de.linusdev.clgl.window.args.ArgumentInfo;
+import de.linusdev.clgl.window.args.AutoUpdateArgument;
 import org.jetbrains.annotations.NotNull;
 
-public class ModifiableStructArgument implements AutoUpdateArgument{
+public class ModifiableStructArgument implements AutoUpdateArgument {
 
     private final @NotNull Structure structure;
     private ArgumentInfo argumentInfo;

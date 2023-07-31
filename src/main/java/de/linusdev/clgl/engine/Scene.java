@@ -24,15 +24,13 @@ import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.window.Handler;
 import de.linusdev.clgl.window.args.KernelView;
-import de.linusdev.clgl.window.args.ModifiableStructArgument;
+import de.linusdev.clgl.window.args.impl.ModifiableStructArgument;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import org.jetbrains.annotations.*;
-
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Scene<GAME extends Game> implements
         HasEngine<GAME>,
@@ -51,11 +49,12 @@ public abstract class Scene<GAME extends Game> implements
 
     private final @NotNull Engine<GAME> engine;
 
-    protected final @NotNull AtomicBoolean loaded = new AtomicBoolean(false);
+    protected @NotNull SceneState state;
     protected final @NotNull BBFloat1 loadingPercent = new BBFloat1(true);
 
     protected Scene(@NotNull Engine<GAME> engine) {
         this.engine = engine;
+        this.state = SceneState.CREATED;
         this.loadingPercent.set(0.0f);
     }
 
@@ -143,11 +142,13 @@ public abstract class Scene<GAME extends Game> implements
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> load0() {
+        this.state = SceneState.LOADING;
         var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             load();
+            this.state = SceneState.UNSTARTED;
             future.complete(Nothing.INSTANCE, this, null);
         });
 
@@ -158,26 +159,39 @@ public abstract class Scene<GAME extends Game> implements
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> unload0() {
+        this.state = SceneState.UNLOADING;
         var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             unload();
+            this.state = SceneState.DEAD;
             future.complete(Nothing.INSTANCE, this, null);
         });
 
         return future;
     }
 
-    @Override
-    public void update0(@NotNull Engine<GAME> window, @NotNull FrameInfo frameInfo) {
+    @ApiStatus.Internal
+    @NonBlocking
+    void start0() {
+        start();
+        this.state = SceneState.STARTED;
+    }
 
-        UpdateListener.super.update0(window, frameInfo);
+    @Override
+    public void update0(@NotNull Engine<GAME> engine, @NotNull FrameInfo frameInfo) {
+
+        UpdateListener.super.update0(engine, frameInfo);
     }
 
     @NotNull
     @Override
     public Engine<GAME> getEngine() {
         return engine;
+    }
+
+    public @NotNull SceneState getState() {
+        return state;
     }
 }

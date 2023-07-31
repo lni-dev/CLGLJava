@@ -17,6 +17,7 @@
 package de.linusdev.clgl.nat.cl.objects;
 
 import de.linusdev.clgl.api.structs.Structure;
+import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.custom.EventWaitList;
 import de.linusdev.lutils.bitfield.LongBitfield;
@@ -50,11 +51,14 @@ public class Buffer extends MemoryObject {
         set(clCreateBuffer(context.getPointer(), clMemFlags, size));
     }
 
-    @Contract("_, true, _, _, _, -> null; _, false, _, _, _, -> !null")
+    @SuppressWarnings("UnusedReturnValue")
+    @Contract("_, true, _, _, _, _, _, -> null; _, false, _, _, _, _, _, -> !null")
     public @Nullable Event enqueueWriteBuffer(
             @NotNull CommandQueue queue,
             boolean blocking,
             long offset,
+            boolean offsetData,
+            long size,
             @NotNull ByteBuffer data,
             @Nullable EventWaitList eventWaitList
             ) {
@@ -66,7 +70,8 @@ public class Buffer extends MemoryObject {
                 get(),
                 blocking,
                 offset,
-                data,
+                size,
+                offsetData ? BufferUtils.getHeapAddress(data) + offset : BufferUtils.getHeapAddress(data),
                 eventWaitList,
                 event
         );
@@ -74,11 +79,14 @@ public class Buffer extends MemoryObject {
         return event;
     }
 
-    @Contract("_, true, _, _, _, -> null; _, false, _, _, _, -> !null")
+    @SuppressWarnings("UnusedReturnValue")
+    @Contract("_, true, _, _, _, _, _, -> null; _, false, _, _, _, _, _, -> !null")
     public @Nullable Event enqueueReadBuffer(
             @NotNull CommandQueue queue,
             boolean blocking,
             long offset,
+            boolean offsetData,
+            long size,
             @NotNull ByteBuffer data,
             @Nullable EventWaitList eventWaitList
     ) {
@@ -89,7 +97,8 @@ public class Buffer extends MemoryObject {
                 get(),
                 blocking,
                 offset,
-                data,
+                size,
+                offsetData ? BufferUtils.getHeapAddress(data) + offset : BufferUtils.getHeapAddress(data),
                 eventWaitList,
                 event
         );

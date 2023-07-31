@@ -507,7 +507,8 @@ public class CL {
             long buffer,
             boolean blocking,
             long offset,
-            @NotNull ByteBuffer ptr,
+            long size,
+            long ptr,
             @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
@@ -518,7 +519,7 @@ public class CL {
                 buffer,
                 blocking,
                 offset,
-                ptr.capacity() - offset,
+                size,
                 ptr,
                 eventWaitList == null ? 0 : eventWaitList.length(),
                 eventWaitList == null ? null : eventWaitList.getByteBuffer(),
@@ -532,7 +533,7 @@ public class CL {
             boolean blocking_read,
             long offset,
             long size,
-            @NotNull ByteBuffer p_ptr,
+            long ptr,
             int num_events_in_wait_list,
             @Nullable ByteBuffer p_event_wait_list,
             @Nullable ByteBuffer p_event
@@ -543,7 +544,8 @@ public class CL {
             long buffer,
             boolean blocking,
             long offset,
-            @NotNull ByteBuffer ptr,
+            long size,
+            long ptr,
             @Nullable NativeArray<Event> eventWaitList,
             @Nullable BBLong1 event
     ) {
@@ -553,7 +555,7 @@ public class CL {
                 buffer,
                 blocking,
                 offset,
-                ptr.capacity() - offset,
+                size,
                 ptr,
                 eventWaitList == null ? 0 : eventWaitList.length(),
                 eventWaitList == null ? null : eventWaitList.getByteBuffer(),
@@ -567,7 +569,7 @@ public class CL {
             boolean blocking_write,
             long offset,
             long size,
-            @NotNull ByteBuffer p_ptr,
+            long ptr,
             int num_events_in_wait_list,
             @Nullable ByteBuffer p_event_wait_list,
             @Nullable ByteBuffer p_event
