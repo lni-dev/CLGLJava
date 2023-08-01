@@ -35,6 +35,8 @@ public interface Engine<G extends Game> {
 
     @NotNull AsyncManager getAsyncManager();
 
+    @NotNull UIThread<G> getUIThread();
+
     <R> @NotNull Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable);
 
     void runSupervised(@NotNull TRunnable runnable);

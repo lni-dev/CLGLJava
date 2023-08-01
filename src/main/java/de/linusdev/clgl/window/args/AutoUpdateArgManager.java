@@ -35,7 +35,6 @@ public class AutoUpdateArgManager {
 
     @CallOnlyFromUIThread("glfw")
     public void reset() {
-        System.out.println("clear");
         arguments.clear();
     }
 

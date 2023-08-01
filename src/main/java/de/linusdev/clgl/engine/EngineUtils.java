@@ -24,8 +24,11 @@ import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class Helper {
+public class EngineUtils {
 
+    /**
+     * Data only class.
+     */
     static class LoadKernelsResult {
         public Kernel renderKernel = null;
         public Kernel uiKernel = null;

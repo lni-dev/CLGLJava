@@ -16,8 +16,19 @@
 
 package de.linusdev.clgl.engine;
 
+import de.linusdev.lutils.async.error.AsyncError;
+import org.jetbrains.annotations.NotNull;
+
 public interface Game {
 
     long getMillisPerTick();
+
+    /**
+     *
+     * @param error the error caused while loading the kernels
+     * @return whether the loading should continue without kernels. {@code false} will fail the loading of the {@link Scene}.
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    boolean onKernelLoadError(@NotNull AsyncError error);
 
 }

@@ -32,7 +32,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 @SuppressWarnings("unused")
 public interface KernelSourceInfo {
@@ -62,6 +64,46 @@ public interface KernelSourceInfo {
 
                 if (in == null)
                     throw new NoSuchFileException(resourcePath);
+
+                StringBuilder src = new StringBuilder();
+                try (
+                        in;
+                        InputStreamReader inReader = new InputStreamReader(in, StandardCharsets.UTF_8);
+                        BufferedReader reader = new BufferedReader(inReader)
+                ) {
+                    String line;
+                    while ((line = reader.readLine()) != null)
+                        src.append(line).append("\n");
+                }
+                return src.toString();
+            }
+
+            @Override
+            public @NotNull String getKernelName() {
+                return kernelName;
+            }
+        };
+    }
+
+    /**
+     *
+     * @param path path to the file
+     * @return {@link KernelSourceInfo} representing given resource
+     */
+    static @NotNull KernelSourceInfo ofUTF8StringFile(
+            @NotNull Path path,
+            @NotNull String kernelName
+    ) {
+        return new KernelSourceInfo() {
+
+            @Override
+            public boolean isUTF8Format() {
+                return true;
+            }
+
+            @Override
+            public String getSourceString() throws IOException {
+                InputStream in = Files.newInputStream(path);
 
                 StringBuilder src = new StringBuilder();
                 try (

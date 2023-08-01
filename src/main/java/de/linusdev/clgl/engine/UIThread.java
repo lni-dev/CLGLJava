@@ -21,6 +21,7 @@ import de.linusdev.clgl.window.Handler;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.completeable.CompletableTask;
 import de.linusdev.lutils.async.error.ThrowableAsyncError;
@@ -32,19 +33,25 @@ public class UIThread<G extends Game> extends Thread implements HasEngine<G> {
 
     private final @NotNull Engine<G> engine;
     private final @NotNull Handler handler;
-    private final CompletableFuture<CLGLWindow, UIThread<G>, CompletableTask<CLGLWindow, UIThread<G>>> future;
+    private final CompletableFuture<CLGLWindow, UIThread<G>, CompletableTask<CLGLWindow, UIThread<G>>> createWindowFuture;
+    private final CompletableFuture<Nothing, UIThread<G>, CompletableTask<Nothing, UIThread<G>>> windowClosedFuture;
 
     public UIThread(@NotNull Engine<G> engine, @NotNull Handler handler) {
         super("glfw-ui-thread");
         setDaemon(false);
         this.engine = engine;
         this.handler = handler;
-        this.future = CompletableFuture.create(engine.getAsyncManager(), false);
+        this.createWindowFuture = CompletableFuture.create(engine.getAsyncManager(), false);
+        this.windowClosedFuture = CompletableFuture.create(engine.getAsyncManager(), false);
     }
 
     public @NotNull Future<CLGLWindow, UIThread<G>> create() {
         start();
-        return future;
+        return createWindowFuture;
+    }
+
+    public @NotNull Future<Nothing, UIThread<G>> getWindowClosedFuture() {
+        return windowClosedFuture;
     }
 
     @Override
@@ -52,17 +59,19 @@ public class UIThread<G extends Game> extends Thread implements HasEngine<G> {
         CLGLWindow window;
         try {
             window = new CLGLWindow(handler, 5);
-            future.complete(window, this, null);
+            createWindowFuture.complete(window, this, null);
         } catch (Throwable t) {
-            future.complete(null, this, new ThrowableAsyncError(t));
+            createWindowFuture.complete(null, this, new ThrowableAsyncError(t));
             return;
         }
 
         try {
             window.show();
             window.close();
+            windowClosedFuture.complete(Nothing.INSTANCE, this, null);
         } catch (Throwable t) {
             log.logThrowable(t);
+            windowClosedFuture.complete(null, this, new ThrowableAsyncError(t));
         }
     }
 

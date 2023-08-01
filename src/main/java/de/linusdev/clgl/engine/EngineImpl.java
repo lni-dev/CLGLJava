@@ -101,10 +101,10 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
                 log.logThrowable(error.asThrowable());
         });
 
-        Helper.loadKernels(this, scene.getLoadingRenderKernelInfo(), scene.getLoadingUIKernelInfo()).then(
+        EngineUtils.loadKernels(this, scene.getLoadingRenderKernelInfo(), scene.getLoadingUIKernelInfo()).then(
                 (loadingKernels, secondary, error) -> {
 
-                    if (error != null) {
+                    if (error != null && !game.onKernelLoadError(error)) {
                         loadFut.complete(null, scene, error);
                         return;
                     }
@@ -121,18 +121,18 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
 
                         //Set/Reset loading kernels
                         window.clearKernels();
-                        window.setRenderKernel(loadingKernels.renderKernel);
-                        window.setUiKernel(loadingKernels.uiKernel);
+                        window.setRenderKernel(loadingKernels == null ? null : loadingKernels.renderKernel);
+                        window.setUiKernel(loadingKernels == null ? null : loadingKernels.uiKernel);
 
                         //start loading after setting loading kernels
                         return scene.load0();
                     });
 
                     // Start loading the normal kernels
-                    Helper.loadKernels(this, scene.getRenderKernelInfo(), scene.getUIKernelInfo())
+                    EngineUtils.loadKernels(this, scene.getRenderKernelInfo(), scene.getUIKernelInfo())
                             .then((normalKernels, secondary1, error1) -> {
 
-                                if (error1 != null) {
+                                if (error1 != null && !game.onKernelLoadError(error1)) {
                                     loadFut.complete(null, scene, error1);
                                     return;
                                 }
@@ -155,8 +155,8 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
 
                                             //Set/Reset normal kernels
                                             window.clearKernels();
-                                            window.setRenderKernel(normalKernels.renderKernel);
-                                            window.setUiKernel(normalKernels.uiKernel);
+                                            window.setRenderKernel(normalKernels == null ? null : normalKernels.renderKernel);
+                                            window.setUiKernel(normalKernels == null ? null : normalKernels.uiKernel);
 
                                             scene.start0();
                                             loadFut.complete(Nothing.INSTANCE, scene, null);
@@ -250,6 +250,11 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     @Override
     public @NotNull AsyncManager getAsyncManager() {
         return window;
+    }
+
+    @Override
+    public @NotNull UIThread<G> getUIThread() {
+        return uiThread;
     }
 
     @Override

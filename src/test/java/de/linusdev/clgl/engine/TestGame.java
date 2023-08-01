@@ -16,9 +16,25 @@
 
 package de.linusdev.clgl.engine;
 
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
+import de.linusdev.lutils.async.error.AsyncError;
+import org.jetbrains.annotations.NotNull;
+
 public class TestGame implements Game {
+
+    private final static @NotNull LogInstance log = LLog.getLogInstance();
+
     @Override
     public long getMillisPerTick() {
-        return 2000;
+        return 20;
+    }
+
+    @Override
+    public boolean onKernelLoadError(@NotNull AsyncError error) {
+
+        log.logThrowable(error.asThrowable());
+
+        return true;
     }
 }

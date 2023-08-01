@@ -17,10 +17,13 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
+import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.args.KernelView;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.nio.file.Paths;
 
 public class TestScene extends Scene<TestGame> {
     protected TestScene(@NotNull Engine<TestGame> engine) {
@@ -30,16 +33,16 @@ public class TestScene extends Scene<TestGame> {
 
     @Override
     @Nullable KernelSourceInfo getUIKernelInfo() {
-        return KernelSourceInfo.ofUTF8StringResource(TestScene.class,
-                "enginetest/ui.cl",
+        return KernelSourceInfo.ofUTF8StringFile(
+                Paths.get("src/test/resources/enginetest/ui.cl"),
                 "render"
         );
     }
 
     @Override
     @Nullable KernelSourceInfo getRenderKernelInfo() {
-        return KernelSourceInfo.ofUTF8StringResource(TestScene.class,
-                "enginetest/render.cl",
+        return KernelSourceInfo.ofUTF8StringFile(
+                Paths.get("src/test/resources/enginetest/render.cl"),
                 "render"
         );
     }
@@ -59,7 +62,7 @@ public class TestScene extends Scene<TestGame> {
         System.out.println("load");
         try {
             final long step = 10L;
-            final long time = 1_000L;
+            final long time = 100L;
             for(long waited = 0; waited < time; waited+=step) {
                 Thread.sleep(step);
                 loadingPercent.set(((float) waited) / ((float) time));
@@ -80,12 +83,14 @@ public class TestScene extends Scene<TestGame> {
 
     @Override
     public void start() {
-        System.out.println("start");
+
     }
 
     @Override
     public void tick() {
-        System.out.println("tick");
+        if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_F5).isPressed()) {
+            getEngine().loadScene(new TestScene(getEngine()));
+        }
     }
 
     @Override

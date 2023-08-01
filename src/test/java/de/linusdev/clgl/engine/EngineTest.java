@@ -18,19 +18,19 @@ package de.linusdev.clgl.engine;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+
 class EngineTest {
 
     @Test
-    public void test() throws InterruptedException {
+    public void test() throws InterruptedException, IOException {
+
         Engine<TestGame> engine = new EngineImpl<>(new TestGame());
 
         engine.loadScene(new TestScene(engine));
 
-        Thread.sleep(3000);
 
-        engine.loadScene(new TestScene(engine));
-
-        Thread.sleep(3000);
+        engine.getUIThread().getWindowClosedFuture().get();
     }
 
 }
