@@ -25,7 +25,8 @@ class EngineTest {
     @Test
     public void test() throws InterruptedException, IOException {
 
-        Engine<TestGame> engine = new EngineImpl<>(new TestGame());
+        TestGame yourGame = new TestGame();
+        Engine<TestGame> engine = Engine.getInstance(yourGame);
 
         engine.loadScene(new TestScene(engine));
 

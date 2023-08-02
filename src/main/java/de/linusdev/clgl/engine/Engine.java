@@ -27,6 +27,10 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Engine<G extends Game> {
 
+    static <T extends Game> @NotNull Engine<T> getInstance(@NotNull T game) {
+        return new EngineImpl<>(game);
+    }
+
     @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene);
 
     @NotNull G getGame();
