@@ -74,6 +74,11 @@ abstract class BBFloatN extends Structure implements FloatN {
     }
 
     @Override
+    public @NotNull String getOpenCLName() {
+        return memberCount == 1 ? "float" : "float" + memberCount;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 

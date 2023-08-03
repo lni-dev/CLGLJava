@@ -19,34 +19,56 @@ package de.linusdev.clgl.api.structs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+@StructureSettings(isOfVariableSize = true, supportsCalculateInfoMethod = true)
 @SuppressWarnings("unused")
 public class StructureArray<T extends Structure> extends ComplexStructure implements NativeArray<T> {
 
+    public static @NotNull StructureInfo calculateInfo(@NotNull Sizeable elementType, int size) {
+        return new StructureInfo(
+                elementType.getAlignment(),
+                false,
+                0,
+                elementType.getRequiredSize() * size,
+                0
+        );
+    }
+
     private final @NotNull Sizeable type;
-    @SuppressWarnings("NotNullFieldNotInitialized") // initialized in calculateInfo()
-    private @NotNull StructureInfo info;
+    private final @NotNull StructureInfo info;
     private final @NotNull ElementCreator<T> creator;
 
+    private final @Nullable Structure @NotNull [] items;
     private final int size;
 
     public StructureArray(
-            boolean trackModifications, @NotNull Sizeable type, int size,
+            boolean allocateBuffer,
+            boolean trackModifications,
+            @NotNull Sizeable type,
+            int size,
             @NotNull ElementCreator<T> creator
     ) {
         super(trackModifications);
         this.type = type;
         this.size = size;
+        super.items = null; //Set this to null, so useBuffer will not do weird stuff
         this.items = new Structure[size];
         this.creator = creator;
-        calculateInfo();
-        allocate();
+        this.info = calculateInfo(type, size);
+
+        if(allocateBuffer)
+            allocate();
+
     }
 
     public void set(int index, @NotNull T struct) {
         items[index] = struct;
 
-        int offset = type.getRequiredSize() * index;
-        struct.useBuffer(this, offset);
+        struct.useBuffer(this.mostParentStructure, this.offset + (type.getRequiredSize() * index));
+    }
+
+    @Override
+    public void useBuffer(@NotNull Structure mostParentStructure, int offset) {
+        super.useBuffer(mostParentStructure, offset);
     }
 
     @Override
@@ -56,13 +78,12 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
 
     @SuppressWarnings("unchecked")
     public T get(int index) {
-        if(items[index] == null)
-            items[index] = creator.create(this, type.getRequiredSize() * index);
-        return (T) items[index];
-    }
+        if(items[index] == null) {
+            items[index] = creator.create();
+            items[index].useBuffer(this.mostParentStructure, this.offset + (type.getRequiredSize() * index));
+        }
 
-    private void calculateInfo() {
-        this.info = new StructureInfo(type.getRequiredSize(), false, 0, type.getRequiredSize() * size, 0);
+        return (T) items[index];
     }
 
     @Override
@@ -70,9 +91,13 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
         return info;
     }
 
+    @Override
+    public @NotNull String getOpenCLName(@Nullable Class<?> elementType, int size, @NotNull String paramName) {
+        return "StructureArray " + paramName + "[" + size + "]";
+    }
 
     @FunctionalInterface
     public interface ElementCreator<T extends Structure> {
-        @Nullable T create(@NotNull StructureArray<T> parent, int offset);
+        @Nullable T create();
     }
 }

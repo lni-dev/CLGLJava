@@ -129,7 +129,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
 
         //Create gl objects array
-        glObjects = new StructureArray<>(false, MemoryObject.INFO, 1, (parent, offset) -> null);
+        glObjects = new StructureArray<>(true, false, MemoryObject.INFO, 1, () -> null);
 
 
         //Read window size

@@ -14,36 +14,31 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.structs;
+package de.linusdev.clgl.engine.structs;
 
 
+import de.linusdev.clgl.api.structs.ComplexStructure;
+import de.linusdev.clgl.api.structs.StructValue;
+import de.linusdev.clgl.api.structs.StructureInfo;
 import de.linusdev.clgl.api.types.bytebuffer.BBFloat1;
 import de.linusdev.clgl.api.types.bytebuffer.BBFloat3;
 import org.jetbrains.annotations.NotNull;
 
 public class CameraStruct extends ComplexStructure {
 
-    public static final StructureInfo INFO = new StructureInfo(
-            BBFloat3.INFO,
-            BBFloat3.INFO,
-            BBFloat1.INFO);
+    public static final StructureInfo INFO = new StructureInfo();
 
-    public final @NotNull BBFloat3 position = new BBFloat3(false);
-    public final @NotNull BBFloat3 lookAtVector = new BBFloat3(false);
-    public final @NotNull BBFloat1 distanceToScreen = new BBFloat1(false);
+    @StructValue public final @NotNull BBFloat3 position = new BBFloat3(false);
+    @StructValue public final @NotNull BBFloat3 lookAtVector = new BBFloat3(false);
+    @StructValue public final @NotNull BBFloat1 distanceToScreen = new BBFloat1(false);
 
     public CameraStruct(boolean allocateBuffer) {
         super(true);
-        init(allocateBuffer, position, lookAtVector, distanceToScreen);
+        init(allocateBuffer);
     }
 
     @Override
     protected @NotNull StructureInfo getInfo() {
         return INFO;
-    }
-
-    @Override
-    public String toString() {
-        return toString(position, lookAtVector, distanceToScreen);
     }
 }

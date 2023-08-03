@@ -17,12 +17,14 @@
 package de.linusdev.clgl.nat.cl.custom;
 
 import de.linusdev.clgl.api.structs.StructureArray;
+import de.linusdev.clgl.api.structs.StructureSettings;
 import de.linusdev.clgl.nat.cl.objects.Event;
 
+@StructureSettings(isOfVariableSize = true)
 public class EventWaitList extends StructureArray<Event> {
 
     public EventWaitList(int size) {
-        super(false,  Event.INFO, size, Event::new);
+        super(true, false,  Event.INFO, size, Event::new);
     }
 
     @Override

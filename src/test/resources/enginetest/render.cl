@@ -14,14 +14,41 @@
 
 
 
-float4 mainImage(float2 uv) {
-    return float4(uv.x, uv.y, uv.x * uv.y, 1.f);
+typedef struct {
+    float3 position;
+    float3 lookAtVector;
+    float distanceToScreen;
+} Camera;
+
+typedef struct {
+    float3 position;
+    float3 color;
+} Player;
+
+typedef struct __attribute__((packed)) {
+    int int1;
+    int int2;
+    int2 padding0;
+    Camera cam;
+    Player players[5];
+    Player playerA;
+    Player playerB;
+} World;
+
+float4 mainImage(float2 uv, World world) {
+    float4 color = toFloat4(1.0f);
+
+    color.xyz = mix(world.playerA.color, world.playerB.color, uv.x + .5f);
+    //color.xyz = world.playerA.color;
+
+    return color;
 }
 
 __kernel void render(
     __write_only image2d_t img,
     const int2 screenSize,
-    __read_only image2d_t ui
+    __read_only image2d_t ui,
+    __global World* world
     )
 {
 
@@ -34,7 +61,7 @@ __kernel void render(
     float4 uiColor = read_imagef(ui, cordi);
 
     if(uiColor.w < 1.0f) {
-        float4 renderColor = mainImage(uv);
+        float4 renderColor = mainImage(uv, *world);
         renderColor.xyz = mix(renderColor.xyz, uiColor.xyz, uiColor.w);
         write_imagef(img, cordi, renderColor);
     } else {

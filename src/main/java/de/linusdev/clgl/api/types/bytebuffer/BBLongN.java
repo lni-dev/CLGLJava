@@ -76,6 +76,11 @@ public abstract class BBLongN extends Structure implements LongN {
     }
 
     @Override
+    public @NotNull String getOpenCLName() {
+        return memberCount == 1 ? "long" : "long" + memberCount;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 

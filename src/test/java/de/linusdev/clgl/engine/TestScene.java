@@ -17,15 +17,25 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
+import de.linusdev.clgl.engine.structs.WorldStruct;
+import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.clgl.nat.cl.objects.Buffer;
 import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.args.KernelView;
+import de.linusdev.clgl.window.args.impl.AutoUpdateBuffer;
+import de.linusdev.lutils.bitfield.LongBitfield;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Paths;
 
 public class TestScene extends Scene<TestGame> {
+
+    private WorldStruct world;
+    private Buffer worldBuffer;
+
+
     protected TestScene(@NotNull Engine<TestGame> engine) {
         super(engine);
         loadingPercent.set(.0f);
@@ -49,12 +59,12 @@ public class TestScene extends Scene<TestGame> {
 
     @Override
     void setRenderKernelArgs(@NotNull KernelView renderKernel) {
-        System.out.println("setRenderKernelArgs");
+        renderKernel.setKernelArg(3, new AutoUpdateBuffer(world, worldBuffer));
     }
 
     @Override
     void setUIKernelArgs(@NotNull KernelView uiKernel) {
-        System.out.println("setUIKernelArgs");
+
     }
 
     @Override
@@ -72,6 +82,18 @@ public class TestScene extends Scene<TestGame> {
         } catch (Throwable t) {
             t.printStackTrace();
         }
+
+        world = new WorldStruct(true);
+        world.playerA.color.x(1.f);
+        world.playerB.color.z(1.f);
+
+        worldBuffer = new Buffer(getEngine().getClContext(),
+                new LongBitfield<>(
+                        CL.CLMemFlag.CL_MEM_READ_ONLY,
+                        CL.CLMemFlag.CL_MEM_HOST_WRITE_ONLY,
+                        CL.CLMemFlag.CL_MEM_USE_HOST_PTR
+                ), world);
+
 
         System.out.println("load end");
     }

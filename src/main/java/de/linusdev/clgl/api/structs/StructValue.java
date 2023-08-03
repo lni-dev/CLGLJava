@@ -16,8 +16,16 @@
 
 package de.linusdev.clgl.api.structs;
 
-public interface Sizeable {
-    int getRequiredSize();
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-    int getAlignment();
+@Retention(RetentionPolicy.RUNTIME)
+public @interface StructValue {
+
+    /**
+     * index of this value in the struct or -1 if it does not matter.
+     * @return index or -1
+     */
+    int value() default -1;
+
 }

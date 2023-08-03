@@ -17,6 +17,7 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.api.misc.interfaces.TRunnable;
+import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.queue.ReturnRunnable;
 import de.linusdev.lutils.async.Future;
@@ -36,6 +37,8 @@ public interface Engine<G extends Game> {
     @NotNull G getGame();
 
     @NotNull CLGLWindow getWindow();
+
+    @NotNull Context getClContext();
 
     @NotNull AsyncManager getAsyncManager();
 

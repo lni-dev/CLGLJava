@@ -186,4 +186,9 @@ public class PrimitiveTypeArray<T> extends Structure implements NativeArray<T> {
     protected @NotNull StructureInfo getInfo() {
         return info;
     }
+
+    @Override
+    public @NotNull String getOpenCLName() {
+       return "Arrays not yet supported. EDIT MANUALLY";
+    }
 }

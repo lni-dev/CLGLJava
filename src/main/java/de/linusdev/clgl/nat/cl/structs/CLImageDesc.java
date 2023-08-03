@@ -17,6 +17,7 @@
 package de.linusdev.clgl.nat.cl.structs;
 
 import de.linusdev.clgl.api.structs.ComplexStructure;
+import de.linusdev.clgl.api.structs.StructValue;
 import de.linusdev.clgl.api.structs.StructureInfo;
 import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
@@ -28,29 +29,18 @@ import org.jetbrains.annotations.Nullable;
 
 public class CLImageDesc extends ComplexStructure {
 
-    public static final StructureInfo INFO = new StructureInfo(
-            BBInt1.INFO, //image_type
-            BBLong1.INFO, //image_width
-            BBLong1.INFO, //image_height
-            BBLong1.INFO, //image_depth
-            BBLong1.INFO, //image_array_size
-            BBLong1.INFO, //image_row_pitch
-            BBLong1.INFO, //image_slice_pitch
-            BBInt1.INFO, //num_mip_levels
-            BBInt1.INFO, //num_samples
-            MemoryObject.INFO //buffer
-    );
+    public static final StructureInfo INFO = new StructureInfo();
 
-    public final @NotNull BBInt1 image_type = new BBInt1(false);
-    public final @NotNull BBLong1 image_width = new BBLong1(false);
-    public final @NotNull BBLong1 image_height = new BBLong1(false);
-    public final @NotNull BBLong1 image_depth = new BBLong1(false);
-    public final @NotNull BBLong1 image_array_size = new BBLong1(false);
-    public final @NotNull BBLong1 image_row_pitch = new BBLong1(false);
-    public final @NotNull BBLong1 image_slice_pitch = new BBLong1(false);
-    public final @NotNull BBInt1 num_mip_levels = new BBInt1(false);
-    public final @NotNull BBInt1 num_samples = new BBInt1(false);
-    public final @NotNull MemoryObject buffer = new MemoryObject(false);
+    @StructValue(0) public final @NotNull BBInt1 image_type = new BBInt1(false);
+    @StructValue(1) public final @NotNull BBLong1 image_width = new BBLong1(false);
+    @StructValue(2) public final @NotNull BBLong1 image_height = new BBLong1(false);
+    @StructValue(3) public final @NotNull BBLong1 image_depth = new BBLong1(false);
+    @StructValue(4) public final @NotNull BBLong1 image_array_size = new BBLong1(false);
+    @StructValue(5) public final @NotNull BBLong1 image_row_pitch = new BBLong1(false);
+    @StructValue(6) public final @NotNull BBLong1 image_slice_pitch = new BBLong1(false);
+    @StructValue(7) public final @NotNull BBInt1 num_mip_levels = new BBInt1(false);
+    @StructValue(8) public final @NotNull BBInt1 num_samples = new BBInt1(false);
+    @StructValue(9) public final @NotNull MemoryObject buffer = new MemoryObject(false);
 
     public CLImageDesc(
             @NotNull CL.CLMemoryObjectType type,

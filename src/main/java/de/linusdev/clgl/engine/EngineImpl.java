@@ -19,6 +19,7 @@ package de.linusdev.clgl.engine;
 import de.linusdev.clgl.api.misc.interfaces.TRunnable;
 import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.engine.ticker.Ticker;
+import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.Handler;
@@ -260,5 +261,10 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     @Override
     public @NotNull CLGLWindow getWindow() {
         return window;
+    }
+
+    @Override
+    public @NotNull Context getClContext() {
+        return window.getClContext();
     }
 }

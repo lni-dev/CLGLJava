@@ -76,6 +76,11 @@ public abstract class BBIntN extends Structure implements IntN {
     }
 
     @Override
+    public @NotNull String getOpenCLName() {
+        return memberCount == 1 ? "int" : "int" + memberCount;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
@@ -86,7 +91,7 @@ public abstract class BBIntN extends Structure implements IntN {
             sb.append(buf.get(i));
         }
 
-        return String.format("float%d(%s)", memberCount, sb);
+        return String.format("int%d(%s)", memberCount, sb);
     }
 }
 

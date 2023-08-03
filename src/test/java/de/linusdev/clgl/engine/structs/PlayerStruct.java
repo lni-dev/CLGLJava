@@ -14,22 +14,30 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.types.bytebuffer;
+package de.linusdev.clgl.engine.structs;
 
+import de.linusdev.clgl.api.structs.ComplexStructure;
+import de.linusdev.clgl.api.structs.StructValue;
 import de.linusdev.clgl.api.structs.StructureInfo;
-import de.linusdev.clgl.api.types.Int1;
+import de.linusdev.clgl.api.types.bytebuffer.BBFloat3;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
-public class BBInt1 extends BBIntN implements Int1 {
-    public static final StructureInfo INFO = new StructureInfo(4, false, 0, 4, 0);
+public class PlayerStruct extends ComplexStructure {
 
-    public BBInt1(boolean allocateBuffer) {
-        super(1, allocateBuffer);
+    public static final StructureInfo INFO = new StructureInfo();
+
+    @StructValue public final @NotNull BBFloat3 position = new BBFloat3(false);
+    @StructValue public final @NotNull BBFloat3 color = new BBFloat3(false);
+
+
+    public PlayerStruct(boolean allocateBuffer) {
+        super(true);
+        init(allocateBuffer);
     }
 
     @Override
     protected @NotNull StructureInfo getInfo() {
         return INFO;
     }
+
 }

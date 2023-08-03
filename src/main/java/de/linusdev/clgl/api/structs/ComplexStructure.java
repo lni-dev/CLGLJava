@@ -32,7 +32,8 @@ public abstract class ComplexStructure extends Structure {
     }
 
     public void init(boolean allocateBuffer, @Nullable Structure @NotNull ... items) {
-        this.items = items;
+        this.items = items.length == 0 ? getInfo().getChildren(this) : items;
+
         if(allocateBuffer)
             allocate();
     }
@@ -68,6 +69,8 @@ public abstract class ComplexStructure extends Structure {
     @Override
     public void useBuffer(@NotNull Structure mostParentStructure, int offset) {
         super.useBuffer(mostParentStructure, offset);
+        if(items == null)
+            return;
         StructureInfo info = getInfo();
 
         int[] sizes = info.getSizes();
@@ -82,7 +85,21 @@ public abstract class ComplexStructure extends Structure {
 
     }
 
-    public String toString(@NotNull Structure @NotNull ... items) {
-        return getInfo().toString(this.getClass().getSimpleName(), items);
+    @Override
+    public @NotNull String getOpenCLName() {
+        String name = getClass().getSimpleName();
+        if(name.endsWith("Struct"))
+            name = name.substring(0, name.length() - "Struct".length());
+        return name;
+    }
+
+    @Override
+    public String toString(@NotNull String name) {
+        return getInfo().toString(this, name);
+    }
+
+    @Override
+    public String toString() {
+        return getInfo().toString(this, this.getClass().getSimpleName());
     }
 }

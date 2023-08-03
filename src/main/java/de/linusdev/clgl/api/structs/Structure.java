@@ -20,6 +20,7 @@ package de.linusdev.clgl.api.structs;
 import de.linusdev.clgl.api.utils.BufferUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -76,11 +77,17 @@ public abstract class Structure implements Sizeable, NativeParsable {
         return getInfo().getRequiredSize();
     }
 
+    @Override
+    public int getAlignment() {
+        return getInfo().getAlignment();
+    }
+
     /**
      * Information about this {@link Structure}.
      * @return {@link StructureInfo}
      */
     protected abstract @NotNull StructureInfo getInfo();
+
 
     /**
      * Byte size of this {@link Structure}
@@ -109,6 +116,21 @@ public abstract class Structure implements Sizeable, NativeParsable {
     @Override
     public @NotNull ByteBuffer getByteBuffer() {
         return byteBuf;
+    }
+
+    /**
+     *
+     * @param name name of this struct
+     * @return A nice string describing this structure
+     */
+    public String toString(@NotNull String name) {
+        return name + " " + this;
+    }
+
+    public abstract @NotNull String getOpenCLName();
+
+    public @NotNull String getOpenCLName(@Nullable Class<?> elementType, int size, @NotNull String paramName) {
+        return getOpenCLName() + " " + paramName;
     }
 
     public boolean isModified() {
