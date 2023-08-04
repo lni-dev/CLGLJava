@@ -85,4 +85,9 @@ public class ModificationInfo {
             return null;
         }
     }
+
+    @Override
+    public String toString() {
+        return "ModificationInfo[startOffset=" + startOffset + " endOffset=" + endOffset + " hasNext=" + (next != null) + "]";
+    }
 }

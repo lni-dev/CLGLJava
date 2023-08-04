@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.concurrent.locks.ReentrantLock;
 
 @SuppressWarnings("unused")
 public abstract class Structure implements Sizeable, NativeParsable {
@@ -33,31 +32,29 @@ public abstract class Structure implements Sizeable, NativeParsable {
     protected ByteBuffer byteBuf;
     protected int offset;
     protected volatile boolean modified;
-    protected ReentrantLock modificationLock;
 
+    /**
+     * Set this {@link Structure} to be a child of {@code mostParentStructure}.
+     * @param mostParentStructure most parental structure
+     * @param offset start of this structure
+     */
     public void useBuffer(@NotNull Structure mostParentStructure, int offset) {
         this.mostParentStructure = mostParentStructure;
         this.offset = offset;
         this.byteBuf = offset == 0 ?
                 mostParentStructure.getByteBuf().order(ByteOrder.nativeOrder()) :
                 mostParentStructure.getByteBuf().slice(offset, getRequiredSize()).order(ByteOrder.nativeOrder());
-        this.modificationLock = mostParentStructure.modificationLock;
     }
 
+    /**
+     * Will set the {@link ByteOrder} to native order.
+     * The most parental structure will be {@code this}.
+     * @param buffer {@link ByteBuffer} to claim
+     */
     public void claimBuffer(@NotNull ByteBuffer buffer) {
         this.mostParentStructure = this;
         this.offset = 0;
         this.byteBuf = buffer.order(ByteOrder.nativeOrder());
-        this.modificationLock = new ReentrantLock();
-    }
-
-    public void modified(int offset, int size) {
-        mostParentStructure.onModification(offset, size);
-    }
-
-    @ApiStatus.OverrideOnly
-    protected void onModification(int offset, int size) {
-        modified = true;
     }
 
     /**
@@ -133,31 +130,58 @@ public abstract class Structure implements Sizeable, NativeParsable {
         return getOpenCLName() + " " + paramName;
     }
 
+    /**
+     * Mark {@code size} bytes at {@code offset} as modified.
+     * @param offset region start
+     * @param size region size
+     */
+    public void modified(int offset, int size) {
+        mostParentStructure.onModification(offset, size);
+    }
+
+    /**
+     * Mark the whole structure as modified.
+     */
+    public void modified() {
+        modified(offset, getSize());
+    }
+
+    /**
+     * Called on the most parental structure if on it or any of its children {@link #modified(int, int)} is called.
+     * @param offset modified region start
+     * @param size modified region size
+     */
+    @ApiStatus.OverrideOnly
+    protected void onModification(int offset, int size) {
+        modified = true;
+    }
+
+    /**
+     * Will be {@code true} after a call to {@link #modified(int, int)}. Will be reset by {@link #unmodified()}.
+     * Note that modifications are only tracked on the most parental structure. The return value of this method is undefined,
+     * if it is not the most parental structure.
+     * @return whether this {@link Structure} has been modified.
+     */
     public boolean isModified() {
         return modified;
     }
 
+    /**
+     * Marks this structure has not modified. May only be called on the most parental structure.
+     */
+    @ApiStatus.Internal
     public void unmodified() {
         modified = false;
     }
 
-    public ModificationInfo getFirstModificationInfo(boolean clear) {
-        throw new UnsupportedOperationException();
-    }
-
-    public boolean hasModificationsInfo() {
-        return false;
-    }
-
-    public void acquireModificationLock() {
-        modificationLock.lock();
-    }
-
-    public void releaseModificationLock() {
-        modificationLock.unlock();
-    }
-
+    /**
+     * Will never be {@code null} after either {@link #claimBuffer(ByteBuffer)} or {@link #useBuffer(Structure, int)}
+     * has been called.
+     * @return the most parental structure.
+     */
+    @ApiStatus.Internal
     public Structure getMostParentStructure() {
         return mostParentStructure;
     }
+
 }

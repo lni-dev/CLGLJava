@@ -19,7 +19,7 @@ package de.linusdev.clgl.api.structs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public abstract class ComplexStructure extends Structure {
+public abstract class ComplexStructure extends ModTrackingStructure {
 
     protected Structure [] items;
 
@@ -64,6 +64,11 @@ public abstract class ComplexStructure extends Structure {
         ModificationInfo ret = modInfo;
         modInfo = null;
         return ret;
+    }
+
+    @Override
+    public boolean tracksModifications() {
+        return trackModifications;
     }
 
     @Override

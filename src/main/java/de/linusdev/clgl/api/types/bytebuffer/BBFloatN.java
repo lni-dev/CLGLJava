@@ -39,10 +39,6 @@ abstract class BBFloatN extends Structure implements FloatN {
             allocate();
     }
 
-    public void modified() {
-        modified(0, getSize());
-    }
-
     @Override
     public void useBuffer(@NotNull Structure mostParentStructure, int offset) {
         super.useBuffer(mostParentStructure, offset);

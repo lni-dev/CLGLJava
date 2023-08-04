@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Paths;
+import java.util.Random;
 
 public class TestScene extends Scene<TestGame> {
 
@@ -112,6 +113,14 @@ public class TestScene extends Scene<TestGame> {
     public void tick() {
         if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_F5).isPressed()) {
             getEngine().loadScene(new TestScene(getEngine()));
+        }
+
+        if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_A).isPressed()) {
+            Random random = new Random();
+            world.playerA.color.xyz(random.nextFloat(), random.nextFloat(), random.nextFloat());
+            world.playerB.color.xyz(random.nextFloat(), random.nextFloat(), random.nextFloat());
+            world.playerA.color.modified();
+            world.playerB.color.modified();
         }
     }
 

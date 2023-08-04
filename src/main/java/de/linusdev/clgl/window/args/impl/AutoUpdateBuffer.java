@@ -16,8 +16,8 @@
 
 package de.linusdev.clgl.window.args.impl;
 
+import de.linusdev.clgl.api.structs.ModTrackingStructure;
 import de.linusdev.clgl.api.structs.ModificationInfo;
-import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.nat.cl.objects.Buffer;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.window.CLGLWindow;
@@ -27,12 +27,12 @@ import org.jetbrains.annotations.NotNull;
 
 public class AutoUpdateBuffer implements AutoUpdateArgument {
 
-    private final @NotNull Structure structure;
+    private final @NotNull ModTrackingStructure structure;
     private final @NotNull Buffer buffer;
 
     private CLGLWindow window;
 
-    public AutoUpdateBuffer(@NotNull Structure structure, @NotNull Buffer buffer) {
+    public AutoUpdateBuffer(@NotNull ModTrackingStructure structure, @NotNull Buffer buffer) {
         this.structure = structure;
         this.buffer = buffer;
     }
@@ -40,12 +40,11 @@ public class AutoUpdateBuffer implements AutoUpdateArgument {
     @Override
     public void check() {
         if (structure.isModified()) {
-
             //set structure to unmodified first. During copying there may be coming in new modifications,
             //that must be copied in the next check()...
             structure.unmodified();
 
-            if (!structure.hasModificationsInfo()) {
+            if (!structure.tracksModifications()) {
                 //No info about the modifications given. Copy the complete buffer.
                 buffer.enqueueWriteBuffer(
                         window.getClQueue(),
