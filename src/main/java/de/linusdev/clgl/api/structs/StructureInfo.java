@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class StructureInfo implements Sizeable {
@@ -285,7 +286,8 @@ public class StructureInfo implements Sizeable {
             case 8 -> sb.append("int2 padding").append(index).append(";\n");
             case 16 -> sb.append("int4 padding").append(index).append(";\n");
             default -> {
-                for(int pad : suppPaddings) {
+                for(int i = suppPaddings.length-1; i >= 0; i--) {
+                    int pad = suppPaddings[i];
                     if(padding - pad > 0) {
                         padding -= pad;
                         index = addPadding(sb, pad, index);
@@ -300,12 +302,38 @@ public class StructureInfo implements Sizeable {
     /**
      * Not fully working! Arrays are not yet supported.
      */
+    @SuppressWarnings("unused")
     public @NotNull String toOpenCLStructCode(@NotNull ComplexStructure self) {
+        return toOpenCLStructCode(self, false, null);
+    }
+
+    /**
+     * Not fully working! Arrays are not yet supported.
+     */
+    public @NotNull String toOpenCLStructCode(@NotNull ComplexStructure self, boolean addChildren, @Nullable ArrayList<String> added) {
         if(infos == null)
             throw new UnsupportedOperationException("Only works with auto generated StructureInfos");
 
+        if(addChildren && added == null)
+            added = new ArrayList<>();
+
         final String name = self.getOpenCLName();
         final StringBuilder sb = new StringBuilder();
+
+        if(addChildren) {
+            for(StructValueInfo valueInfo : infos) {
+                Structure instance = valueInfo.get(self);
+                if(instance instanceof ComplexStructure complexStructure && complexStructure.canGenerateOpenCLCode()) {
+                    if(added.contains(complexStructure.getOpenCLName()))
+                        continue;
+                    added.add(complexStructure.getOpenCLName());
+                    sb
+                            .append(valueInfo.getInfo().toOpenCLStructCode(complexStructure, true, added))
+                            .append("\n\n");
+                }
+
+            }
+        }
 
         int paddingIndex = 0;
 

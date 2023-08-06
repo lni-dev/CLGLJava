@@ -114,10 +114,10 @@ publishing {
     publications {
 
         OpenCLWindow(MavenPublication) {
-            artifactId = 'OpenCLGLJava'
+            artifactId = 'CLGLJava'
             from components.java
             pom {
-                name = 'OpenCLGLJava'
+                name = 'CLGLJava'
                 description = ''
                 url = 'https://www.linusdev.de'
                 groupId = 'de.linusdev'
@@ -139,9 +139,9 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com/lni-dev/OpenCLWindowJava.git'
-                    developerConnection ='scm:git:ssh://github.com:lni-dev/OpenCLWindowJava.git'
-                    url = 'https://github.com/lni-dev/OpenCLWindowJava/tree/master'
+                    connection = 'scm:git:git://github.com/lni-dev/CLGLJava.git'
+                    developerConnection ='scm:git:ssh://github.com:lni-dev/CLGLJava.git'
+                    url = 'https://github.com/lni-dev/CLGLJava/tree/master'
                 }
             }
         }

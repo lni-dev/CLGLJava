@@ -25,12 +25,16 @@ import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
 import de.linusdev.clgl.window.Handler;
 import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.args.impl.ModifiableStructArgument;
+import de.linusdev.clgl.window.input.InputManagerImpl;
+import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import org.jetbrains.annotations.*;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Scene<GAME extends Game> implements
         HasEngine<GAME>,
@@ -47,54 +51,64 @@ public abstract class Scene<GAME extends Game> implements
     public static final KernelSourceInfo LOADING_RENDER_KERNEL_INFO = KernelSourceInfo.ofUTF8StringResource(KernelSourceInfo.class,
             "kernels/loading-render.cl", "render");
 
-    private final @NotNull Engine<GAME> engine;
+    protected final @NotNull Engine<GAME> engine;
+    private final @NotNull InputManagerImpl inputManger;
 
-    protected @NotNull SceneState state;
+    protected final @NotNull AtomicReference<SceneState> state;
     protected final @NotNull BBFloat1 loadingPercent = new BBFloat1(true);
 
     protected Scene(@NotNull Engine<GAME> engine) {
         this.engine = engine;
-        this.state = SceneState.CREATED;
+        this.state = new AtomicReference<>(SceneState.CREATED);
         this.loadingPercent.set(0.0f);
+        this.inputManger = engine.createInputManagerForScene(this);
     }
 
 
 
 
-    abstract @Nullable KernelSourceInfo getUIKernelInfo();
+    @ApiStatus.OverrideOnly
+    protected abstract @Nullable KernelSourceInfo getUIKernelInfo();
 
-    abstract @Nullable KernelSourceInfo getRenderKernelInfo();
+    @ApiStatus.OverrideOnly
+    protected abstract @Nullable KernelSourceInfo getRenderKernelInfo();
 
-    @NotNull KernelSourceInfo getLoadingUIKernelInfo() {
+    @ApiStatus.OverrideOnly
+    protected @NotNull KernelSourceInfo getLoadingUIKernelInfo() {
         return LOADING_UI_KERNEL_INFO;
     }
 
-    @NotNull KernelSourceInfo getLoadingRenderKernelInfo() {
+    @ApiStatus.OverrideOnly
+    protected @NotNull KernelSourceInfo getLoadingRenderKernelInfo() {
         return LOADING_RENDER_KERNEL_INFO;
     }
 
     /**
      * @see Handler#setRenderKernelArgs(KernelView)
      */
-    abstract void setRenderKernelArgs(@NotNull KernelView renderKernel);
+    @ApiStatus.OverrideOnly
+    protected abstract void setRenderKernelArgs(@NotNull KernelView renderKernel);
 
     /**
      * @see Handler#setUIKernelArgs(KernelView)
      */
-    abstract void setUIKernelArgs(@NotNull KernelView uiKernel);
+    @ApiStatus.OverrideOnly
+    protected abstract void setUIKernelArgs(@NotNull KernelView uiKernel);
 
     /**
      * @see Handler#setRenderKernelArgs(KernelView)
      */
+    @ApiStatus.OverrideOnly
     @SuppressWarnings("unused")
-    void setLoadingRenderKernelArgs(@NotNull KernelView renderKernel) {
+    protected void setLoadingRenderKernelArgs(@NotNull KernelView renderKernel) {
 
     }
 
     /**
      * @see Handler#setUIKernelArgs(KernelView) (Kernel)
      */
-    void setLoadingUIKernelArgs(@NotNull KernelView uiKernel) {
+    @ApiStatus.OverrideOnly
+    protected void setLoadingUIKernelArgs(@NotNull KernelView uiKernel) {
         uiKernel.setKernelArg(2, new ModifiableStructArgument(loadingPercent));
     }
 
@@ -135,20 +149,35 @@ public abstract class Scene<GAME extends Game> implements
     @Override
     public abstract void update(@NotNull Engine<GAME> engine, @NotNull FrameInfo frameInfo);
 
+    @ApiStatus.Internal
+    @NonBlocking
+    void onKey0(int key, int scancode, int action, int mods) {
+        inputManger.onKey(key, scancode, action, mods);
+    }
 
+    @ApiStatus.Internal
+    @NonBlocking
+    void onMouseButton0(int button, int action, int mods) {
+        inputManger.onMouseButton(button, action, mods);
+    }
 
+    @ApiStatus.Internal
+    @NonBlocking
+    void onTextInput0(char[] chars, boolean supplementaryChar) {
+        inputManger.onTextInput(chars, supplementaryChar);
+    }
 
 
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> load0() {
-        this.state = SceneState.LOADING;
+        this.state.set(SceneState.LOADING);
         var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             load();
-            this.state = SceneState.UNSTARTED;
+            this.state.set(SceneState.UNSTARTED);
             future.complete(Nothing.INSTANCE, this, null);
         });
 
@@ -159,13 +188,13 @@ public abstract class Scene<GAME extends Game> implements
     @ApiStatus.Internal
     @NonBlocking
     @NotNull Future<Nothing, Scene<GAME>> unload0() {
-        this.state = SceneState.UNLOADING;
+        this.state.set(SceneState.UNLOADING);
         var future = CompletableFuture.<Nothing, Scene<GAME>>create(engine.getAsyncManager(), false);
 
         engine.runSupervised(() -> {
             //noinspection BlockingMethodInNonBlockingContext: run in new thread
             unload();
-            this.state = SceneState.DEAD;
+            this.state.set(SceneState.DEAD);
             future.complete(Nothing.INSTANCE, this, null);
         });
 
@@ -176,7 +205,7 @@ public abstract class Scene<GAME extends Game> implements
     @NonBlocking
     void start0() {
         start();
-        this.state = SceneState.STARTED;
+        this.state.set(SceneState.STARTED);
     }
 
     @Override
@@ -192,6 +221,14 @@ public abstract class Scene<GAME extends Game> implements
     }
 
     public @NotNull SceneState getState() {
-        return state;
+        return state.get();
+    }
+
+    /**
+     *
+     * @return {@link InputManger} for this {@link Scene}
+     */
+    public @NotNull InputManger getInputManger() {
+        return inputManger;
     }
 }

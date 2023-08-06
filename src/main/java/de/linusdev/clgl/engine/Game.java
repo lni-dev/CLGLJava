@@ -31,4 +31,10 @@ public interface Game {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean onKernelLoadError(@NotNull AsyncError error);
 
+    /**
+     * Window title
+     * @return {@link String} title
+     */
+    @NotNull String getTitle();
+
 }

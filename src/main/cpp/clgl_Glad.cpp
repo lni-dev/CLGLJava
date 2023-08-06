@@ -305,9 +305,9 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallbac
             [](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
                 JNIEnv* env;
                 JNI_UTILS->getEnv(&env);
-
+                DEBUG_MSG("glDebugMessageCallback - 1: JNIEnv* env: %p", env);
                 jobject msgBuffer = env->NewDirectByteBuffer(reinterpret_cast<void*>(const_cast<GLchar*>(message)), length);
-
+                DEBUG_MSG("glDebugMessageCallback - 2");
                 env->CallVoidMethod(
                         globalRefDebugMessageCallback,
                         messageMethodId,

@@ -32,7 +32,7 @@ class StructureTest {
         CLImageDesc cl = new CLImageDesc(CL.CLMemoryObjectType.CL_MEM_OBJECT_IMAGE1D, 1, 1, 1, 1, 1, 1, 1, 1, null);
 
         System.out.println(worldStruct);
-        System.out.println(WorldStruct.INFO.toOpenCLStructCode(worldStruct));
+        System.out.println(WorldStruct.INFO.toOpenCLStructCode(worldStruct, true, null));
         System.out.println(cl);
     }
 

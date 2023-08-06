@@ -16,8 +16,13 @@
 
 package de.linusdev.clgl.window.input;
 
+import de.linusdev.clgl.api.misc.annos.CallFromAnyThread;
 import de.linusdev.clgl.nat.glfw3.GLFWValues;
+import de.linusdev.clgl.nat.glfw3.custom.KeyListener;
+import de.linusdev.clgl.nat.glfw3.custom.MouseButtonListener;
+import de.linusdev.clgl.nat.glfw3.custom.TextInputListener;
 import org.intellij.lang.annotations.MagicConstant;
+import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
 import static de.linusdev.clgl.nat.glfw3.GLFW.glfwGetKeyScancode;
@@ -55,5 +60,29 @@ public interface InputManger {
             case MOUSE_BUTTON -> getMouseButton(serialized.value());
         };
     }
+
+    @CallFromAnyThread
+    @NonBlocking
+    void addTextInputListener(@NotNull TextInputListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeTextInputListener(@NotNull TextInputListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void addKeyListener(@NotNull KeyListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeKeyListener(@NotNull KeyListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void addMouseButtonListener(@NotNull MouseButtonListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeMouseButtonListener(@NotNull MouseButtonListener listener);
 
 }

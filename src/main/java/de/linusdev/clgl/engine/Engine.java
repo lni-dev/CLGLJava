@@ -19,24 +19,43 @@ package de.linusdev.clgl.engine;
 import de.linusdev.clgl.api.misc.interfaces.TRunnable;
 import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.window.CLGLWindow;
+import de.linusdev.clgl.window.input.InputManagerImpl;
+import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.window.queue.ReturnRunnable;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public interface Engine<G extends Game> {
 
+    /**
+     * Creates a {@link Engine} instance. This will also create the window.
+     * Call {@link Engine#loadScene(Scene)} to load your {@link Scene}.
+     * @param game your {@link Game}
+     * @return {@link Engine}
+     * @param <T> your {@link Game}
+     */
     static <T extends Game> @NotNull Engine<T> getInstance(@NotNull T game) {
         return new EngineImpl<>(game);
     }
 
     @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene);
 
+    @ApiStatus.Internal
+    @NotNull InputManagerImpl createInputManagerForScene(@NotNull Scene<G> scene);
+
     @NotNull G getGame();
 
     @NotNull CLGLWindow getWindow();
+
+    /**
+     * {@link InputManger} to be used across all scenes.
+     * @return {@link InputManger}
+     */
+    @NotNull InputManger getGlobalInputManager();
 
     @NotNull Context getClContext();
 

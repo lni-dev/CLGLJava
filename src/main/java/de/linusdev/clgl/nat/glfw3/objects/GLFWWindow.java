@@ -69,9 +69,9 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
     protected final @NotNull List<CursorEnterListener> cursorEnterListeners;
     protected final @NotNull List<CursorPositionListener> cursorPositionListeners;
     protected final @NotNull List<ScrollListener> scrollListeners;
-    protected final @NotNull List<TextInputListener> textInputListeners;
-    protected final @NotNull List<KeyListener> keyListeners;
-    protected final @NotNull List<MouseButtonListener> mouseButtonListeners;
+    protected @Nullable TextInputListener textInputListener;
+    protected @Nullable KeyListener keyListener;
+    protected @Nullable MouseButtonListener mouseButtonListener;
     protected final static @NotNull List<JoystickListener> joystickListeners = new LLinkedList<>();
 
     //Array "buffers"
@@ -92,9 +92,6 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         this.cursorEnterListeners = listenerListSupplier.supply();
         this.cursorPositionListeners = listenerListSupplier.supply();
         this.scrollListeners = listenerListSupplier.supply();
-        this.textInputListeners = listenerListSupplier.supply();
-        this.keyListeners = listenerListSupplier.supply();
-        this.mouseButtonListeners = listenerListSupplier.supply();
 
         //Set user pointer to window id
         glfwSetWindowUserPointer(pointer, id);
@@ -254,39 +251,22 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
 
     @CallFromAnyThread
     @NonBlocking
-    public void addTextInputListener(@NotNull TextInputListener listener) {
-        textInputListeners.add(listener);
+    public void setTextInputListener(@NotNull TextInputListener listener) {
+        textInputListener = listener;
     }
 
     @CallFromAnyThread
     @NonBlocking
-    public void removeTextInputListener(@NotNull TextInputListener listener) {
-        textInputListeners.remove(listener);
+    public void setKeyListener(@NotNull KeyListener listener) {
+        keyListener = listener;
     }
 
     @CallFromAnyThread
     @NonBlocking
-    public void addKeyListener(@NotNull KeyListener listener) {
-        keyListeners.add(listener);
+    public void setMouseButtonListener(@NotNull MouseButtonListener listener) {
+        mouseButtonListener = listener;
     }
 
-    @CallFromAnyThread
-    @NonBlocking
-    public void removeKeyListener(@NotNull KeyListener listener) {
-        keyListeners.remove(listener);
-    }
-
-    @CallFromAnyThread
-    @NonBlocking
-    public void addMouseButtonListener(@NotNull MouseButtonListener listener) {
-        mouseButtonListeners.add(listener);
-    }
-
-    @CallFromAnyThread
-    @NonBlocking
-    public void removeMouseButtonListener(@NotNull MouseButtonListener listener) {
-        mouseButtonListeners.remove(listener);
-    }
 
     @CallFromAnyThread
     @NonBlocking
@@ -334,7 +314,8 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         long id = glfwGetWindowUserPointer(p_window);
         GLFWWindow window = windows.get(id);
 
-        window.keyListeners.forEach(keyListener -> keyListener.onKey(key, scancode, action, mods));
+        if(window.keyListener != null)
+            window.keyListener.onKey(key, scancode, action, mods);
     }
 
     private static void cursor_position_callback(long p_window, double xpos, double ypos) {
@@ -355,7 +336,8 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         long id = glfwGetWindowUserPointer(p_window);
         GLFWWindow window = windows.get(id);
 
-        window.mouseButtonListeners.forEach(mbl -> mbl.onMouseButton(button, action, mods));
+        if(window.mouseButtonListener != null)
+            window.mouseButtonListener.onMouseButton(button, action, mods);
     }
 
     private static void character_callback(long p_window, int codepoint) {
@@ -365,8 +347,8 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         int ret = Character.toChars(codepoint, window.charCallbackBuffer, 0);
         char[] chars = Character.toChars(codepoint);
 
-        window.textInputListeners.forEach(textInputListener ->
-                textInputListener.onTextInput(window.charCallbackBuffer, ret == 2));
+        if(window.textInputListener != null)
+            window.textInputListener.onTextInput(window.charCallbackBuffer, ret == 2);
     }
 
     private static void scroll_callback(long p_window, double xoffset, double yoffset) {

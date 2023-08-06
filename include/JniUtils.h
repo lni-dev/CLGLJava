@@ -23,7 +23,7 @@
 
 #define GET_BUF_ADDRESS_NULLABLE(OBJ) (OBJ == nullptr ? nullptr : env->GetDirectBufferAddress(OBJ))
 #define DEBUG_MSG(...)
-//#define DEBUG_MSG(...)  char buff_uhiihoiol[5000];snprintf(buff_uhiihoiol, sizeof(buff_uhiihoiol), __VA_ARGS__);JNI_UTILS->printInJava(buff_uhiihoiol);
+//#define DEBUG_MSG(...)  {char buff_uhiihoiol[5000];snprintf(buff_uhiihoiol, sizeof(buff_uhiihoiol), __VA_ARGS__);JNI_UTILS->printInJava(buff_uhiihoiol);}
 
 class JniUtils {
 private:

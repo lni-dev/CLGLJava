@@ -24,6 +24,7 @@ import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.args.impl.AutoUpdateBuffer;
+import de.linusdev.clgl.window.input.TextInput;
 import de.linusdev.lutils.bitfield.LongBitfield;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,7 +44,7 @@ public class TestScene extends Scene<TestGame> {
     }
 
     @Override
-    @Nullable KernelSourceInfo getUIKernelInfo() {
+    protected @Nullable KernelSourceInfo getUIKernelInfo() {
         return KernelSourceInfo.ofUTF8StringFile(
                 Paths.get("src/test/resources/enginetest/ui.cl"),
                 "render"
@@ -51,7 +52,7 @@ public class TestScene extends Scene<TestGame> {
     }
 
     @Override
-    @Nullable KernelSourceInfo getRenderKernelInfo() {
+    protected @Nullable KernelSourceInfo getRenderKernelInfo() {
         return KernelSourceInfo.ofUTF8StringFile(
                 Paths.get("src/test/resources/enginetest/render.cl"),
                 "render"
@@ -59,12 +60,12 @@ public class TestScene extends Scene<TestGame> {
     }
 
     @Override
-    void setRenderKernelArgs(@NotNull KernelView renderKernel) {
+    protected void setRenderKernelArgs(@NotNull KernelView renderKernel) {
         renderKernel.setKernelArg(3, new AutoUpdateBuffer(world, worldBuffer));
     }
 
     @Override
-    void setUIKernelArgs(@NotNull KernelView uiKernel) {
+    protected void setUIKernelArgs(@NotNull KernelView uiKernel) {
 
     }
 
@@ -106,14 +107,32 @@ public class TestScene extends Scene<TestGame> {
 
     @Override
     public void start() {
+        getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_F5).addPressListener(() -> {
+            getEngine().loadScene(new TestScene(getEngine()));
+        });
 
+
+        new TextInput(getInputManger(), new TextInput.Listener() {
+            @Override
+            public void onAdd(@NotNull TextInput input, @NotNull StringBuffer current, char @NotNull [] added) {
+
+            }
+
+            @Override
+            public void onRemove(@NotNull TextInput input, @NotNull StringBuffer current, char removed) {
+
+            }
+
+            @Override
+            public void onEnter(@NotNull TextInput input, @NotNull StringBuffer current) {
+                System.out.println(current);
+                input.stop();
+            }
+        }).start();
     }
 
     @Override
     public void tick() {
-        if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_F5).isPressed()) {
-            getEngine().loadScene(new TestScene(getEngine()));
-        }
 
         if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_A).isPressed()) {
             Random random = new Random();

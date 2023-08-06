@@ -27,6 +27,7 @@ public enum SceneState {
      * Starting State
      */
     CREATED {
+
         @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
             
@@ -52,6 +53,21 @@ public enum SceneState {
      * Scene is currently loading.
      */
     LOADING {
+        @Override
+        <G extends Game> void onKey(@NotNull Scene<G> scene, int key, int scancode, int action, int mods) {
+            scene.onKey0(key, scancode, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onMouseButton(@NotNull Scene<G> scene, int button, int action, int mods) {
+            scene.onMouseButton0(button, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onTextInput(@NotNull Scene<G> scene, char[] chars, boolean supplementaryChar) {
+            scene.onTextInput0(chars, supplementaryChar);
+        }
+
         @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
             
@@ -80,6 +96,21 @@ public enum SceneState {
      */
     UNSTARTED {
         @Override
+        <G extends Game> void onKey(@NotNull Scene<G> scene, int key, int scancode, int action, int mods) {
+            scene.onKey0(key, scancode, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onMouseButton(@NotNull Scene<G> scene, int button, int action, int mods) {
+            scene.onMouseButton0(button, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onTextInput(@NotNull Scene<G> scene, char[] chars, boolean supplementaryChar) {
+            scene.onTextInput0(chars, supplementaryChar);
+        }
+
+        @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
 
         }
@@ -105,6 +136,21 @@ public enum SceneState {
      */
     STARTED {
         @Override
+        <G extends Game> void onKey(@NotNull Scene<G> scene, int key, int scancode, int action, int mods) {
+            scene.onKey0(key, scancode, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onMouseButton(@NotNull Scene<G> scene, int button, int action, int mods) {
+            scene.onMouseButton0(button, action, mods);
+        }
+
+        @Override
+        <G extends Game> void onTextInput(@NotNull Scene<G> scene, char[] chars, boolean supplementaryChar) {
+            scene.onTextInput0(chars, supplementaryChar);
+        }
+
+        @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
             scene.tick();
         }
@@ -129,6 +175,7 @@ public enum SceneState {
      * Scene is not active anymore and is currently releasing resources.
      */
     UNLOADING {
+
         @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
             throw new UnsupportedOperationException();
@@ -154,6 +201,7 @@ public enum SceneState {
      * Scene is dead.
      */
     DEAD {
+
         @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
             throw new UnsupportedOperationException();
@@ -189,4 +237,18 @@ public enum SceneState {
     @NonBlocking
     abstract <G extends Game> void setUIKernelArgs(@NotNull Scene<G> scene, @NotNull KernelView kernel);
 
+    @NonBlocking
+    <G extends Game> void onKey(@NotNull Scene<G> scene, int key, int scancode, int action, int mods) {
+
+    }
+
+    @NonBlocking
+    <G extends Game> void onMouseButton(@NotNull Scene<G> scene, int button, int action, int mods) {
+
+    }
+
+    @NonBlocking
+    <G extends Game> void onTextInput(@NotNull Scene<G> scene, char[] chars, boolean supplementaryChar) {
+
+    }
 }

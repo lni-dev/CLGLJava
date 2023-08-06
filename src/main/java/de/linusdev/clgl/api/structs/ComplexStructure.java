@@ -98,6 +98,10 @@ public abstract class ComplexStructure extends ModTrackingStructure {
         return name;
     }
 
+    public boolean canGenerateOpenCLCode() {
+        return true;
+    }
+
     @Override
     public String toString(@NotNull String name) {
         return getInfo().toString(this, name);

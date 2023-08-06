@@ -21,9 +21,14 @@ import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.engine.ticker.Ticker;
 import de.linusdev.clgl.nat.cl.objects.Context;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
+import de.linusdev.clgl.nat.glfw3.custom.KeyListener;
+import de.linusdev.clgl.nat.glfw3.custom.MouseButtonListener;
+import de.linusdev.clgl.nat.glfw3.custom.TextInputListener;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.Handler;
 import de.linusdev.clgl.window.args.KernelView;
+import de.linusdev.clgl.window.input.InputManagerImpl;
+import de.linusdev.clgl.window.input.InputManger;
 import de.linusdev.clgl.window.queue.ReturnRunnable;
 import de.linusdev.clgl.window.queue.UITaskQueue;
 import de.linusdev.llog.LLog;
@@ -42,7 +47,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable {
+public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable, KeyListener, MouseButtonListener, TextInputListener {
 
     private final static @NotNull LogInstance log = LLog.getLogInstance();
 
@@ -68,6 +73,9 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
 
         try {
             this.window = this.uiThread.create().getResult();
+            this.window.getGlfwWindow().setTitle(game.getTitle());
+            this.window.getInputManger().addKeyListener(this);
+            this.window.getInputManger().addMouseButtonListener(this);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -80,6 +88,11 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     /*
     Functions
      */
+
+    @Override
+    public @NotNull InputManagerImpl createInputManagerForScene(@NotNull Scene<G> scene) {
+        return new InputManagerImpl(null);
+    }
 
     @Override
     public @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene) {
@@ -174,9 +187,59 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
         return loadFut;
     }
 
+    @Override
+    public @NotNull <R> Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
+        var future = CompletableFuture.<R, Engine<G>>create(getAsyncManager(), false);
+        executor.execute(() -> {
+            try {
+                future.complete(runnable.run(), this, null);
+            } catch (Throwable t) {
+                log.logThrowable(t);
+                future.complete(null, this, new ThrowableAsyncError(t));
+            }
+        });
+        return future;
+    }
+
+    @Override
+    public void runSupervised(@NotNull TRunnable runnable) {
+        executor.execute(() -> {
+            try {
+                runnable.run();
+            } catch (Throwable t) {
+                log.logThrowable(t);
+
+            }
+        });
+    }
+
     /*
     Listener
      */
+
+    @Override
+    public void onKey(int key, int scancode, int action, int mods) {
+        Scene<G> scene = currentScene.get();
+        if(scene == null)
+            return;
+        scene.getState().onKey(scene, key, scancode, action, mods);
+    }
+
+    @Override
+    public void onMouseButton(int button, int action, int mods) {
+        Scene<G> scene = currentScene.get();
+        if(scene == null)
+            return;
+        scene.getState().onMouseButton(scene, button, action, mods);
+    }
+
+    @Override
+    public void onTextInput(char[] chars, boolean supplementaryChar) {
+        Scene<G> scene = currentScene.get();
+        if(scene == null)
+            return;
+        scene.getState().onTextInput(scene, chars, supplementaryChar);
+    }
 
     @Override
     @NonBlocking
@@ -213,32 +276,6 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
 
     }
 
-    @Override
-    public @NotNull <R> Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
-        var future = CompletableFuture.<R, Engine<G>>create(getAsyncManager(), false);
-        executor.execute(() -> {
-            try {
-                future.complete(runnable.run(), this, null);
-            } catch (Throwable t) {
-                log.logThrowable(t);
-                future.complete(null, this, new ThrowableAsyncError(t));
-            }
-        });
-        return future;
-    }
-
-    @Override
-    public void runSupervised(@NotNull TRunnable runnable) {
-        executor.execute(() -> {
-            try {
-                runnable.run();
-            } catch (Throwable t) {
-                log.logThrowable(t);
-
-            }
-        });
-    }
-
     /*
     Getter
      */
@@ -261,6 +298,11 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable 
     @Override
     public @NotNull CLGLWindow getWindow() {
         return window;
+    }
+
+    @Override
+    public @NotNull InputManger getGlobalInputManager() {
+        return window.getInputManger();
     }
 
     @Override

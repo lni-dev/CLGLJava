@@ -28,6 +28,8 @@ public abstract class PressableImpl implements Pressable {
     protected final @NotNull InputManger manager;
     protected final @NotNull InputType type;
 
+    //TODO: removing a listener while iterating over the list (removing it in a onPress call) would lead
+    //to a ConcurrentModificationException
     private @Nullable List<PressListener> pressListeners;
     private @Nullable List<ReleaseListener> releaseListeners;
     private final @NotNull ReentrantReadWriteLock listenersLock = new ReentrantReadWriteLock(false);

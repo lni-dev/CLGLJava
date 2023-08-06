@@ -96,6 +96,11 @@ public class StructureArray<T extends Structure> extends ComplexStructure implem
         return "StructureArray " + paramName + "[" + size + "]";
     }
 
+    @Override
+    public boolean canGenerateOpenCLCode() {
+        return false;
+    }
+
     @FunctionalInterface
     public interface ElementCreator<T extends Structure> {
         @Nullable T create();

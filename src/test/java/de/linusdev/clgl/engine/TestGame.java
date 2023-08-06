@@ -37,4 +37,9 @@ public class TestGame implements Game {
 
         return true;
     }
+
+    @Override
+    public @NotNull String getTitle() {
+        return "TestGame";
+    }
 }
