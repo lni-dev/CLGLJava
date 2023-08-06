@@ -57,7 +57,7 @@ public class GLFW {
 
     protected static native int _glfwInit();
 
-
+    public static native void glfwSwapInterval(int interval);
 
     public static void glfwWindowHint(int hint, int value) {
         _glfwWindowHint(hint, value);

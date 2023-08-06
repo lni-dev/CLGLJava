@@ -70,6 +70,11 @@ abstract class BBFloatN extends Structure implements FloatN {
     }
 
     @Override
+    public boolean isView() {
+        return false;
+    }
+
+    @Override
     public @NotNull String getOpenCLName() {
         return memberCount == 1 ? "float" : "float" + memberCount;
     }

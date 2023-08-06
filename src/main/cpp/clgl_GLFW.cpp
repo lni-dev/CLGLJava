@@ -28,6 +28,18 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwInit
 }
 
 /*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    glfwSwapInterval
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwSwapInterval(
+        JNIEnv* env, jclass clazz,
+        jint interval
+) {
+    glfwSwapInterval(interval);
+}
+
+/*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
  * Method:    _glfwWindowHint
  * Signature: (II)V

@@ -109,6 +109,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
 
         //OpenGL
         makeGLContextCurrent();
+        glfwSwapInterval(0);
         gladLoadGL();
     }
 

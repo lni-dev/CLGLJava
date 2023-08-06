@@ -16,6 +16,8 @@
 
 package de.linusdev.clgl.api.types;
 
+import org.jetbrains.annotations.NotNull;
+
 public interface FloatN extends Vector {
 
     /**
@@ -35,4 +37,10 @@ public interface FloatN extends Vector {
      *  may result in undefined behavior.
      */
     void put(int index, float value);
+
+    @Override
+    @NotNull
+    default FloatN getOriginal() {
+        throw new UnsupportedOperationException();
+    }
 }

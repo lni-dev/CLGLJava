@@ -16,6 +16,8 @@
 
 package de.linusdev.clgl.api.types;
 
+import org.jetbrains.annotations.NotNull;
+
 @SuppressWarnings("unused")
 public interface Float2 extends FloatN {
 
@@ -38,6 +40,65 @@ public interface Float2 extends FloatN {
     default void xy(float x, float y) {
         put(0, x);
         put(1, y);
+    }
+
+    @SuppressWarnings("ClassCanBeRecord")
+    class Float2View implements Float2 {
+
+        private final @NotNull FloatN original;
+        private final int @NotNull [] mapping;
+
+        public Float2View(@NotNull FloatN original, int @NotNull [] mapping) {
+
+            if(original.isView()) {
+                mapping = Vector.recalculateMappingToOriginal(original, mapping);
+                original = original.getOriginal();
+            }
+
+            this.original = original;
+            this.mapping = mapping;
+        }
+
+        @Override
+        public float get(int index) {
+            return original.get(mapping[index]);
+        }
+
+        @Override
+        public void put(int index, float value) {
+            original.put(mapping[index], value);
+        }
+
+        @Override
+        public int getMemberCount() {
+            return 2;
+        }
+
+        @Override
+        public boolean isArrayBacked() {
+            return false;
+        }
+
+        @Override
+        public boolean isBufferBacked() {
+            return false;
+        }
+
+        @Override
+        public boolean isView() {
+            return true;
+        }
+
+        @NotNull
+        @Override
+        public FloatN getOriginal() {
+            return original;
+        }
+
+        @Override
+        public int @NotNull [] getMapping() {
+            return mapping;
+        }
     }
 
 }

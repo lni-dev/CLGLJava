@@ -23,6 +23,23 @@ import org.jetbrains.annotations.NotNull;
 public interface Vector {
 
     /**
+     * Used by {@link #isView() view vectors} to calculate the mapping directly to the original vectors if a view of
+     * a view vector is created.
+     * @param view the view vector, which the view should be created upon
+     * @param mapping the mapping on the view vector
+     * @return mapping directly to the original vector
+     */
+    static int @NotNull [] recalculateMappingToOriginal(@NotNull FloatN view, int @NotNull [] mapping) {
+        int[] viewMapping = view.getMapping();
+        int[] newMapping = new int[mapping.length];
+
+        for(int i = 0; i < mapping.length; i++)
+            newMapping[i] = viewMapping[mapping[i]];
+
+        return newMapping;
+    }
+
+    /**
      * Count of components in this vector.
      * @return float count in this vector
      */
@@ -49,4 +66,30 @@ public interface Vector {
     default @NotNull Structure getStructure() {
         throw new UnsupportedOperationException("This vector is not buffer backed.");
     }
+
+    /**
+     * Whether this vector is only a view onto another vector.
+     * @return {@code true} if this vector is a view.
+     */
+    boolean isView();
+
+    /**
+     *
+     * @return the original vector this vector views to
+     * @throws UnsupportedOperationException if this vector is not {@link #isView() a view on another vector}.
+     */
+    default @NotNull Vector getOriginal() {
+        throw new UnsupportedOperationException("This vector is not buffer backed.");
+    }
+
+    /**
+     * The returned mapping must always map to a non view vector.
+     * @return the mapping to the original vector
+     * @throws UnsupportedOperationException if this vector is not {@link #isView() a view on another vector}.
+     */
+    default int @NotNull [] getMapping() {
+        throw new UnsupportedOperationException("This vector is not buffer backed.");
+    }
+
+
 }

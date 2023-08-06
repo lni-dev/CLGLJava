@@ -53,6 +53,11 @@ public class ABFloatN implements FloatN {
     }
 
     @Override
+    public boolean isView() {
+        return false;
+    }
+
+    @Override
     public float get(int index) {
         return array[arrayStartIndex + index];
     }

@@ -18,7 +18,7 @@ package de.linusdev.clgl.api.types;
 
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class VMath {
 
     public static @NotNull FloatN add(@NotNull FloatN left, @NotNull FloatN right, @NotNull FloatN store) {
@@ -62,6 +62,30 @@ public class VMath {
             dot += left.get(i) * right.get(i);
 
         return dot;
+    }
+
+    public static @NotNull Float3 cross(@NotNull Float3 left, @NotNull Float3 right, @NotNull Float3 store) {
+        float storeX, storeY, storeZ;
+
+        storeX = (left.get(1) * right.get(2)) - (left.get(2) * right.get(1));
+        storeY = (left.get(2) * right.get(0)) - (left.get(0) * right.get(2));
+        storeZ = (left.get(0) * right.get(1)) - (left.get(1) * right.get(0));
+
+        store.xyz(storeX, storeY, storeZ);
+        return store;
+    }
+
+    public static @NotNull FloatN normalize(@NotNull FloatN toNormalize, @NotNull FloatN store) {
+        float length = 0;
+        for(int i = 0; i < toNormalize.getMemberCount(); i++)
+            length += toNormalize.get(i) * toNormalize.get(i);
+
+        length = (float) Math.sqrt(length);
+
+        for(int i = 0; i < toNormalize.getMemberCount(); i++)
+            store.put(i, toNormalize.get(i) / length);
+
+        return store;
     }
 
 
