@@ -31,7 +31,7 @@ enum CPPBuildType{
     }
 }
 
-CPPBuildType BUILD_TYPE = CPPBuildType.DEBUG_VS
+CPPBuildType BUILD_TYPE = CPPBuildType.RELEASE
 
 java {
     withJavadocJar()
