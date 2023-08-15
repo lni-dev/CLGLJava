@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.types;
+package de.linusdev.clgl.api.types.matrix;
 
-import org.jetbrains.annotations.NotNull;
+public interface Float4x4 extends Float4xM {
+    int HEIGHT = 4;
 
-public interface Matrix {
-
-    int getWidth();
-
-    int getHeight();
-
-    boolean isArrayBacked();
-
-    boolean isBufferBacked();
-
+    @Override
+    default int getHeight() {
+        return HEIGHT;
+    }
 }

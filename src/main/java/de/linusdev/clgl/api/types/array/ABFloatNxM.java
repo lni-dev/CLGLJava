@@ -16,12 +16,32 @@
 
 package de.linusdev.clgl.api.types.array;
 
-import de.linusdev.clgl.api.types.FloatN;
-import de.linusdev.clgl.api.types.FloatNxM;
+import de.linusdev.clgl.api.types.array.utils.ABMatInfo;
+import de.linusdev.clgl.api.types.matrix.FloatNxM;
+import de.linusdev.clgl.api.types.matrix.Matrix;
+import org.jetbrains.annotations.NotNull;
 
-public abstract class ABFloatNxM implements FloatNxM {
+public abstract class ABFloatNxM<M extends ABFloatN> implements FloatNxM {
 
-    abstract protected FloatN getRow(int y);
+    protected final float[] array;
+    protected final M[] lines;
+
+    public ABFloatNxM(@NotNull ABMatInfo<M> info) {
+        this.lines = info.createArray();
+        this.array = new float[info.getMemberSize() * lines.length];
+
+        for(int i = 0; i < lines.length; i++)
+            lines[i] = info.createNew(array, i * info.getMemberSize());
+    }
+
+    @Override
+    public int getHeight() {
+        return lines.length;
+    }
+
+    protected M getRow(int y) {
+        return lines[y];
+    }
 
     @Override
     public float get(int x, int y) {
@@ -41,5 +61,10 @@ public abstract class ABFloatNxM implements FloatNxM {
     @Override
     public boolean isBufferBacked() {
         return false;
+    }
+
+    @Override
+    public String toString() {
+        return Matrix.toString("ABFloat", this);
     }
 }

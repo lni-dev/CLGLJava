@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.api.types;
+package de.linusdev.clgl.api.types.matrix;
 
 public interface FloatNxM extends Matrix {
 
