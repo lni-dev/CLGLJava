@@ -222,6 +222,7 @@ class VMathTest {
 
     @Test
     void inverse() {
+        ABFloat4x4 res = new ABFloat4x4();
         BBFloat4x4 mat = new BBFloat4x4(true);
 
         mat.put(0, 0, 1);
@@ -246,28 +247,28 @@ class VMathTest {
 
         //System.out.println(mat);
 
-        VMath.inverse(mat, mat);
+        VMath.inverse(mat, res);
 
         //System.out.println(mat);
 
-        assertEquals(-0.027161822f, mat.get(0, 0));
-        assertEquals(0.1268659f, mat.get(1, 0));
-        assertEquals(-0.05532098561525345, mat.get(2, 0));
-        assertEquals(0.055686691711825526106f, mat.get(3, 0));
+        assertEquals(-0.027161822f, res.get(0, 0));
+        assertEquals(0.1268659f, res.get(1, 0));
+        assertEquals(-0.05532098561525345, res.get(2, 0));
+        assertEquals(0.055686691711825526106f, res.get(3, 0));
 
-        assertEquals(0.18471357f, mat.get(0, 1));
-        assertEquals(0.052794308321420259988f, mat.get(1, 1));
-        assertEquals(0.13630772299611024305f, mat.get(2, 1));
-        assertEquals(-0.31749725722264702952f, mat.get(3, 1));
+        assertEquals(0.18471357f, res.get(0, 1));
+        assertEquals(0.052794308321420259988f, res.get(1, 1));
+        assertEquals(0.13630772299611024305f, res.get(2, 1));
+        assertEquals(-0.31749725722264702952f, res.get(3, 1));
 
-        assertEquals(-0.143488809466362f, mat.get(0, 2));
-        assertEquals(-0.056850288f, mat.get(1, 2));
-        assertEquals(0.25120518f, mat.get(2, 2));
-        assertEquals(-0.04853884770105389139f, mat.get(3, 2));
+        assertEquals(-0.143488809466362f, res.get(0, 2));
+        assertEquals(-0.056850288f, res.get(1, 2));
+        assertEquals(0.25120518f, res.get(2, 2));
+        assertEquals(-0.04853884770105389139f, res.get(3, 2));
 
-        assertEquals(0.06310052f, mat.get(0, 3));
-        assertEquals(-0.035240542f, mat.get(1, 3));
-        assertEquals(-0.20685527f, mat.get(2, 3));
-        assertEquals(0.26230925230227068722f, mat.get(3, 3));
+        assertEquals(0.06310052f, res.get(0, 3));
+        assertEquals(-0.035240542f, res.get(1, 3));
+        assertEquals(-0.20685527f, res.get(2, 3));
+        assertEquals(0.26230925230227068722f, res.get(3, 3));
     }
 }

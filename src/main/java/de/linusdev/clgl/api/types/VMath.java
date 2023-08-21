@@ -16,7 +16,6 @@
 
 package de.linusdev.clgl.api.types;
 
-import de.linusdev.clgl.api.types.array.ABFloat4x4;
 import de.linusdev.clgl.api.types.matrix.Float3x3;
 import de.linusdev.clgl.api.types.matrix.Float4x4;
 import de.linusdev.clgl.api.types.matrix.FloatNxM;
@@ -235,7 +234,46 @@ public class VMath {
         return store;
     }
 
-    public static <M extends FloatNxM> @NotNull M scale(@NotNull M toScale, float factor, @NotNull M store) {
+    public static float dot(@NotNull FloatN left, @NotNull FloatN right) {
+        assert matchingDimensions(left, right);
+
+        float dot = 0.0f;
+        for(int i = 0; i < left.getMemberCount(); i++)
+            dot += left.get(i) * right.get(i);
+
+        return dot;
+    }
+
+
+
+    public static @NotNull Float3 cross(@NotNull Float3 left, @NotNull Float3 right, @NotNull Float3 store) {
+        float storeX, storeY, storeZ;
+
+        storeX = (left.get(1) * right.get(2)) - (left.get(2) * right.get(1));
+        storeY = (left.get(2) * right.get(0)) - (left.get(0) * right.get(2));
+        storeZ = (left.get(0) * right.get(1)) - (left.get(1) * right.get(0));
+
+        store.xyz(storeX, storeY, storeZ);
+        return store;
+    }
+
+    public static <V extends FloatN> @NotNull V normalize(@NotNull V toNormalize, @UniqueView @NotNull V store) {
+        assert matchingDimensions(toNormalize, store);
+        assert uniqueViewVector(store, toNormalize);
+
+        float length = 0;
+        for(int i = 0; i < toNormalize.getMemberCount(); i++)
+            length += toNormalize.get(i) * toNormalize.get(i);
+
+        length = (float) Math.sqrt(length);
+
+        for(int i = 0; i < toNormalize.getMemberCount(); i++)
+            store.put(i, toNormalize.get(i) / length);
+
+        return store;
+    }
+
+    public static <M extends FloatNxM> @NotNull M scale(@NotNull M toScale, float factor, @UniqueView @NotNull M store) {
         assert matchingDimensions(toScale, store);
 
         for(int x = 0; x < toScale.getWidth(); x++) {
@@ -245,16 +283,6 @@ public class VMath {
         }
 
         return store;
-    }
-
-    public static float dot(@NotNull FloatN left, @NotNull FloatN right) {
-        assert matchingDimensions(left, right);
-
-        float dot = 0.0f;
-        for(int i = 0; i < left.getMemberCount(); i++)
-            dot += left.get(i) * right.get(i);
-
-        return dot;
     }
 
     public static float determinant(@NotNull Float4x4 mat) {
@@ -443,38 +471,8 @@ public class VMath {
         return store;
     }
 
-    public static @NotNull Float4x4 inverse(@NotNull Float4x4 mat, @NotNull Float4x4 store) {
-        Float4x4 buf = VMath.adjugate(mat, new ABFloat4x4());
-
-        return VMath.scale(buf, 1f / VMath.determinant(mat), store);
+    public static @NotNull Float4x4 inverse(@NotNull Float4x4 mat, @Unique @NotNull Float4x4 store) {
+        return VMath.scale(VMath.adjugate(mat, store), 1f / VMath.determinant(mat), store);
     }
-
-    public static @NotNull Float3 cross(@NotNull Float3 left, @NotNull Float3 right, @NotNull Float3 store) {
-        float storeX, storeY, storeZ;
-
-        storeX = (left.get(1) * right.get(2)) - (left.get(2) * right.get(1));
-        storeY = (left.get(2) * right.get(0)) - (left.get(0) * right.get(2));
-        storeZ = (left.get(0) * right.get(1)) - (left.get(1) * right.get(0));
-
-        store.xyz(storeX, storeY, storeZ);
-        return store;
-    }
-
-    public static <V extends FloatN> @NotNull V normalize(@NotNull V toNormalize, @UniqueView @NotNull V store) {
-        assert matchingDimensions(toNormalize, store);
-        assert uniqueViewVector(store, toNormalize);
-
-        float length = 0;
-        for(int i = 0; i < toNormalize.getMemberCount(); i++)
-            length += toNormalize.get(i) * toNormalize.get(i);
-
-        length = (float) Math.sqrt(length);
-
-        for(int i = 0; i < toNormalize.getMemberCount(); i++)
-            store.put(i, toNormalize.get(i) / length);
-
-        return store;
-    }
-
 
 }
