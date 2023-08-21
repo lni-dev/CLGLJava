@@ -83,7 +83,8 @@ public class VMath {
     }
 
     /**
-     * Checks if no {@link Vector} in {@code vectors} is a {@link Vector#isView() view} on {@code unique}.
+     * Checks if no {@link Vector} in {@code vectors} is a {@link Vector#isView() view} on {@code unique} or if {@code unique}
+     * is a view, that {@code unique} is not a view on any vector in {@code vectors}.
      * @param vectors array of {@link Vector vectors}
      * @param unique vector which should be checked if it is unique (view wise)
      * @return {@code true} if no vector in {@code vectors} is a {@link Vector#isView() view} on {@code unique}
@@ -92,8 +93,12 @@ public class VMath {
         Vector original = unique.isView() ? unique.getOriginal() : unique;
 
         for(int i = 0; i < vectors.length; i++) {
-            if(vectors[i].isView() && original == vectors[i].getOriginal())
+            if(
+                    vectors[i].isView() && original == vectors[i].getOriginal()
+                    || unique.isView() && original == vectors[i]
+            ) {
                 return false;
+            }
         }
 
         return true;
@@ -125,7 +130,7 @@ public class VMath {
 
     /**
      * Marks that no other parameter may be a {@link Vector#isView() view} on this parameter. But they may
-     * be the same parameter
+     * be the same parameter. If this parameter is a {@link Vector#isView() view}, it may not view on any other parameter.
      */
     @Documented
     @Retention(RetentionPolicy.CLASS)
@@ -441,7 +446,7 @@ public class VMath {
     public static @NotNull Float4x4 inverse(@NotNull Float4x4 mat, @NotNull Float4x4 store) {
         Float4x4 buf = VMath.adjugate(mat, new ABFloat4x4());
 
-        return VMath.scale(buf, 1 / VMath.determinant(mat), store);
+        return VMath.scale(buf, 1f / VMath.determinant(mat), store);
     }
 
     public static @NotNull Float3 cross(@NotNull Float3 left, @NotNull Float3 right, @NotNull Float3 store) {
