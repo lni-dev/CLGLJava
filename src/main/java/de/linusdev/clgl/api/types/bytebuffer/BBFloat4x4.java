@@ -19,10 +19,11 @@ package de.linusdev.clgl.api.types.bytebuffer;
 import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.api.structs.StructureInfo;
 import de.linusdev.clgl.api.types.bytebuffer.utils.BBMatInfo;
-import de.linusdev.clgl.api.types.matrix.Float3x3;
+import de.linusdev.clgl.api.types.matrix.Float4x4;
 import org.jetbrains.annotations.NotNull;
 
-public class BBFloat4x4 extends BBFloatNxM<BBFloat4> implements Float3x3 {
+@SuppressWarnings("unused")
+public class BBFloat4x4 extends BBFloatNxM<BBFloat4> implements Float4x4 {
 
     public static final BBMatInfo<BBFloat4> MAT_INFO = new BBMatInfo<>(
             BBFloat4.class,

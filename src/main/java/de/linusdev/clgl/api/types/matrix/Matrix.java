@@ -32,7 +32,7 @@ public interface Matrix {
 
         for(int y = 0; y < matrix.getHeight(); y++) {
             for(int x = 0; x < matrix.getWidth(); x++) {
-                sb.append(String.format("% 10.5f", matrix.get(x, y)));
+                sb.append(String.format(" % 10.2f ", matrix.get(x, y)));
             }
             if(y != matrix.getHeight()-1)
                 sb.append("\n");
