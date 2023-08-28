@@ -16,11 +16,11 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.custom.EventWaitList;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import de.linusdev.lutils.struct.abstracts.Structure;
+import de.linusdev.lutils.struct.utils.BufferUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

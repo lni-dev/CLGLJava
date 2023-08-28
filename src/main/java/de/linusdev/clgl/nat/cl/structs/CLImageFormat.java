@@ -16,8 +16,8 @@
 
 package de.linusdev.clgl.nat.cl.structs;
 
-import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import org.jetbrains.annotations.NotNull;
 
 public class CLImageFormat extends BBInt2 {

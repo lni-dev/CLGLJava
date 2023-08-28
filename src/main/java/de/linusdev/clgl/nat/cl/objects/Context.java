@@ -16,14 +16,14 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
+import de.linusdev.clgl.nat.cl.listener.ContextOnError;
 import de.linusdev.clgl.nat.custom.StaticCallbackObject;
 import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
-import de.linusdev.clgl.nat.cl.listener.ContextOnError;
 import de.linusdev.clgl.nat.wgl.WGL;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
+import de.linusdev.lutils.struct.array.PrimitiveTypeArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

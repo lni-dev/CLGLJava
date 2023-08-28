@@ -18,8 +18,6 @@ package de.linusdev.clgl.nat.glfw3.objects;
 
 import de.linusdev.clgl.api.misc.annos.CallFromAnyThread;
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
-import de.linusdev.clgl.api.utils.BufferUtils;
 import de.linusdev.clgl.nat.Load;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.custom.StaticCallbackObject;
@@ -30,6 +28,8 @@ import de.linusdev.clgl.nat.glfw3.custom.*;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
+import de.linusdev.lutils.struct.utils.BufferUtils;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
@@ -286,7 +286,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
     @Override
     public void message(int source, int type, int id, int severity, ByteBuffer message, long userParam) {
         if(debugMessageListener != null) {
-            String msg = BufferUtils.byteBufferToString(message, false);
+            String msg = BufferUtils.readString(message, false);
             debugMessageListener.onMessage(source, type, id, severity, msg, userParam);
         }
     }
@@ -370,7 +370,7 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
 
         for(int i = 0; i < b.capacity(); i++) {
             long pointer = b.get(i);
-            pathArray[i] = Paths.get(BufferUtils.byteBufferToString(
+            pathArray[i] = Paths.get(BufferUtils.readString(
                     NativeUtils.getBufferFromPointer(pointer, 0), false));
         }
 

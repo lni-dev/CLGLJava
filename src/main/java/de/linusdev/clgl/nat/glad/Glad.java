@@ -16,8 +16,8 @@
 
 package de.linusdev.clgl.nat.glad;
 
-import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
 import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
+import de.linusdev.lutils.struct.array.PrimitiveTypeArray;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 
@@ -55,7 +55,7 @@ public class Glad {
     ) {
         _glGenFramebuffers(
                 ids.size(),
-                ids.getByteBuf()
+                ids.getByteBuffer()
         );
     }
 
@@ -73,7 +73,7 @@ public class Glad {
     ) {
         _glDeleteFramebuffers(
                 framebuffers.size(),
-                framebuffers.getByteBuf()
+                framebuffers.getByteBuffer()
         );
     }
 
@@ -100,7 +100,7 @@ public class Glad {
     ) {
         _glGenRenderbuffers(
                 renderbuffers.size(),
-                renderbuffers.getByteBuf()
+                renderbuffers.getByteBuffer()
         );
     }
 
@@ -118,7 +118,7 @@ public class Glad {
     ) {
         _glDeleteRenderbuffers(
                 renderbuffers.size(),
-                renderbuffers.getByteBuf()
+                renderbuffers.getByteBuffer()
         );
     }
 

@@ -16,20 +16,19 @@
 
 package de.linusdev.clgl.engine.structs;
 
-import de.linusdev.clgl.api.structs.*;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
+import de.linusdev.lutils.struct.abstracts.ComplexStructure;
+import de.linusdev.lutils.struct.annos.FixedLength;
+import de.linusdev.lutils.struct.annos.StructValue;
+import de.linusdev.lutils.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
 public class WorldStruct extends ComplexStructure {
 
-    public static final StructureInfo INFO = new StructureInfo();
-
     @StructValue public final @NotNull BBInt1 int1 = new BBInt1(false);
     @StructValue public final @NotNull BBInt1 int2 = new BBInt1(false);
     @StructValue public final @NotNull CameraStruct cam = new CameraStruct(false);
-    @StructValue @FixedElementSize(value = 5, elementType = PlayerStruct.class)
-    public final @NotNull StructureArray<PlayerStruct> players = new StructureArray<>(
-            false, true, PlayerStruct.INFO, 5, () -> new PlayerStruct(false));
+    @StructValue @FixedLength(value = 5, elementTypes = PlayerStruct.class) public final @NotNull StructureArray<PlayerStruct> players = new StructureArray<>(false, true, PlayerStruct.class, 5, () -> new PlayerStruct(false));
     @StructValue public final @NotNull PlayerStruct playerA = new PlayerStruct(false);
     @StructValue public final @NotNull PlayerStruct playerB = new PlayerStruct(false);
 
@@ -37,10 +36,5 @@ public class WorldStruct extends ComplexStructure {
     public WorldStruct(boolean allocateBuffer) {
         super(true);
         init(allocateBuffer);
-    }
-
-    @Override
-    protected @NotNull StructureInfo getInfo() {
-        return INFO;
     }
 }

@@ -16,11 +16,11 @@
 
 package de.linusdev.clgl.nat.glfw3;
 
-import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
 import de.linusdev.clgl.nat.glfw3.custom.ErrorCallback;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.llog.LLog;
 import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -178,7 +178,7 @@ public class GLFW {
 
 
     public static void glfwGetFramebufferSize(long pointer, @NotNull BBInt2 widthHeight) {
-        _glfwGetFramebufferSize(pointer, widthHeight.getByteBuf());
+        _glfwGetFramebufferSize(pointer, widthHeight.getByteBuffer());
     }
     protected static native void _glfwGetFramebufferSize(
             long pointer,

@@ -16,19 +16,22 @@
 
 package de.linusdev.clgl.nat.cl;
 
-import de.linusdev.clgl.api.structs.NativeArray;
-import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
-import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
-import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
-import de.linusdev.clgl.api.utils.BufferUtils;
-import de.linusdev.clgl.nat.cl.objects.*;
+import de.linusdev.clgl.nat.cl.objects.Context;
+import de.linusdev.clgl.nat.cl.objects.Event;
+import de.linusdev.clgl.nat.cl.objects.MemoryObject;
+import de.linusdev.clgl.nat.cl.objects.Program;
 import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
 import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLongN;
+import de.linusdev.lutils.struct.abstracts.Structure;
+import de.linusdev.lutils.struct.array.NativeArray;
+import de.linusdev.lutils.struct.array.PrimitiveTypeArray;
+import de.linusdev.lutils.struct.utils.BufferUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -57,8 +60,8 @@ public class CL {
     ) {
         return _clGetPlatformIDs(
                 array == null ? 0 : array.size(),
-                array == null ? null : array.getByteBuf(),
-                platformCount == null ? null : platformCount.getByteBuf()
+                array == null ? null : array.getByteBuffer(),
+                platformCount == null ? null : platformCount.getByteBuffer()
         );
     }
 
@@ -163,7 +166,7 @@ public class CL {
     }
 
     public static long getPlatformInfoLong(long platform, @NotNull PlatformInfo paramName) {
-        ByteBuffer longBuffer = BufferUtils.createAlignedByteBuffer(Long.BYTES, 8);
+        ByteBuffer longBuffer = BufferUtils.createAligned(Long.BYTES, 8);
         check(clGetPlatformInfo(platform, paramName, longBuffer, null));
         return longBuffer.getLong();
     }
@@ -172,7 +175,7 @@ public class CL {
         BBLong1 size = new BBLong1(true);
         check(clGetPlatformInfo(platform, paramName, null, size));
 
-        ByteBuffer info = BufferUtils.createAlignedByteBuffer((int) size.get(), 8);
+        ByteBuffer info = BufferUtils.createAligned((int) size.get(), 8);
         check(clGetPlatformInfo(platform, paramName, info, null));
 
         info.limit(info.capacity() - 1); //remove '\0' from c-string
@@ -190,7 +193,7 @@ public class CL {
                 paramName.getValue(),
                 paramValue == null ? 0 : paramValue.capacity(),
                 paramValue,
-                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuffer()
         );
     }
 
@@ -247,8 +250,8 @@ public class CL {
                 platform,
                 deviceType.getValue(),
                 array == null ? 0 : array.size(),
-                array == null ? null : array.getByteBuf(),
-                deviceCount == null ? null : deviceCount.getByteBuf()
+                array == null ? null : array.getByteBuffer(),
+                deviceCount == null ? null : deviceCount.getByteBuffer()
         );
     }
 
@@ -289,12 +292,12 @@ public class CL {
             @Nullable BBInt1 errCodeRet
     ) {
         return _clCreateContext(
-                properties == null ? null : properties.getByteBuf(),
+                properties == null ? null : properties.getByteBuffer(),
                 devices.size(),
-                devices.getByteBuf(),
+                devices.getByteBuffer(),
                 Context.class,
                 userData,
-                errCodeRet == null ? null : errCodeRet.getByteBuf()
+                errCodeRet == null ? null : errCodeRet.getByteBuffer()
         );
     }
 
@@ -366,8 +369,8 @@ public class CL {
         long pointer = _clCreateCommandQueueWithProperties(
                 context,
                 device,
-                properties == null ? null : properties.getByteBuf(),
-                errCodeRet.getByteBuf()
+                properties == null ? null : properties.getByteBuffer(),
+                errCodeRet.getByteBuffer()
         );
 
         check(errCodeRet.get());
@@ -392,7 +395,7 @@ public class CL {
                 context,
                 device,
                 properties == null ? 0 : properties.getValue(),
-                errCodeRet.getByteBuf()
+                errCodeRet.getByteBuffer()
         );
 
         check(errCodeRet.get());
@@ -459,7 +462,7 @@ public class CL {
                 clMemFlags.getValue(),
                 size,
                 null,
-                errCodeRet.getByteBuf()
+                errCodeRet.getByteBuffer()
         );
         check(errCodeRet.get());
         return pointer;
@@ -474,9 +477,9 @@ public class CL {
         long pointer = _clCreateBuffer(
                 context,
                 clMemFlags.getValue(),
-                hostPtr.getSize(),
-                hostPtr.getByteBuf(),
-                errCodeRet.getByteBuf()
+                hostPtr.getRequiredSize(),
+                hostPtr.getByteBuffer(),
+                errCodeRet.getByteBuffer()
         );
         check(errCodeRet.get());
         return pointer;
@@ -583,7 +586,7 @@ public class CL {
         long pointer = _clCreateProgramWithSource(
                 context,
                 src,
-                errCodeRet.getByteBuf()
+                errCodeRet.getByteBuffer()
         );
         check(errCodeRet.get());
         return pointer;
@@ -614,7 +617,7 @@ public class CL {
         check(_clBuildProgram(
                 program,
                 deviceList.size(),
-                deviceList.getByteBuf(),
+                deviceList.getByteBuffer(),
                 options,
                 Program.class,
                 user_data
@@ -714,7 +717,7 @@ public class CL {
                 program,
                 device,
                 param_name,
-                paramValue.getByteBuf(),
+                paramValue.getByteBuffer(),
                 null
         );
 
@@ -732,7 +735,7 @@ public class CL {
                 program,
                 device,
                 param_name,
-                paramValue.getByteBuf(),
+                paramValue.getByteBuffer(),
                 null
         );
 
@@ -754,7 +757,7 @@ public class CL {
                 paramValueSizeRet
         );
 
-        ByteBuffer paramValue = BufferUtils.createAlignedByteBuffer((int) paramValueSizeRet.get(), 8);
+        ByteBuffer paramValue = BufferUtils.createAligned((int) paramValueSizeRet.get(), 8);
 
         clGetProgramBuildInfo(
                 program,
@@ -781,7 +784,7 @@ public class CL {
                 param_name.getValue(),
                 paramValue == null ? 0 : paramValue.capacity(),
                 paramValue,
-                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuffer()
         ));
     }
 
@@ -933,7 +936,7 @@ public class CL {
                 sizeRet
         );
 
-        ByteBuffer paramValue = BufferUtils.createAlignedByteBuffer((int) sizeRet.get(), 8);
+        ByteBuffer paramValue = BufferUtils.createAligned((int) sizeRet.get(), 8);
 
         clGetDeviceInfo(
                 device,
@@ -957,7 +960,7 @@ public class CL {
                 paramName.getValue(),
                 paramValue == null ? 0 : paramValue.capacity(),
                 paramValue,
-                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuffer()
         ));
     }
 
@@ -978,7 +981,7 @@ public class CL {
         long pointer = _clCreateKernel(
                 program,
                 kernelName,
-                errCodeRet.getByteBuf()
+                errCodeRet.getByteBuffer()
         );
 
         check(errCodeRet.get());
@@ -1023,8 +1026,8 @@ public class CL {
         check(_clSetKernelArg(
                 kernel,
                 argIndex,
-                value.getSize(),
-                BufferUtils.getHeapAddress(value.getByteBuf()),
+                value.getRequiredSize(),
+                value.getPointer(),
                 false
         ));
     }
@@ -1066,7 +1069,7 @@ public class CL {
         clGetKernelInfo(
                 kernel,
                 paramName,
-                value.getByteBuf(),
+                value.getByteBuffer(),
                 null
         );
 
@@ -1086,7 +1089,7 @@ public class CL {
                 sizeRet
         );
 
-        ByteBuffer paramValue = BufferUtils.createAlignedByteBuffer((int) sizeRet.get(), 8);
+        ByteBuffer paramValue = BufferUtils.createAligned((int) sizeRet.get(), 8);
 
         clGetKernelInfo(
                 kernel,
@@ -1110,7 +1113,7 @@ public class CL {
                 paramName.getValue(),
                 paramValue == null ? 0 : paramValue.capacity(),
                 paramValue,
-                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuf()
+                paramValueSizeRet == null ? null : paramValueSizeRet.getByteBuffer()
         ));
     }
 
@@ -1136,9 +1139,9 @@ public class CL {
                 command_queue,
                 kernel,
                 work_dim,
-                globalWorkOffset == null ? null : globalWorkOffset.getByteBuf(),
-                globalWorkSize == null ? null : globalWorkSize.getByteBuf(),
-                localWorkSize == null ? null : localWorkSize.getByteBuf(),
+                globalWorkOffset == null ? null : globalWorkOffset.getByteBuffer(),
+                globalWorkSize == null ? null : globalWorkSize.getByteBuffer(),
+                localWorkSize == null ? null : localWorkSize.getByteBuffer(),
                 event_wait_list == null ? 0 : event_wait_list.length(),
                 event_wait_list == null ? null : event_wait_list.getByteBuffer(),
                 event == null ? null : event.getByteBuffer()

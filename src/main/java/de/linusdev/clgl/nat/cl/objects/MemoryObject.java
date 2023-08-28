@@ -16,14 +16,14 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.NativeParsable;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
 import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
+import de.linusdev.lutils.struct.abstracts.NativeParsable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

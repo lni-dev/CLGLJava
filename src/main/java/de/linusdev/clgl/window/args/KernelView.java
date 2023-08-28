@@ -16,10 +16,10 @@
 
 package de.linusdev.clgl.window.args;
 
-import de.linusdev.clgl.api.structs.Structure;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.nat.cl.objects.MemoryObject;
 import de.linusdev.clgl.window.CLGLWindow;
+import de.linusdev.lutils.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("unused")

@@ -16,11 +16,11 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.PrimitiveTypeArray;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.custom.ProgramBuild;
 import de.linusdev.clgl.nat.cl.custom.ProgramBuildFuture;
 import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
+import de.linusdev.lutils.struct.array.PrimitiveTypeArray;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

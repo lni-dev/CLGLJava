@@ -16,20 +16,17 @@
 
 package de.linusdev.clgl.nat.cl.structs;
 
-import de.linusdev.clgl.api.structs.ComplexStructure;
-import de.linusdev.clgl.api.structs.StructValue;
-import de.linusdev.clgl.api.structs.StructureInfo;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt1;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.objects.MemoryObject;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
+import de.linusdev.lutils.struct.abstracts.ComplexStructure;
+import de.linusdev.lutils.struct.annos.StructValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CLImageDesc extends ComplexStructure {
-
-    public static final StructureInfo INFO = new StructureInfo();
 
     @StructValue(0) public final @NotNull BBInt1 image_type = new BBInt1(false);
     @StructValue(1) public final @NotNull BBLong1 image_width = new BBLong1(false);
@@ -86,10 +83,5 @@ public class CLImageDesc extends ComplexStructure {
 
     public void setBuffer(@Nullable MemoryObject memoryObject) {
         buffer.set(memoryObject == null ? NativeUtils.getNullPointer() : memoryObject.get());
-    }
-
-    @Override
-    protected @NotNull StructureInfo getInfo() {
-        return INFO;
     }
 }

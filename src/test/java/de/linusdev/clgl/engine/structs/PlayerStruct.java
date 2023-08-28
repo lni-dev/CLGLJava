@@ -16,28 +16,22 @@
 
 package de.linusdev.clgl.engine.structs;
 
-import de.linusdev.clgl.api.structs.ComplexStructure;
-import de.linusdev.clgl.api.structs.StructValue;
-import de.linusdev.clgl.api.structs.StructureInfo;
-import de.linusdev.clgl.api.types.bytebuffer.BBFloat3;
+
+import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat3;
+import de.linusdev.lutils.struct.abstracts.ComplexStructure;
+import de.linusdev.lutils.struct.annos.StructValue;
 import org.jetbrains.annotations.NotNull;
 
 public class PlayerStruct extends ComplexStructure {
 
-    public static final StructureInfo INFO = new StructureInfo();
-
-    @StructValue public final @NotNull BBFloat3 position = new BBFloat3(false);
+    @StructValue
+    public final @NotNull BBFloat3 position = new BBFloat3(false);
     @StructValue public final @NotNull BBFloat3 color = new BBFloat3(false);
 
 
     public PlayerStruct(boolean allocateBuffer) {
         super(true);
         init(allocateBuffer);
-    }
-
-    @Override
-    protected @NotNull StructureInfo getInfo() {
-        return INFO;
     }
 
 }

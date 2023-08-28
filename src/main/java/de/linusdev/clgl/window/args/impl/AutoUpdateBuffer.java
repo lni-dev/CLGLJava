@@ -16,13 +16,13 @@
 
 package de.linusdev.clgl.window.args.impl;
 
-import de.linusdev.clgl.api.structs.ModTrackingStructure;
-import de.linusdev.clgl.api.structs.ModificationInfo;
 import de.linusdev.clgl.nat.cl.objects.Buffer;
 import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.args.ArgumentInfo;
 import de.linusdev.clgl.window.args.AutoUpdateArgument;
+import de.linusdev.lutils.struct.mod.ModTrackingStructure;
+import de.linusdev.lutils.struct.mod.ModificationInfo;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoUpdateBuffer implements AutoUpdateArgument {
@@ -49,8 +49,8 @@ public class AutoUpdateBuffer implements AutoUpdateArgument {
                 buffer.enqueueWriteBuffer(
                         window.getClQueue(),
                         false,
-                        0, false, structure.getSize(),
-                        structure.getByteBuf(),
+                        0, false, structure.getRequiredSize(),
+                        structure.getByteBuffer(),
                         null
                 );
                 return;
@@ -67,7 +67,7 @@ public class AutoUpdateBuffer implements AutoUpdateArgument {
                             false,
                             first.startOffset, true,
                             first.endOffset - first.startOffset,
-                            structure.getByteBuf(),
+                            structure.getByteBuffer(),
                             null
                     );
                     first = first.next;

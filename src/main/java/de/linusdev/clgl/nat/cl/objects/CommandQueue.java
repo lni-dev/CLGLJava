@@ -16,10 +16,10 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.NativeArray;
-import de.linusdev.clgl.api.types.bytebuffer.BBLongN;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.cl.custom.EventWaitList;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLongN;
+import de.linusdev.lutils.struct.array.NativeArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

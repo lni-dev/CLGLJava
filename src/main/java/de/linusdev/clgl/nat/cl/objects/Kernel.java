@@ -16,7 +16,7 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.Structure;
+import de.linusdev.lutils.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 
 import static de.linusdev.clgl.nat.cl.CL.*;

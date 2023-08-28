@@ -17,9 +17,6 @@
 package de.linusdev.clgl.window;
 
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
-import de.linusdev.clgl.api.structs.StructureArray;
-import de.linusdev.clgl.api.types.bytebuffer.BBInt2;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong2;
 import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.clgl.nat.cl.objects.*;
 import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
@@ -41,6 +38,9 @@ import de.linusdev.lutils.async.Task;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.bitfield.LongBitfield;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong2;
+import de.linusdev.lutils.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -119,7 +119,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
             this.openClVersion = ver;
             List<Device> devs;
-            if(plat == null || (devs = plat.getDevices(CL.DeviceType.CL_DEVICE_TYPE_GPU)).size() == 0) {
+            if(plat == null || (devs = plat.getDevices(CL.DeviceType.CL_DEVICE_TYPE_GPU)).isEmpty()) {
                 throw new UnsupportedOperationException("This computer does not have a GPU supporting OpenCL 2 or 3.");
             }
 
@@ -129,7 +129,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
 
         //Create gl objects array
-        glObjects = new StructureArray<>(true, false, MemoryObject.INFO, 1, () -> null);
+        glObjects = new StructureArray<>(true, false, MemoryObject.class, 1, () -> null);
 
 
         //Read window size

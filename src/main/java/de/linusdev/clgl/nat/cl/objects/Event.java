@@ -16,9 +16,7 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
-import de.linusdev.clgl.api.structs.Structure;
-import de.linusdev.clgl.api.types.bytebuffer.BBLong1;
-import org.jetbrains.annotations.NotNull;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
 
 @SuppressWarnings("unused")
 public class Event extends BBLong1 {
@@ -30,9 +28,8 @@ public class Event extends BBLong1 {
         super(true);
     }
 
-    public Event(@NotNull Structure parent, int offset) {
-        super(false);
-        useBuffer(parent, offset);
+    public Event(boolean allocateBuffer) {
+        super(allocateBuffer);
     }
 
     public long getPointer() {

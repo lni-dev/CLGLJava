@@ -17,7 +17,6 @@
 package de.linusdev.clgl.engine;
 
 import de.linusdev.clgl.api.misc.annos.CallOnlyFromUIThread;
-import de.linusdev.clgl.api.types.bytebuffer.BBFloat1;
 import de.linusdev.clgl.engine.kernel.source.KernelSourceInfo;
 import de.linusdev.clgl.engine.ticker.Tickable;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
@@ -32,6 +31,7 @@ import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
+import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
 import org.jetbrains.annotations.*;
 
 import java.util.concurrent.atomic.AtomicReference;
