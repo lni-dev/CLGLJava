@@ -16,6 +16,9 @@
 
 package de.linusdev.clgl.engine;
 
+import de.linusdev.clgl.engine.structs.WorldStruct;
+import de.linusdev.lutils.struct.abstracts.Structure;
+import de.linusdev.lutils.struct.generator.Language;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -30,6 +33,7 @@ class EngineTest {
 
         engine.loadScene(new TestScene(engine));
 
+        System.out.println(Structure.generateStructCode(Language.OPEN_CL, WorldStruct.class));
 
         engine.getUIThread().getWindowClosedFuture().get();
     }

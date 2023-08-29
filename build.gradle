@@ -57,6 +57,7 @@ test {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
@@ -99,7 +100,7 @@ tasks.named("build").get().dependsOn(cnlTask)
 
 dependencies {
     api 'de.linusdev:lutils:1.1.0'
-    implementation 'de.linusdev:llog:1.0.0'
+    implementation 'de.linusdev:llog:1.0.1'
     api 'org.jetbrains:annotations:24.0.1'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'

@@ -22,7 +22,6 @@ import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.args.ArgumentInfo;
 import de.linusdev.clgl.window.args.AutoUpdateArgument;
 import de.linusdev.lutils.struct.mod.ModTrackingStructure;
-import de.linusdev.lutils.struct.mod.ModificationInfo;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoUpdateBuffer implements AutoUpdateArgument {
@@ -39,44 +38,16 @@ public class AutoUpdateBuffer implements AutoUpdateArgument {
 
     @Override
     public void check() {
-        if (structure.isModified()) {
-            //set structure to unmodified first. During copying there may be coming in new modifications,
-            //that must be copied in the next check()...
-            structure.unmodified();
-
-            if (!structure.tracksModifications()) {
-                //No info about the modifications given. Copy the complete buffer.
+        structure.handleModifications(modInfo ->
                 buffer.enqueueWriteBuffer(
                         window.getClQueue(),
                         false,
-                        0, false, structure.getRequiredSize(),
+                        modInfo.startOffset,
+                        true,
+                        modInfo.endOffset - modInfo.startOffset,
                         structure.getByteBuffer(),
-                        null
-                );
-                return;
-            }
-
-            //Acquire lock for this structure's modifications info.
-            structure.acquireModificationLock();
-            try {
-                ModificationInfo first = structure.getFirstModificationInfo(true);
-
-                while (first != null) {
-                    buffer.enqueueWriteBuffer(
-                            window.getClQueue(),
-                            false,
-                            first.startOffset, true,
-                            first.endOffset - first.startOffset,
-                            structure.getByteBuffer(),
-                            null
-                    );
-                    first = first.next;
-                }
-            } finally {
-                structure.releaseModificationLock();
-            }
-
-        }
+                        null)
+        );
     }
 
     @Override
