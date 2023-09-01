@@ -31,7 +31,7 @@ enum CPPBuildType{
     }
 }
 
-CPPBuildType BUILD_TYPE = CPPBuildType.RELEASE
+CPPBuildType BUILD_TYPE = CPPBuildType.DEBUG_VS
 
 java {
     withJavadocJar()
@@ -57,8 +57,8 @@ test {
 }
 
 repositories {
-    mavenLocal()
     mavenCentral()
+    mavenLocal()
 }
 
 def cnlTask = tasks.register('copy-native-libraries') {
@@ -99,7 +99,7 @@ def cnlTask = tasks.register('copy-native-libraries') {
 tasks.named("build").get().dependsOn(cnlTask)
 
 dependencies {
-    api 'de.linusdev:lutils:1.1.0'
+    api 'de.linusdev:lutils:1.1.2'
     implementation 'de.linusdev:llog:1.0.1'
     api 'org.jetbrains:annotations:24.0.1'
 

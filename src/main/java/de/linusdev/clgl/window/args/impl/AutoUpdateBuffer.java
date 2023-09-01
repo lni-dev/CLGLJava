@@ -21,10 +21,15 @@ import de.linusdev.clgl.nat.cl.objects.Kernel;
 import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.args.ArgumentInfo;
 import de.linusdev.clgl.window.args.AutoUpdateArgument;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.struct.mod.ModTrackingStructure;
 import org.jetbrains.annotations.NotNull;
 
 public class AutoUpdateBuffer implements AutoUpdateArgument {
+
+    @SuppressWarnings("unused")
+    private final static @NotNull LogInstance log = LLog.getLogInstance();
 
     private final @NotNull ModTrackingStructure structure;
     private final @NotNull Buffer buffer;
@@ -38,15 +43,16 @@ public class AutoUpdateBuffer implements AutoUpdateArgument {
 
     @Override
     public void check() {
-        structure.handleModifications(modInfo ->
-                buffer.enqueueWriteBuffer(
+        structure.handleModifications(
+                modInfo -> buffer.enqueueWriteBuffer(
                         window.getClQueue(),
                         false,
                         modInfo.startOffset,
                         true,
                         modInfo.endOffset - modInfo.startOffset,
                         structure.getByteBuffer(),
-                        null)
+                        null
+                )
         );
     }
 

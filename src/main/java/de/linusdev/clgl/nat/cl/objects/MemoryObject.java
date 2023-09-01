@@ -74,14 +74,14 @@ public class MemoryObject extends BBLong1 implements AutoCloseable {
             return;
 
         try {
-            CL.clReleaseMemObject(getPointer());
+            CL.clReleaseMemObject(getOpenCLObjectPointer());
         } finally {
             closed = true;
             set(NativeUtils.getNullPointer());
         }
     }
 
-    public long getPointer() {
+    public long getOpenCLObjectPointer() {
         return get();
     }
 

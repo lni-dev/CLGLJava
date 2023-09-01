@@ -663,4 +663,21 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateImage(
     ));
 }
 
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clWaitForEvents
+ * Signature: (IJ)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clWaitForEvents(
+        JNIEnv * env,
+        jclass clazz,
+        jint num_events,
+        jlong ptr_event_list
+) {
+    return clWaitForEvents(
+            num_events,
+            reinterpret_cast<cl_event const*>(ptr_event_list)
+    );
+}
+
 

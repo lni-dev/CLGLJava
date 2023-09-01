@@ -129,6 +129,8 @@ public class TestScene extends Scene<TestGame> {
                 input.stop();
             }
         }).start();
+
+        world.playerA.position.modified();
     }
 
     @Override

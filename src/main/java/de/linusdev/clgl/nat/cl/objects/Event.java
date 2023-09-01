@@ -16,6 +16,7 @@
 
 package de.linusdev.clgl.nat.cl.objects;
 
+import de.linusdev.clgl.nat.cl.CL;
 import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
 
 @SuppressWarnings("unused")
@@ -32,13 +33,16 @@ public class Event extends BBLong1 {
         super(allocateBuffer);
     }
 
-    public long getPointer() {
+    public long getOpenCLObjectPointer() {
         return get();
     }
 
     public boolean isEmpty() {
-        return getPointer() == 0L;
+        return getOpenCLObjectPointer() == 0L;
     }
 
+    public void waitForEvent() {
+        CL.clWaitForEvent(this);
+    }
 
 }

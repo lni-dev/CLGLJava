@@ -1013,7 +1013,7 @@ public class CL {
                 kernel,
                 argIndex,
                 SIZE_OF_CL_MEM,
-                memoryObject.getPointer(),
+                memoryObject.getOpenCLObjectPointer(),
                 true
         ));
     }
@@ -1368,5 +1368,22 @@ public class CL {
             long p_image_desc,
             long host_ptr,
             @Nullable ByteBuffer p_errcode_ret
+    );
+
+    public static void clWaitForEvents(
+            NativeArray<Event> eventList
+    ) {
+        check(_clWaitForEvents(eventList.length(), eventList.getPointer()));
+    }
+
+    public static void clWaitForEvent(
+            Event event
+    ) {
+        check(_clWaitForEvents(1, event.getPointer()));
+    }
+
+    protected static native int _clWaitForEvents(
+            int num_events,
+            long ptr_event_list
     );
 }

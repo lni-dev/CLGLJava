@@ -231,6 +231,14 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clFlush
 JNIEXPORT jlong JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clCreateImage
   (JNIEnv *, jclass, jlong, jlong, jlong, jlong, jlong, jobject);
 
+/*
+ * Class:     de_linusdev_clgl_nat_cl_CL
+ * Method:    _clWaitForEvents
+ * Signature: (IJ)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_cl_CL__1clWaitForEvents
+  (JNIEnv *, jclass, jint, jlong);
+
 #ifdef __cplusplus
 }
 #endif
