@@ -208,6 +208,12 @@ public abstract class Scene<GAME extends Game> implements
         this.state.set(SceneState.STARTED);
     }
 
+    @ApiStatus.Internal
+    @NonBlocking
+    void tick0() {
+        tick();
+    }
+
     @Override
     public void update0(@NotNull Engine<GAME> engine, @NotNull FrameInfo frameInfo) {
 

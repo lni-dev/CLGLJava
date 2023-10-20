@@ -152,7 +152,7 @@ public enum SceneState {
 
         @Override
         <G extends Game> void tick(@NotNull Scene<G> scene) {
-            scene.tick();
+            scene.tick0();
         }
 
         @Override
