@@ -16,22 +16,55 @@
 
 package de.linusdev.clgl.engine.obj.collider;
 
+import de.linusdev.lutils.math.vector.abstracts.floatn.Float3;
 import org.jetbrains.annotations.NotNull;
 
 public interface Collider {
 
-    float distanceTo(@NotNull SphereCollider other);
+    /**
+     * Central position of this collider
+     */
+    @NotNull Float3 getCenter();
 
-    default float distanceTo(@NotNull Collider other) {
-        float min = 1000f;
-        SphereCollider[] children = other.getChildren();
-        //noinspection ForLoopReplaceableByForEach
-        for(int i = 0; i < children.length; i++)
-            min = Math.min(min, distanceTo(children[i]));
-        return min;
-    }
+    /**
+     *
+     * @return The longest diagonal (going through the center) of this collider.
+     */
+    float getDiagonal();
 
-    @NotNull SphereCollider @NotNull [] getChildren();
+    /**
+     * Best effort smallest-distance to given sphere-collider. Must always be smaller or equal to
+     * the {@link #exactDistanceTo(SphereCollider) exact smallest distance}.
+     * @param other sphere-collider to which the distance shall be calculated.
+     * @return distance as described above
+     */
+    float bestEffortDistanceTo(@NotNull SphereCollider other);
+
+    /**
+     * Exact smallest-distance to given sphere-collider.
+     * @param other sphere-collider to which the distance shall be calculated.
+     * @return distance as described above
+     */
+    float exactDistanceTo(@NotNull SphereCollider other);
+
+    /**
+     * Best effort smallest-distance to given aligned-box-collider. Must always be smaller or equal to
+     * the {@link #exactDistanceTo(AlignedBoxCollider) exact smallest distance}.
+     * @param other aligned-box-collider to which the distance shall be calculated.
+     * @return distance as described above
+     */
+    float bestEffortDistanceTo(@NotNull AlignedBoxCollider other);
+
+    /**
+     * Exact smallest-distance to given aligned-box-collider.
+     * @param other aligned-box-collider to which the distance shall be calculated.
+     * @return distance as described above
+     */
+    float exactDistanceTo(@NotNull AlignedBoxCollider other);
+
+    float bestEffortDistanceTo(@NotNull Collider other);
+
+    float exactDistanceTo(@NotNull Collider other);
 
     int getColliderGroup();
 

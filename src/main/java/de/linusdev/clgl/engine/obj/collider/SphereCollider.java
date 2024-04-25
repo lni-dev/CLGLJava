@@ -37,18 +37,53 @@ public class SphereCollider implements Collider {
         this.colliderGroup = colliderGroup;
         this.center = center;
         this.radius = radius;
+        throw new UnsupportedOperationException("Not Implemented");
     }
 
     @Override
-    public float distanceTo(@NotNull SphereCollider other) {
+    public @NotNull Float3 getCenter() {
+        return center;
+    }
+
+    public @NotNull Float1 getRadius() {
+        return radius;
+    }
+
+    @Override
+    public float getDiagonal() {
+        return radius.get() * 2f;
+    }
+
+    @Override
+    public float bestEffortDistanceTo(@NotNull SphereCollider other) {
+        return exactDistanceTo(other);
+    }
+
+    @Override
+    public float exactDistanceTo(@NotNull SphereCollider other) {
         return VMath.length(VMath.subtract(this.center, other.center, new ABFloat3()))
                         - this.radius.get()
                         - other.radius.get();
     }
 
     @Override
-    public @NotNull SphereCollider @NotNull [] getChildren() {
-        return new SphereCollider[]{this};
+    public float bestEffortDistanceTo(@NotNull AlignedBoxCollider other) {
+        return 0;
+    }
+
+    @Override
+    public float exactDistanceTo(@NotNull AlignedBoxCollider other) {
+        return 0;
+    }
+
+    @Override
+    public float bestEffortDistanceTo(@NotNull Collider other) {
+        return 0;
+    }
+
+    @Override
+    public float exactDistanceTo(@NotNull Collider other) {
+        return 0;
     }
 
     @Override

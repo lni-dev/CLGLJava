@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.clgl.nat.glfw3.custom;
+package de.linusdev.clgl.nat.glfw3.exceptions;
 
-import de.linusdev.clgl.nat.glfw3.exceptions.GLFWError;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public interface ErrorCallback {
-    void onError(@NotNull GLFWError error);
+public record GLFWError(
+        int code,
+        @Nullable String description
+) {
+
 }

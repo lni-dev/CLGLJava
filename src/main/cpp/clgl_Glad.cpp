@@ -22,7 +22,7 @@
  * Method:    gladLoadGL
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_gladLoadGL
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1gladLoadGL
   (JNIEnv* env, jclass clazz) {
     return gladLoadGL((GLADloadfunc)glfwGetProcAddress);
 }
@@ -323,6 +323,50 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallbac
             },
             reinterpret_cast<const void*>(userParam)
     );
+}
+
+
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenVertexArrays(
+        JNIEnv* env, jclass clazz, jint n, jlong p_arrays
+) {
+    glGenVertexArrays(n, reinterpret_cast<GLuint*>(p_arrays));
+}
+
+
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteVertexArrays(
+        JNIEnv* env, jclass clazz, jint n, jlong p_arrays
+) {
+    glDeleteVertexArrays(n, reinterpret_cast<const GLuint*>(p_arrays));
+}
+
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindVertexArray(
+        JNIEnv* env, jclass clazz, jint id
+) {
+    glBindVertexArray(id);
+}
+
+
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glGenBuffers
+ * Signature: (IJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenBuffers(
+        JNIEnv* env, jclass clazz, jint n, jlong p_buffers
+) {
+    glGenBuffers(n, reinterpret_cast<GLuint*>(p_buffers));
+}
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glDeleteBuffers
+ * Signature: (IJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteBuffers(
+        JNIEnv* env, jclass clazz, jint n, jlong p_buffers
+) {
+    glDeleteBuffers(n, reinterpret_cast<const GLuint*>(p_buffers));
 }
 
 

@@ -22,10 +22,12 @@ import de.linusdev.clgl.nat.cl.objects.*;
 import de.linusdev.clgl.nat.cl.structs.CLImageDesc;
 import de.linusdev.clgl.nat.cl.structs.CLImageFormat;
 import de.linusdev.clgl.nat.glad.Glad;
+import de.linusdev.clgl.nat.glad.GladInitException;
 import de.linusdev.clgl.nat.glad.objects.GLFrameBuffer;
 import de.linusdev.clgl.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
 import de.linusdev.clgl.nat.glfw3.custom.UpdateListener;
+import de.linusdev.clgl.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.clgl.window.args.AutoUpdateArgManager;
 import de.linusdev.clgl.window.args.KernelView;
@@ -87,8 +89,8 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     protected final @NotNull MemoryObject uiImageBuffer;
 
 
-    public CLGLWindow(@NotNull Handler handler, long maxQueuedTaskMillisPerFrame) {
-        this.glfwWindow = new GLFWWindow();
+    public CLGLWindow(@NotNull Handler handler, long maxQueuedTaskMillisPerFrame) throws GLFWException, GladInitException {
+        this.glfwWindow = new GLFWWindow(null);
         this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
 

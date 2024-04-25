@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,46 +19,36 @@ package de.linusdev.clgl.engine.obj.collider;
 import de.linusdev.lutils.math.vector.abstracts.floatn.Float3;
 import org.jetbrains.annotations.NotNull;
 
-public class ParentCollider implements Collider {
+public class AlignedBoxCollider implements Collider {
 
-    private final int colliderGroup;
-    private final @NotNull SphereCollider container;
-    private final @NotNull SphereCollider @NotNull [] colliders;
+    private final @NotNull Float3 center;
+    private final @NotNull Float3 size;
 
-    public ParentCollider(
-            int colliderGroup,
-            @NotNull SphereCollider container,
-            @NotNull SphereCollider @NotNull [] colliders
-    ) {
-        this.colliderGroup = colliderGroup;
-        this.container = container;
-        this.colliders = colliders;
+    public AlignedBoxCollider(@NotNull Float3 center, @NotNull Float3 size) {
+        this.center = center;
+        this.size = size;
         throw new UnsupportedOperationException("Not Implemented");
     }
 
+
     @Override
-    public float bestEffortDistanceTo(@NotNull SphereCollider other) {
-        return other.exactDistanceTo(container);
+    public @NotNull Float3 getCenter() {
+        return center;
     }
 
     @Override
     public float getDiagonal() {
-        return container.getRadius().get();
+        return 0;
     }
 
     @Override
-    public @NotNull Float3 getCenter() {
-        return container.getCenter();
+    public float bestEffortDistanceTo(@NotNull SphereCollider other) {
+        return 0;
     }
 
     @Override
     public float exactDistanceTo(@NotNull SphereCollider other) {
-        float min = 1000f;
-
-        for(SphereCollider collider : colliders)
-            min = Math.min(min, other.exactDistanceTo(collider));
-
-        return min;
+        return 0;
     }
 
     @Override
@@ -83,8 +73,10 @@ public class ParentCollider implements Collider {
 
     @Override
     public int getColliderGroup() {
-        return colliderGroup;
+        return 0;
     }
 
-
+    public @NotNull Float3 getSize() {
+        return size;
+    }
 }

@@ -12,7 +12,7 @@ extern "C" {
  * Method:    gladLoadGL
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_gladLoadGL
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1gladLoadGL
   (JNIEnv *, jclass);
 
 /*
@@ -198,6 +198,46 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDisable
  */
 JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallback
   (JNIEnv *, jclass, jobject, jlong);
+
+/*
+* Class:     de_linusdev_clgl_nat_glad_Glad
+* Method:    _glGenVertexArrays
+* Signature: (IJ)V
+*/
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenVertexArrays
+(JNIEnv *, jclass, jint, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glDeleteVertexArrays
+ * Signature: (IJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteVertexArrays
+  (JNIEnv *, jclass, jint, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    glBindVertexArray
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindVertexArray
+  (JNIEnv *, jclass, jint);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glGenBuffers
+ * Signature: (IJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenBuffers
+  (JNIEnv *, jclass, jint, jlong);
+
+/*
+ * Class:     de_linusdev_clgl_nat_glad_Glad
+ * Method:    _glDeleteBuffers
+ * Signature: (IJ)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteBuffers
+  (JNIEnv *, jclass, jint, jlong);
 
 #ifdef __cplusplus
 }

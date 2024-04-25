@@ -17,6 +17,10 @@
 package de.linusdev.clgl.nat.glad;
 
 import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
+import de.linusdev.clgl.nat.glad.objects.GLBuffer;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
+import de.linusdev.lutils.struct.abstracts.NativeParsable;
+import de.linusdev.lutils.struct.array.NativeArray;
 import de.linusdev.lutils.struct.array.PrimitiveTypeArray;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +32,12 @@ import static de.linusdev.clgl.nat.glad.GLConstants.*;
 @SuppressWarnings("unused")
 public class Glad {
 
-    public static native int gladLoadGL();
+    protected static native int _gladLoadGL();
+
+    public static void gladLoadGL() throws GladInitException {
+        if(_gladLoadGL() == 0)
+            throw new GladInitException();
+    }
 
     public static native void glClear(
             @MagicConstant(intValues = {GL_COLOR_BUFFER_BIT, GL_DEPTH_BUFFER_BIT, GL_STENCIL_BUFFER_BIT})
@@ -230,4 +239,109 @@ public class Glad {
             long userParam
     );
 
+    public static int glGenVertexArray() {
+        BBInt1 arrays = new BBInt1(true);
+        _glGenVertexArrays(1, arrays.getPointer());
+        return arrays.get();
+    }
+
+    public static void glGenVertexArrays(
+            @NotNull PrimitiveTypeArray<Integer> arrays
+    ) {
+        _glGenVertexArrays(
+                arrays.size(),
+                arrays.getPointer()
+        );
+    }
+
+    protected static native void _glGenVertexArrays(
+            int n,
+            long p_arrays
+    );
+
+    public static void glDeleteVertexArray(int name) {
+        BBInt1 arrays = new BBInt1(true);
+        arrays.set(name);
+        _glDeleteVertexArrays(1, arrays.getPointer());
+    }
+
+    public static void glDeleteVertexArrays(
+            @NotNull NativeArray<Integer> arrays
+    ) {
+        _glDeleteVertexArrays(
+                arrays.length(),
+                arrays.getPointer()
+        );
+    }
+
+    protected static native void _glDeleteVertexArrays(
+            int n,
+            long p_arrays
+    );
+
+    public static native void glBindVertexArray(int id);
+
+    public static int glGenBuffer() {
+        BBInt1 arrays = new BBInt1(true);
+        _glGenBuffers(1, arrays.getPointer());
+        return arrays.get();
+    }
+
+    public static void glGenBuffers(
+            @NotNull NativeArray<Integer> buffers
+    ) {
+        _glGenBuffers(buffers.length(), buffers.getPointer());
+    }
+
+    protected static native void _glGenBuffers(
+            int n,
+            long p_buffers
+    );
+
+    public static void glDeleteBuffer(int name) {
+        BBInt1 buffers = new BBInt1(true);
+        buffers.set(name);
+        _glDeleteBuffers(1, buffers.getPointer());
+    }
+
+    public static void glDeleteBuffers(
+            @NotNull NativeArray<Integer> buffers
+    ) {
+        _glDeleteBuffers(buffers.length(), buffers.getPointer());
+    }
+
+    private static native void _glDeleteBuffers(
+            int n,
+            long p_buffers
+    );
+
+    public static void glNamedBufferData(
+        GLBuffer buffer,
+        NativeParsable data,
+        @MagicConstant(intValues = {
+                GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW,
+                GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ,
+                GL_DYNAMIC_COPY
+        })
+        int usage
+    ) {
+        _glNamedBufferData(
+                buffer.getName(),
+                data.getRequiredSize(),
+                data.getPointer(),
+                usage
+        );
+    }
+
+    protected static native void _glNamedBufferData(
+            int buffer,
+            long size,
+            long p_data,
+            @MagicConstant(intValues = {
+                    GL_STREAM_DRAW, GL_STREAM_READ, GL_STREAM_COPY, GL_STATIC_DRAW,
+                    GL_STATIC_READ, GL_STATIC_COPY, GL_DYNAMIC_DRAW, GL_DYNAMIC_READ,
+                    GL_DYNAMIC_COPY
+            })
+            int usage
+    );
 }

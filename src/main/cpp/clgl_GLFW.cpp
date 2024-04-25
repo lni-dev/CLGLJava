@@ -531,3 +531,14 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwGetKeyScancode(
     return glfwGetKeyScancode(key);
 }
 
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetError(
+        JNIEnv* env, jclass clazz, jlong pointer
+) {
+    return glfwGetError(reinterpret_cast<const char**>(pointer));
+}
+
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwDefaultWindowHints
+        (JNIEnv *, jclass) {
+    glfwDefaultWindowHints();
+}
+

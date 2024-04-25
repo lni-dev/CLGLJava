@@ -263,6 +263,17 @@ JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetKeyName
 JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwGetKeyScancode
         (JNIEnv *, jclass, jint);
 
+/*
+ * Class:     de_linusdev_clgl_nat_glfw3_GLFW
+ * Method:    _glfwGetError
+ * Signature: (J)I
+ */
+JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW__1glfwGetError
+        (JNIEnv *, jclass, jlong);
+
+JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glfw3_GLFW_glfwDefaultWindowHints
+        (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

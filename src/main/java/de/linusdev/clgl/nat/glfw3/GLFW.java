@@ -16,11 +16,18 @@
 
 package de.linusdev.clgl.nat.glfw3;
 
+import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.glfw3.custom.ErrorCallback;
+import de.linusdev.clgl.nat.glfw3.custom.GLFWWindowHints;
+import de.linusdev.clgl.nat.glfw3.custom.NativeErrorCallback;
+import de.linusdev.clgl.nat.glfw3.exceptions.GLFWError;
+import de.linusdev.clgl.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.llog.LLog;
 import de.linusdev.lutils.llist.LLinkedList;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
+import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
+import de.linusdev.lutils.struct.utils.BufferUtils;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,15 +40,23 @@ public class GLFW {
     protected static boolean init = false;
 
     protected static final @NotNull LLinkedList<ErrorCallback> errorCallbacks = new LLinkedList<>();
-    protected static final @NotNull ErrorCallback staticErrorCallback = (error, description) -> {
-        LLog.getLogInstance().logError(description);
+    protected static final @NotNull NativeErrorCallback staticErrorCallback = (code, description) -> {
+        GLFWError error = new GLFWError(code, description);
+
+        LLog.getLogInstance().logError(
+                error.description() == null ?
+                        "Error " + error.code() + ": " + "No description provided." :
+                        "Error " + error.code() + ": " + error.description()
+        );
+
         for(ErrorCallback callback : errorCallbacks)
-            callback.onError(error, description);
+            callback.onError(error);
     };
 
-    public synchronized static void glfwInit() {
+    public synchronized static void glfwInit() throws GLFWException {
         if(!init) {
-            _glfwInit();
+            if(_glfwInit() == GLFWValues.GLFW_FALSE)
+                throw GLFWException.readFromGLFWGetError();
 
             Runtime.getRuntime().addShutdownHook(new Thread(GLFW::_glfwTerminate));
 
@@ -66,12 +81,35 @@ public class GLFW {
 
 
 
-    protected static native void _glfwSetErrorCallback(@NotNull ErrorCallback callback);
+    protected static native void _glfwSetErrorCallback(@NotNull NativeErrorCallback callback);
 
 
+    /**
+     * @param resetHints {@code true} to reset the window hints before creating this window
+     * @param hints custom window hints to set or {@code null}.
+     * @param width width of the window
+     * @param height height of the window
+     * @param title title of the window
+     * @return window pointer
+     * @throws GLFWException if the window cannot be created
+     */
+    public static long glfwCreateWindow(
+            boolean resetHints, @Nullable GLFWWindowHints hints,
+            int width, int height, String title
+    ) throws GLFWException {
 
-    public static long glfwCreateWindow(int width, int height, String title) {
-        return _glfwCreateWindow(width, height, title);
+        if(resetHints)
+            glfwDefaultWindowHints();
+
+        if(hints != null)
+            hints.adjustWindowHints();
+
+        long pointer = _glfwCreateWindow(width, height, title);
+
+        if(NativeUtils.isNull(pointer))
+            throw GLFWException.readFromGLFWGetError();
+
+        return pointer;
     }
     protected static native long _glfwCreateWindow(int width, int height, String title);
 
@@ -238,5 +276,23 @@ public class GLFW {
     public static native int glfwGetKeyScancode(
             @MagicConstant(valuesFromClass = GLFWValues.Keys_US.class) int key
     );
+
+    protected static native int _glfwGetError(long pointer);
+
+    public static @Nullable GLFWError glfwGetError() {
+        BBLong1 pointer = new BBLong1(true);
+
+        int code = _glfwGetError(pointer.getPointer());
+
+        if(code == GLFWValues.ErrorCodes.GLFW_NO_ERROR)
+            return null;
+
+        String description = NativeUtils.isNull(pointer.get()) ? null :
+                BufferUtils.readString(NativeUtils.getBufferFromPointer(pointer.get(), 0), false);
+
+        return new GLFWError(code, description);
+    }
+
+    public static native void glfwDefaultWindowHints();
 
 }

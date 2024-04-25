@@ -22,9 +22,11 @@ import de.linusdev.clgl.nat.Load;
 import de.linusdev.clgl.nat.NativeUtils;
 import de.linusdev.clgl.nat.custom.StaticCallbackObject;
 import de.linusdev.clgl.nat.custom.StaticCallbackObjects;
+import de.linusdev.clgl.nat.glad.GladInitException;
 import de.linusdev.clgl.nat.glad.custom.DebugMessageCallback;
 import de.linusdev.clgl.nat.glad.custom.DebugMessageListener;
 import de.linusdev.clgl.nat.glfw3.custom.*;
+import de.linusdev.clgl.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.llist.LLinkedList;
@@ -77,12 +79,12 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
     //Array "buffers"
     protected final char[] charCallbackBuffer = new char[2];
 
-    public GLFWWindow() {
+    public GLFWWindow(@Nullable GLFWWindowHints hints) throws GLFWException, GladInitException {
         Load.init();
         glfwInit();
 
         //Create window
-        this.pointer = glfwCreateWindow(500, 500, "Window");
+        this.pointer = glfwCreateWindow(true, hints, 500, 500, "Window");
         this.id = windows.add(this);
 
         //Init variables

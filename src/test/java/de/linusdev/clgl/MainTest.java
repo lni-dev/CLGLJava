@@ -16,15 +16,17 @@
 
 package de.linusdev.clgl;
 
+import de.linusdev.clgl.nat.cl.objects.Kernel;
+import de.linusdev.clgl.nat.cl.objects.Program;
+import de.linusdev.clgl.nat.glad.GladInitException;
+import de.linusdev.clgl.nat.glfw3.GLFWValues;
 import de.linusdev.clgl.nat.glfw3.custom.FrameInfo;
+import de.linusdev.clgl.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.Handler;
 import de.linusdev.clgl.window.args.KernelView;
 import de.linusdev.clgl.window.input.InputManger;
-import de.linusdev.clgl.nat.cl.objects.Kernel;
-import de.linusdev.clgl.nat.cl.objects.Program;
-import de.linusdev.clgl.nat.glfw3.GLFWValues;
-import de.linusdev.clgl.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.clgl.window.CLGLWindow;
 import de.linusdev.clgl.window.input.Key;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -115,8 +117,8 @@ public class MainTest {
     }
 
     @Test
-    void test() throws InterruptedException {
-        GLFWWindow window = new GLFWWindow();
+    void test() throws InterruptedException, GLFWException, GladInitException {
+        GLFWWindow window = new GLFWWindow(null);
 
         window.setSize(800, 500);
         window.setTitle("Nice");
