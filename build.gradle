@@ -1,3 +1,7 @@
+import de.linusdev.cvg4j.build.CPPBuildType
+import de.linusdev.cvg4j.build.FileDownloader
+import de.linusdev.cvg4j.build.codegen.VulkanXMLGeneratorTask
+
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -10,32 +14,31 @@ plugins {
 group 'de.linusdev'
 version '1.0.0'
 
+CPPBuildType buildType = CPPBuildType.DEBUG_VS_X64
 targetCompatibility = JavaVersion.VERSION_17
 sourceCompatibility = JavaVersion.VERSION_17
 compileJava.options.encoding = 'UTF-8'
 
-enum CPPBuildType{
-    RELEASE("cmake-build-release", "lib", "a"),
-    DEBUG("cmake-build-debug", "lib", "a"),
-    DEBUG_VS("cmake-build-debug-vs", "", "lib"),
-    ;
-
-    public final String folderName;
-    public final String filePrefix;
-    public final String fileEnding;
-
-    CPPBuildType (String folderName, String filePrefix, String fileEnding) {
-        this.folderName = folderName;
-        this.filePrefix = filePrefix;
-        this.fileEnding = fileEnding;
-    }
+def downloadVKTask = tasks.register("downloadVk.xml", FileDownloader.class) {
+    url "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/vk.xml"
 }
 
-CPPBuildType BUILD_TYPE = CPPBuildType.DEBUG_VS
+def generateVulkanFromXML = tasks.register("genFromVulkanXML", VulkanXMLGeneratorTask.class) {
+    basePackage = "de.linusdev.cvg4j.nat.vulkan"
+    vulkanXmlFile = downloadVKTask
+}
 
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir(generateVulkanFromXML)
+        }
+    }
 }
 
 javadoc {
@@ -57,8 +60,8 @@ test {
 }
 
 repositories {
-    mavenCentral()
     mavenLocal()
+    mavenCentral()
 }
 
 def cnlTask = tasks.register('copy-native-libraries') {
@@ -66,11 +69,11 @@ def cnlTask = tasks.register('copy-native-libraries') {
 
     def projectPath = project.projectDir.toPath()
 
-    def buildFolder = BUILD_TYPE.folderName;
+    def buildFolder = buildType.folderName;
 
-    def mainLib = projectPath.resolve(buildFolder + "\\" + BUILD_TYPE.filePrefix + "CLGLJava.jnilib")
-    def gladLib = projectPath.resolve(buildFolder + "\\libs\\glad\\" + BUILD_TYPE.filePrefix + "glad." + BUILD_TYPE.fileEnding)
-    def glfwLib = projectPath.resolve(buildFolder + "\\_deps\\glfw3-build\\src\\" + BUILD_TYPE.filePrefix + "glfw3." + BUILD_TYPE.fileEnding)
+    def mainLib = projectPath.resolve(buildFolder + "\\" + buildType.filePrefix + "CLGLJava.jnilib")
+    def gladLib = projectPath.resolve(buildFolder + "\\libs\\glad\\" + buildType.filePrefix + "glad." + buildType.fileEnding)
+    def glfwLib = projectPath.resolve(buildFolder + "\\_deps\\glfw3-build\\src\\" + buildType.filePrefix + "glfw3." + buildType.fileEnding)
 
     if(Files.exists(mainLib) && Files.exists(gladLib) && Files.exists(glfwLib)) {
         project.logger.lifecycle("Copying c/++ libraries")
@@ -99,7 +102,7 @@ def cnlTask = tasks.register('copy-native-libraries') {
 tasks.named("build").get().dependsOn(cnlTask)
 
 dependencies {
-    api 'de.linusdev:lutils:1.1.3'
+    api 'de.linusdev:lutils:2.0.0'
     implementation 'de.linusdev:llog:1.0.1'
     api 'org.jetbrains:annotations:24.0.1'
 

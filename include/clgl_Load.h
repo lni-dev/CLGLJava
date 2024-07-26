@@ -12,7 +12,7 @@ extern "C" {
  * Method:    _init
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1init
   (JNIEnv *, jclass);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
  * Method:    _close
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1close
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1close
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus

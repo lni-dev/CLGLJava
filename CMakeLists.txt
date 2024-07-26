@@ -18,7 +18,9 @@ add_library(${PROJECT_NAME} STATIC MODULE
         src/main/cpp/clgl_CL.cpp
         src/main/cpp/clgl_NativeUtils.cpp
         src/main/cpp/clgl_WGL.cpp
-        src/main/cpp/JniUtils.cpp)
+        src/main/cpp/clgl_Vulkan.cpp
+        src/main/cpp/JniUtils.cpp
+)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
@@ -31,6 +33,7 @@ find_package(Java REQUIRED)
 find_package(JNI REQUIRED)
 find_package(OpenCL REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(Vulkan REQUIRED)
 FetchContent_Declare(
         glfw3
         GIT_REPOSITORY https://github.com/glfw/glfw.git
@@ -43,6 +46,7 @@ target_link_libraries(${PROJECT_NAME}
         PRIVATE OpenGL::GL
         PUBLIC glfw
         PUBLIC glad
-        )
+        PRIVATE Vulkan::Vulkan
+)
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${JNI_INCLUDE_DIRS} ${_classDir} ${_stubDir} include)

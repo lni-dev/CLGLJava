@@ -12,7 +12,7 @@ extern "C" {
  * Method:    gladLoadGL
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1gladLoadGL
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1gladLoadGL
   (JNIEnv *, jclass);
 
 /*
@@ -20,7 +20,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1gladLoadGL
  * Method:    glClear
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClear
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glClear
   (JNIEnv *, jclass, jint);
 
 /*
@@ -28,7 +28,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClear
  * Method:    glClearColor
  * Signature: (FFFF)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClearColor
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glClearColor
   (JNIEnv *, jclass, jfloat, jfloat, jfloat, jfloat);
 
 /*
@@ -36,7 +36,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glClearColor
  * Method:    glFinish
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glFinish
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glFinish
   (JNIEnv *, jclass);
 
 /*
@@ -44,7 +44,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glFinish
  * Method:    glBindFramebuffer
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindFramebuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glBindFramebuffer
   (JNIEnv *, jclass, jint, jint);
 
 /*
@@ -52,7 +52,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindFramebuffer
  * Method:    _glGenFramebuffers
  * Signature: (ILjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenFramebuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glGenFramebuffers
   (JNIEnv *, jclass, jint, jobject);
 
 /*
@@ -60,7 +60,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenFramebuffers
  * Method:    glGenFramebuffer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenFramebuffer
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glGenFramebuffer
   (JNIEnv *, jclass);
 
 /*
@@ -68,7 +68,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenFramebuffer
  * Method:    glCreateFramebuffer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateFramebuffer
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glCreateFramebuffer
   (JNIEnv *, jclass);
 
 /*
@@ -76,7 +76,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateFramebuffer
  * Method:    _glDeleteFramebuffers
  * Signature: (ILjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteFramebuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glDeleteFramebuffers
   (JNIEnv *, jclass, jint, jobject);
 
 /*
@@ -84,7 +84,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteFramebuffer
  * Method:    glDeleteFramebuffer
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteFramebuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glDeleteFramebuffer
   (JNIEnv *, jclass, jint);
 
 /*
@@ -92,7 +92,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteFramebuffer
  * Method:    glNamedFramebufferRenderbuffer
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRenderbuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glNamedFramebufferRenderbuffer
   (JNIEnv *, jclass, jint, jint, jint, jint);
 
 /*
@@ -100,7 +100,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRen
  * Method:    _glGenRenderbuffers
  * Signature: (ILjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenRenderbuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glGenRenderbuffers
   (JNIEnv *, jclass, jint, jobject);
 
 /*
@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenRenderbuffers
  * Method:    glGenRenderbuffer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenRenderbuffer
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glGenRenderbuffer
   (JNIEnv *, jclass);
 
 /*
@@ -116,7 +116,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGenRenderbuffer
  * Method:    glCreateRenderbuffer
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateRenderbuffer
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glCreateRenderbuffer
   (JNIEnv *, jclass);
 
 /*
@@ -124,7 +124,7 @@ JNIEXPORT jint JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glCreateRenderbuffer
  * Method:    _glDeleteRenderbuffers
  * Signature: (ILjava/nio/ByteBuffer;)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteRenderbuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glDeleteRenderbuffers
   (JNIEnv *, jclass, jint, jobject);
 
 /*
@@ -132,7 +132,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteRenderbuffe
  * Method:    glDeleteRenderbuffer
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteRenderbuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glDeleteRenderbuffer
   (JNIEnv *, jclass, jint);
 
 /*
@@ -140,7 +140,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDeleteRenderbuffer
  * Method:    glNamedRenderbufferStorage
  * Signature: (IIII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedRenderbufferStorage
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glNamedRenderbufferStorage
   (JNIEnv *, jclass, jint, jint, jint, jint);
 
 /*
@@ -148,7 +148,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedRenderbufferSt
  * Method:    glBlitNamedFramebuffer
  * Signature: (IIIIIIIIIIII)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBlitNamedFramebuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glBlitNamedFramebuffer
   (JNIEnv *, jclass, jint, jint, jint, jint, jint, jint, jint, jint, jint, jint, jint, jint);
 
 /*
@@ -156,7 +156,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBlitNamedFramebuffe
  * Method:    glNamedFramebufferReadBuffer
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferReadBuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glNamedFramebufferReadBuffer
   (JNIEnv *, jclass, jint, jint);
 
 /*
@@ -164,7 +164,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferRea
  * Method:    glNamedFramebufferDrawBuffer
  * Signature: (II)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferDrawBuffer
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glNamedFramebufferDrawBuffer
   (JNIEnv *, jclass, jint, jint);
 
 /*
@@ -172,7 +172,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glNamedFramebufferDra
  * Method:    glGetString
  * Signature: (I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGetString
+JNIEXPORT jstring JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glGetString
   (JNIEnv *, jclass, jint);
 
 /*
@@ -180,7 +180,7 @@ JNIEXPORT jstring JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glGetString
  * Method:    glEnable
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glEnable
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glEnable
   (JNIEnv *, jclass, jint);
 
 /*
@@ -188,7 +188,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glEnable
  * Method:    glDisable
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDisable
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glDisable
   (JNIEnv *, jclass, jint);
 
 /*
@@ -196,7 +196,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDisable
  * Method:    glDebugMessageCallback
  * Signature: (Lde/linusdev/clgl/nat/glad/custom/DebugMessageCallback;J)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallback
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glDebugMessageCallback
   (JNIEnv *, jclass, jobject, jlong);
 
 /*
@@ -204,7 +204,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glDebugMessageCallbac
 * Method:    _glGenVertexArrays
 * Signature: (IJ)V
 */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenVertexArrays
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glGenVertexArrays
 (JNIEnv *, jclass, jint, jlong);
 
 /*
@@ -212,7 +212,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenVertexArrays
  * Method:    _glDeleteVertexArrays
  * Signature: (IJ)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteVertexArrays
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glDeleteVertexArrays
   (JNIEnv *, jclass, jint, jlong);
 
 /*
@@ -220,7 +220,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteVertexArray
  * Method:    glBindVertexArray
  * Signature: (I)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindVertexArray
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad_glBindVertexArray
   (JNIEnv *, jclass, jint);
 
 /*
@@ -228,7 +228,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad_glBindVertexArray
  * Method:    _glGenBuffers
  * Signature: (IJ)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenBuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glGenBuffers
   (JNIEnv *, jclass, jint, jlong);
 
 /*
@@ -236,7 +236,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glGenBuffers
  * Method:    _glDeleteBuffers
  * Signature: (IJ)V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_glad_Glad__1glDeleteBuffers
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glad_Glad__1glDeleteBuffers
   (JNIEnv *, jclass, jint, jlong);
 
 #ifdef __cplusplus

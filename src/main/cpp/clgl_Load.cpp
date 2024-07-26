@@ -22,7 +22,7 @@
  * Method:    _test
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1init
     (JNIEnv* env, jclass clazz)
 {
     if(JNI_UTILS != nullptr) return;
@@ -33,7 +33,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1init
 
 }
 
-JNIEXPORT void JNICALL Java_de_linusdev_clgl_nat_Load__1close
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1close
         (JNIEnv* env, jclass clazz)
 {
     //This causes problems, when some threads are still working while another already called the close method
