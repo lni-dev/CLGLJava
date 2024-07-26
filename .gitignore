@@ -1,6 +1,8 @@
 /cmake-build-*/
 /build/
+/buildSrc/build/
 /.gradle/
+/buildSrc/.gradle/
 *.log
 *.mdmp
 /*.lib
