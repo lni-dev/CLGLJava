@@ -22,30 +22,17 @@ import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
-
-public class HandleType implements Type {
-
-    private static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".handles";
+public class AliasOfBasicType implements Type{
 
     private final @NotNull String name;
     private final @NotNull Type alias;
-    private final @Nullable String parent;
-    private final @NotNull String objTypeEnum;
+    private final @NotNull String packageString;
 
-
-    public HandleType(
-            @NotNull String name,
-            @NotNull Type alias,
-            @Nullable String parent,
-            @NotNull String objTypeEnum
-    ) {
+    public AliasOfBasicType(@NotNull String name, @NotNull Type alias, @NotNull String packageString) {
         this.name = name;
         this.alias = alias;
-        this.parent = parent;
-        this.objTypeEnum = objTypeEnum;
+        this.packageString = packageString;
     }
 
 
@@ -64,7 +51,7 @@ public class HandleType implements Type {
             @NotNull RegistryLoader registry,
             @NotNull SourceGenerator generator
     ) {
-        JavaClassGenerator clazz = generator.addJavaFile(SUB_PACKAGE);
+        JavaClassGenerator clazz = generator.addJavaFile(packageString);
 
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);
@@ -78,7 +65,7 @@ public class HandleType implements Type {
         return new JavaClass() {
             @Override
             public @NotNull JavaPackage getPackage() {
-                return generator.getJavaBasePackage().extend(SUB_PACKAGE);
+                return generator.getJavaBasePackage().extend(packageString);
             }
 
             @Override

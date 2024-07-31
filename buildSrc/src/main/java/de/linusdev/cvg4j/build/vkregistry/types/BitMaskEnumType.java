@@ -23,21 +23,26 @@ import de.linusdev.lutils.bitfield.IntBitFieldValue;
 import de.linusdev.lutils.bitfield.LongBitFieldValue;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
+import de.linusdev.lutils.nat.enums.NativeEnumMember32;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Node;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 
 public class BitMaskEnumType implements Type {
-    private final static @NotNull String SUB_PACKAGE = "bitmasks.enums";
+    private final static @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".bitmasks.enums";
 
     private final @NotNull String name;
     private final int bitWidth;
     private final @Nullable String comment;
 
-    private final @NotNull Map<String, Value> values = new LinkedHashMap<>();
+    private final @NotNull LinkedHashMap<String, Value> values = new LinkedHashMap<>();
 
     public BitMaskEnumType(
             @NotNull String name,
@@ -69,11 +74,15 @@ public class BitMaskEnumType implements Type {
                 bitPostAttr == null ? -1 : Integer.parseInt(bitPostAttr.getNodeValue()),
                 valueAttr == null ? (aliasAttr == null ? null : aliasAttr.getNodeValue() + ".getValue()") : valueAttr.getNodeValue(),
                 commentAttr == null ? null : commentAttr.getNodeValue(),
-                deprecatedAttr == null ? null : deprecatedAttr.getNodeValue()
-        );
+                deprecatedAttr == null ? null : deprecatedAttr.getNodeValue(),
+                null);
 
         values.put(v.name, v);
 
+    }
+
+    public void addValue(@NotNull Value value) {
+        values.put(value.name, value);
     }
 
     @Override
@@ -95,9 +104,14 @@ public class BitMaskEnumType implements Type {
         if(comment != null) clazz.setJavaDoc(comment);
 
         if(bitWidth == 32)
-            clazz.setImplementedClasses(new JavaClass[]{JavaClass.ofClass(IntBitFieldValue.class)});
+            clazz.setImplementedClasses(new JavaClass[]{
+                    JavaClass.ofClass(IntBitFieldValue.class),
+                    JavaClass.ofClass(NativeEnumMember32.class)
+            });
         else if (bitWidth == 64)
-            clazz.setImplementedClasses(new JavaClass[]{JavaClass.ofClass(LongBitFieldValue.class)});
+            clazz.setImplementedClasses(new JavaClass[]{
+                    JavaClass.ofClass(LongBitFieldValue.class)
+            });
         else
             throw new UnsupportedOperationException("Unsupported bit width: " + bitWidth);
 
@@ -111,7 +125,17 @@ public class BitMaskEnumType implements Type {
         var valueParameter = constructor.addParameter("valueParam", valueVar.getType());
         constructor.body(body -> body.addExpression(JavaExpression.assign(valueVar, valueParameter)));
 
-        for (Value value : values.values()) {
+        // Sort, so that aliases are in last place.
+        var sortedVals = values.values().stream().sorted(
+                (o1, o2) -> {
+                    boolean bo1 = o1.stringValue != null && o1.stringValue.contains(".getValue()");
+                    boolean bo2 = o2.stringValue != null && o2.stringValue.contains(".getValue()");
+                    if(bo1 && !bo2) return 1;
+                    else if(!bo1 && bo2) return -1;
+                    return 0;
+                }
+        ).collect(Collectors.toCollection(ArrayList::new));
+        for (Value value : sortedVals) {
             JavaEnumMemberGenerator member;
             if (value.stringValue == null) {
                 member = clazz.addEnumMember(value.name,
@@ -133,8 +157,9 @@ public class BitMaskEnumType implements Type {
                                 JavaVariable.of(Deprecated.class, "since"),
                                 JavaExpression.ofString(value.deprecated)
                         );
-            if(value.comment != null)
-                member.setJavaDoc(value.comment);
+            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment);
+            if(value.writeDoc != null)
+                value.writeDoc.accept(doc);
         }
     }
 
@@ -159,19 +184,21 @@ public class BitMaskEnumType implements Type {
         private final @Nullable String stringValue;
         private final @Nullable String comment;
         private final @Nullable String deprecated;
+        private final @Nullable Consumer<JavaDocGenerator> writeDoc;
 
         public Value(
                 @NotNull String name,
                 int bitPos,
                 @Nullable String stringValue,
                 @Nullable String comment,
-                @Nullable String deprecated
+                @Nullable String deprecated, @Nullable Consumer<JavaDocGenerator> writeDoc
         ) {
             this.name = name;
             this.bitPos = bitPos;
             this.stringValue = stringValue;
             this.comment = comment;
             this.deprecated = deprecated;
+            this.writeDoc = writeDoc;
         }
     }
 }

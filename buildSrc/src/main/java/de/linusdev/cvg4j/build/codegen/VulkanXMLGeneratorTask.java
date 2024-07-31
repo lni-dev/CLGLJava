@@ -49,6 +49,9 @@ public class VulkanXMLGeneratorTask extends DefaultTask {
     @InputFile
     RegularFileProperty vulkanXmlFile = getProject().getObjects().fileProperty();
 
+    @InputFile
+    RegularFileProperty vulkanVideoXmlFile = getProject().getObjects().fileProperty();
+
     @Internal
     Property<SourceGenerator> sourceGenerator = getProject().getObjects().property(SourceGenerator.class)
             .convention(getProject().provider(() -> {
@@ -71,7 +74,10 @@ public class VulkanXMLGeneratorTask extends DefaultTask {
     @TaskAction
     void generate() throws ParserConfigurationException, IOException, SAXException {
         System.out.println("GENERATE");
-        RegistryLoader registry = new RegistryLoader(vulkanXmlFile.get().getAsFile().toPath());
+        RegistryLoader registry = new RegistryLoader(
+                vulkanXmlFile.get().getAsFile().toPath(),
+                vulkanVideoXmlFile.get().getAsFile().toPath()
+        );
         SourceGenerator generator = sourceGenerator.get();
 
         registry.generate(generator);
@@ -98,6 +104,17 @@ public class VulkanXMLGeneratorTask extends DefaultTask {
         this.vulkanXmlFile.set(vulkanXmlFile);
     }
 
+    public void setVulkanVideoXmlFile(TaskProvider<?> vulkanVideoXmlFile) {
+        dependsOn(vulkanVideoXmlFile);
+        this.vulkanVideoXmlFile.value(getProject().getLayout().file(getProject().provider(() ->
+                vulkanVideoXmlFile.get().getOutputs().getFiles().getSingleFile()
+        )));
+    }
+
+    public void setVulkanVideoXmlFile(File vulkanVideoXmlFile) {
+        this.vulkanXmlFile.set(vulkanVideoXmlFile);
+    }
+
     public void setGeneratedSourceRoot(Path generatedSourceRoot) {
         this.generatedSourceRoot.set(generatedSourceRoot);
     }
@@ -113,6 +130,10 @@ public class VulkanXMLGeneratorTask extends DefaultTask {
 
     public RegularFile getVulkanXmlFile() {
         return vulkanXmlFile.get();
+    }
+
+    public RegularFile getVulkanVideoXmlFile() {
+        return vulkanVideoXmlFile.get();
     }
 
     public Directory getGeneratedJavaSource() {

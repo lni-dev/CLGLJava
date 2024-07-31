@@ -26,12 +26,17 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Node;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 
 public class EnumType implements Type {
 
-    private final static @NotNull String SUB_PACKAGE = "enums";
+    private final static @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".enums";
 
     private final @NotNull String name;
     private final @Nullable String comment;
@@ -64,11 +69,15 @@ public class EnumType implements Type {
                 nameAttr.getNodeValue(),
                 valueAttr == null ? aliasAttr.getNodeValue() + ".getValue()" : valueAttr.getNodeValue(),
                 commentAttr == null ? null : commentAttr.getNodeValue(),
-                deprecatedAttr == null ? null : deprecatedAttr.getNodeValue()
-        );
+                deprecatedAttr == null ? null : deprecatedAttr.getNodeValue(),
+                null);
 
         values.put(v.name, v);
 
+    }
+
+    public void addValue(@NotNull Value value) {
+        values.put(value.name, value);
     }
 
     @Override
@@ -99,7 +108,17 @@ public class EnumType implements Type {
         var valueParameter = constructor.addParameter("valueParam", JavaClass.ofClass(int.class));
         constructor.body(body -> body.addExpression(JavaExpression.assign(valueVar, valueParameter)));
 
-        for (Value value : values.values()) {
+        // Sort, so that aliases are in last place.
+        var sortedVals = values.values().stream().sorted(
+                (o1, o2) -> {
+                    boolean bo1 = o1.stringValue.contains(".getValue()");
+                    boolean bo2 = o2.stringValue.contains(".getValue()");
+                    if(bo1 && !bo2) return 1;
+                    else if(!bo1 && bo2) return -1;
+                    return 0;
+                }
+        ).collect(Collectors.toCollection(ArrayList::new));
+        for (Value value : sortedVals) {
             var member = clazz.addEnumMember(value.name, JavaExpression.ofCode(value.stringValue));
             if(value.deprecated != null)
                 member.addAnnotation(JavaClass.ofClass(Deprecated.class))
@@ -107,8 +126,10 @@ public class EnumType implements Type {
                                 JavaVariable.of(Deprecated.class, "since"),
                                 JavaExpression.ofString(value.deprecated)
                         );
-            if(value.comment != null)
-                member.setJavaDoc(value.comment);
+
+            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment);
+            if(value.writeDoc != null)
+                value.writeDoc.accept(doc);
         }
     }
 
@@ -132,12 +153,14 @@ public class EnumType implements Type {
         private final @NotNull String stringValue;
         private final @Nullable String comment;
         private final @Nullable String deprecated;
+        private final @Nullable Consumer<JavaDocGenerator> writeDoc;
 
-        public Value(@NotNull String name, @NotNull String stringValue, @Nullable String comment, @Nullable String deprecated) {
+        public Value(@NotNull String name, @NotNull String stringValue, @Nullable String comment, @Nullable String deprecated, @Nullable Consumer<JavaDocGenerator> writeDoc) {
             this.name = name;
             this.stringValue = stringValue;
             this.comment = comment;
             this.deprecated = deprecated;
+            this.writeDoc = writeDoc;
         }
     }
 }

@@ -27,9 +27,11 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
+
 public class BitMaskType implements Type {
 
-    private static final @NotNull String SUB_PACKAGE = "bitmasks";
+    public static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".bitmasks";
 
     private final @NotNull String name;
     private final @NotNull Type alias;

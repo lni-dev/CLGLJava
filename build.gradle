@@ -23,9 +23,14 @@ def downloadVKTask = tasks.register("downloadVk.xml", FileDownloader.class) {
     url "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/vk.xml"
 }
 
+def downloadVKVideoTask = tasks.register("downloadVkVideo.xml", FileDownloader.class) {
+    url "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/video.xml"
+}
+
 def generateVulkanFromXML = tasks.register("genFromVulkanXML", VulkanXMLGeneratorTask.class) {
-    basePackage = "de.linusdev.cvg4j.nat.vulkan"
+    basePackage = "de.linusdev.cvg4j.nat"
     vulkanXmlFile = downloadVKTask
+    vulkanVideoXmlFile = downloadVKVideoTask
 }
 
 java {
@@ -50,7 +55,13 @@ javadoc {
         tags(
                 'implNote:a:Implementation Note:',
                 'implSpec:a:Implemenatation Requirements:',
-                'apiNote:a:API Note:'
+                'apiNote:a:API Note:',
+                'cvg4j.addedByExtension:a:Added By Extension:',
+                'cvg4j.vk.optional:a:Optional',
+                'cvg4j.vk.noAutoValidity:a:NoAutoValidity',
+                'cvg4j.vk.limitType:a:LimitType',
+                'cvg4j.vk.len:a:Len',
+                'cvg4j.cDef:a:C-Definition'
         )
     }
 }

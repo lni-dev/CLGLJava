@@ -21,33 +21,36 @@ import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
+import de.linusdev.lutils.nat.pointer.Pointer64;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import org.w3c.dom.Node;
 
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
+import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.findInChildren;
 
-public class HandleType implements Type {
+public class FunctionPointerType implements Type {
 
-    private static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".handles";
+    private final static @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".funcpointer";
+
+    private final @NotNull RegistryLoader registry;
 
     private final @NotNull String name;
-    private final @NotNull Type alias;
-    private final @Nullable String parent;
-    private final @NotNull String objTypeEnum;
+    private final @NotNull String cDefinition;
 
-
-    public HandleType(
-            @NotNull String name,
-            @NotNull Type alias,
-            @Nullable String parent,
-            @NotNull String objTypeEnum
+    public FunctionPointerType(
+            @NotNull RegistryLoader registry,
+            Node functionPointerNode
     ) {
-        this.name = name;
-        this.alias = alias;
-        this.parent = parent;
-        this.objTypeEnum = objTypeEnum;
-    }
+        this.registry = registry;
+        Node nameNode = findInChildren(functionPointerNode, "name");
 
+        if(nameNode == null)
+            throw new IllegalStateException("Function-pointer without name: " + functionPointerNode.getTextContent());
+
+        this.name = nameNode.getTextContent();
+        this.cDefinition = functionPointerNode.getTextContent();
+
+    }
 
     @Override
     public @NotNull String getName() {
@@ -59,22 +62,31 @@ public class HandleType implements Type {
         return TypeType.ALIAS_OF_BASIC;
     }
 
-    @Override
-    public void generate(
-            @NotNull RegistryLoader registry,
-            @NotNull SourceGenerator generator
-    ) {
-        JavaClassGenerator clazz = generator.addJavaFile(SUB_PACKAGE);
 
+    @Override
+    public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
+        System.out.println("GEN FunctionPointerType");
+
+        var clazz = generator.addJavaFile(SUB_PACKAGE);
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        clazz.setExtendedClass(alias.getJavaClass(registry, generator));
+        clazz.setJavaDoc("<pre>{@code " + cDefinition + "}</pre>");
+        clazz.setExtendedClass(JavaClass.ofClass(Pointer64.class));
+        var constructor = clazz.addConstructor();
+        constructor.body(block ->
+                block.addExpression(JavaExpression.callSuper(
+                        JavaExpression.booleanPrimitive(false),
+                        JavaExpression.nullExpression()
+                ))
+        );
+        constructor.setVisibility(JavaVisibility.PUBLIC);
+
+        System.out.println("END GEN FunctionPointerType");
     }
 
     @Override
     public @NotNull JavaClass getJavaClass(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-
         return new JavaClass() {
             @Override
             public @NotNull JavaPackage getPackage() {

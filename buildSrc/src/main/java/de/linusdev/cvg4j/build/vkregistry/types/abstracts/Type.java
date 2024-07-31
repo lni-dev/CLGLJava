@@ -42,6 +42,13 @@ public interface Type {
             @NotNull SourceGenerator generator
     );
 
+    default void ensureGenerated(
+            @NotNull RegistryLoader registry,
+            @NotNull SourceGenerator generator
+    ) {
+        throw new UnsupportedOperationException();
+    }
+
     @NotNull JavaClass getJavaClass(
             @NotNull RegistryLoader registry,
             @NotNull SourceGenerator generator

@@ -17,37 +17,25 @@
 package de.linusdev.cvg4j.build.vkregistry.types;
 
 import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
+import de.linusdev.cvg4j.build.vkregistry.types.abstracts.PossiblyUnresolvedType;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
-
-public class HandleType implements Type {
-
-    private static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".handles";
+public class AliasOfBitMaskType implements Type {
 
     private final @NotNull String name;
-    private final @NotNull Type alias;
-    private final @Nullable String parent;
-    private final @NotNull String objTypeEnum;
+    private final @NotNull PossiblyUnresolvedType alias;
 
-
-    public HandleType(
+    public AliasOfBitMaskType(
             @NotNull String name,
-            @NotNull Type alias,
-            @Nullable String parent,
-            @NotNull String objTypeEnum
+            @NotNull PossiblyUnresolvedType alias
     ) {
         this.name = name;
         this.alias = alias;
-        this.parent = parent;
-        this.objTypeEnum = objTypeEnum;
     }
-
 
     @Override
     public @NotNull String getName() {
@@ -56,29 +44,25 @@ public class HandleType implements Type {
 
     @Override
     public @NotNull TypeType getType() {
-        return TypeType.ALIAS_OF_BASIC;
+        return alias.resolve().getType();
     }
 
     @Override
-    public void generate(
-            @NotNull RegistryLoader registry,
-            @NotNull SourceGenerator generator
-    ) {
-        JavaClassGenerator clazz = generator.addJavaFile(SUB_PACKAGE);
+    public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
+        JavaClassGenerator clazz = generator.addJavaFile(BitMaskType.SUB_PACKAGE);
 
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        clazz.setExtendedClass(alias.getJavaClass(registry, generator));
+        clazz.setExtendedClass(alias.resolve().getJavaClass(registry, generator));
     }
 
     @Override
     public @NotNull JavaClass getJavaClass(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-
         return new JavaClass() {
             @Override
             public @NotNull JavaPackage getPackage() {
-                return generator.getJavaBasePackage().extend(SUB_PACKAGE);
+                return generator.getJavaBasePackage().extend(BitMaskType.SUB_PACKAGE);
             }
 
             @Override

@@ -27,13 +27,16 @@ public class BasicType implements Type {
 
     private final @NotNull String name;
     private final @NotNull CTypes alias;
+    private final @NotNull String packageString;
 
     public BasicType(
             @NotNull String name,
-            @NotNull CTypes alias
+            @NotNull CTypes alias,
+            @NotNull String packageString
     ) {
         this.name = name;
         this.alias = alias;
+        this.packageString = packageString;
     }
 
     @Override
@@ -53,25 +56,28 @@ public class BasicType implements Type {
 
     @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-        if(alias.getJavaStruct() == null)
+        if(alias.getJavaStruct() == null && alias != CTypes.VOID)
             throw new IllegalStateException("Trying to generate basic type " + name + " with illegal alias " + alias.name());
 
-        var clazz = generator.addJavaFile();
+        var clazz = generator.addJavaFile(packageString);
 
         clazz.setType(JavaClassType.CLASS);
         clazz.setName(name);
-        clazz.setExtendedClass(JavaClass.ofClass(alias.getJavaStruct()));
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        var constructor = clazz.addConstructor();
-        constructor.setVisibility(JavaVisibility.PUBLIC);
-        constructor.body(body -> {
-            body.addExpression(
-                    JavaExpression.callSuper(
-                            JavaExpression.booleanPrimitive(false),
-                            JavaExpression.nullExpression()
-                    )
-            );
-        });
+        clazz.setExtendedClass(alias.getJavaClass(registry, generator));
+
+        if(alias != CTypes.VOID){
+            var constructor = clazz.addConstructor();
+            constructor.setVisibility(JavaVisibility.PUBLIC);
+            constructor.body(body -> {
+                body.addExpression(
+                        JavaExpression.callSuper(
+                                JavaExpression.booleanPrimitive(false),
+                                JavaExpression.nullExpression()
+                        )
+                );
+            });
+        }
     }
 
     @Override
@@ -79,7 +85,7 @@ public class BasicType implements Type {
         return new JavaClass() {
             @Override
             public @NotNull JavaPackage getPackage() {
-                return generator.getJavaBasePackage();
+                return generator.getJavaBasePackage().extend(packageString);
             }
 
             @Override

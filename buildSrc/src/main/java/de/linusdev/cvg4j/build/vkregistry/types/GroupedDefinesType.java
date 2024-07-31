@@ -28,22 +28,42 @@ import org.w3c.dom.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
+
 public class GroupedDefinesType implements Type {
 
-    private final static @Nullable String SUB_PACKAGE = "constants";
+    private final static @Nullable String SUB_PACKAGE = VULKAN_PACKAGE + ".constants";
 
     private final @NotNull String name;
     private final @Nullable String comment;
+    private final @Nullable GroupedDefinesType parent;
     private final @NotNull Map<String, Define> defines = new LinkedHashMap<>();
 
-    public GroupedDefinesType(@NotNull String name, @Nullable String comment) {
+    private final @NotNull Object genLock = new Object();
+    private boolean isGenereated = false;
+    private JavaClassGenerator generated;
+
+    public GroupedDefinesType(
+            @NotNull String name,
+            @Nullable String comment,
+            @Nullable GroupedDefinesType parent
+    ) {
         this.name = name;
         this.comment = comment;
+        this.parent = parent;
     }
 
     public void addDefine(@NotNull Node enumNode) {
-        Define define = new Define(enumNode);
+        Define define = new Define(enumNode, this);
         defines.put(define.name, define);
+    }
+
+    public void addDefine(@NotNull Define define) {
+        defines.put(define.name, define);
+    }
+
+    public @NotNull Map<String, Define> getDefines() {
+        return defines;
     }
 
     @Override
@@ -57,8 +77,30 @@ public class GroupedDefinesType implements Type {
     }
 
     @Override
+    public void ensureGenerated(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
+        generate(registry, generator);
+    }
+
+    public JavaClassGenerator getGenerated(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
+        ensureGenerated(registry, generator);
+        return generated;
+    }
+
+    @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-        var clazz = generator.addJavaFile(SUB_PACKAGE);
+        synchronized (genLock) {
+            if(isGenereated)
+                return;
+            isGenereated = true;
+        }
+
+        JavaClassGenerator clazz =
+                parent == null ?
+                        generator.addJavaFile(SUB_PACKAGE)
+                        :
+                        parent.getGenerated(registry, generator).addSubClass(true);
+
+        generated = clazz;
 
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
@@ -67,12 +109,33 @@ public class GroupedDefinesType implements Type {
             clazz.setJavaDoc(comment);
 
         for (Define define : defines.values()) {
+            if(define.skip) continue;
             var var = clazz.addVariable(JavaClass.ofClass(define.getType(defines).getJavaClass()), define.getName(defines));
             var.setVisibility(JavaVisibility.PUBLIC);
             var.setStatic(true);
             var.setFinal(true);
-            var.setDefaultValue(JavaExpression.ofCode(define.getStringValue(defines)));
+
+            if(define.alias != null) {
+                var aliasDefine = registry.getPUDefine(define.alias).resolve();
+                if(aliasDefine.parent == this)
+                    var.setDefaultValue(JavaExpression.ofCode(define.getStringValue(defines)));
+                else
+                    var.setDefaultValue(JavaExpression.publicStaticVariable(aliasDefine.var));
+            } else {
+                // check if define is alias. Some defines are aliases, but the alias is set as value instead of alias.
+                Define def = registry.getDefine(define.stringValue);
+                if(def != null) {
+                    // alias
+                    def.parent.ensureGenerated(registry, generator);
+                    var.setDefaultValue(JavaExpression.publicStaticVariable(def.var));
+                } else {
+                    // no alias
+                    var.setDefaultValue(JavaExpression.ofCode(define.getStringValue(defines)));
+                }
+            }
+
             if(define.comment != null) var.setJavaDoc(define.comment);
+            define.var = var;
         }
     }
 
@@ -101,8 +164,13 @@ public class GroupedDefinesType implements Type {
         private final @NotNull String stringValue;
 
         private final @Nullable String comment;
+        private final boolean skip;
 
-        public Define(@NotNull Node enumNode) {
+        public final @NotNull GroupedDefinesType parent;
+        public JavaVariable var;
+
+        public Define(@NotNull Node enumNode, @NotNull GroupedDefinesType parent) {
+            this.parent = parent;
 
             if(enumNode.getAttributes() == null) {
                 throw new IllegalStateException("<enum> node without any attributes: " + enumNode.getTextContent());
@@ -114,18 +182,28 @@ public class GroupedDefinesType implements Type {
             Node aliasAttr = enumNode.getAttributes().getNamedItem("alias");
             Node commentAttr = enumNode.getAttributes().getNamedItem("comment");
 
-            if(nameAttr == null || (valueAttr == null && aliasAttr == null))
+            if(nameAttr == null)
                 throw new IllegalStateException("<enum> node without name or value/alias: " + enumNode.getTextContent());
 
             comment = commentAttr == null ? null : commentAttr.getNodeValue();
-
             name = nameAttr.getNodeValue();
+
+            if(valueAttr == null && aliasAttr == null) {
+                System.out.println("Skipping <enum> without value or alias attr.");
+                skip = true;
+                alias = null;
+                type = null;
+                stringValue = "";
+                return;
+            }
+
+
             if(aliasAttr != null) {
                 alias = aliasAttr.getNodeValue();
                 type = null;
                 stringValue = alias;
             } else if(typeAttr == null) {
-                if(valueAttr.getNodeValue().startsWith("\"")) type = CTypes.STRING;
+                if(valueAttr.getNodeValue().startsWith("\"")) type = CTypes.STRING_UTF8;
                 else type = CTypes.INT32;
                 stringValue = valueAttr.getNodeValue();
                 alias = null;
@@ -137,6 +215,26 @@ public class GroupedDefinesType implements Type {
                 stringValue = value;
                 alias = null;
             }
+
+            skip = false;
+        }
+
+        public Define(
+                @NotNull String name,
+                @Nullable String alias,
+                @Nullable CTypes type,
+                @NotNull String stringValue,
+                @Nullable String comment,
+                boolean skip,
+                @NotNull GroupedDefinesType parent
+        ) {
+            this.name = name;
+            this.alias = alias;
+            this.type = type;
+            this.stringValue = stringValue;
+            this.comment = comment;
+            this.skip = skip;
+            this.parent = parent;
         }
 
         public @NotNull String getName(@NotNull Map<String, Define> defineMap) {
@@ -146,7 +244,7 @@ public class GroupedDefinesType implements Type {
         public @NotNull CTypes getType(@NotNull Map<String, Define> defineMap) {
             if(type == null) {
                 if(alias == null)
-                    throw new IllegalStateException("alias and type are null.");
+                    throw new IllegalStateException("alias and type are null for define with name '" + name + "' in group " + parent.getName());
 
                 return defineMap.get(alias).getType(defineMap);
             }
