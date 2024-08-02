@@ -46,35 +46,35 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum CTypes implements Type {
-    CHAR(BBByte1.class, "char", byte.class, Byte.BYTES * 8, null, null),
-    FLOAT(BBFloat1.class, "float", float.class, Float.BYTES * 8, null, null),
-    DOUBLE(BBDouble1.class, "double", double.class, Double.BYTES * 8, null, null),
-    INT(NativeInteger.class, "int", long.class, -1, null, null),
-    INT8(BBByte1.class, "int8_t", byte.class, Byte.BYTES * 8, null, null),
-    UINT8(BBUByte1.class, "uint8_t", byte.class, Byte.BYTES * 8, null, NativeUInt8Array.class),
-    INT16(BBShort1.class, "int16_t", short.class, Short.BYTES * 8, null, null),
-    UINT16(BBUShort1.class, "uint16_t", short.class, Short.BYTES * 8, null, null),
-    UINT32(BBUInt1.class, "uint32_t", int.class, Integer.BYTES * 8, IntBitfield.class, null),
-    UINT64(BBULong1.class, "uint64_t", long.class, Long.BYTES * 8, LongBitfield.class, null),
-    INT32(BBInt1.class, "int32_t", int.class, Integer.BYTES * 8, IntBitfield.class, NativeInt32Array.class),
-    INT64(BBLong1.class, "int64_t", long.class, Long.BYTES * 8, LongBitfield.class, NativeInt64Array.class),
-    SIZE(BBULong1.class, "size_t", long.class, Long.BYTES * 8, null, null),
-    POINTER(Pointer64.class, "*", long.class, Long.BYTES * 8, null, null),
+    CHAR("B", BBByte1.class, "char", byte.class, Byte.BYTES * 8, null, null),
+    FLOAT("F", BBFloat1.class, "float", float.class, Float.BYTES * 8, null, null),
+    DOUBLE("D", BBDouble1.class, "double", double.class, Double.BYTES * 8, null, null),
+    INT("NI", NativeInteger.class, "int", long.class, -1, null, null),
+    INT8("B", BBByte1.class, "int8_t", byte.class, Byte.BYTES * 8, null, null),
+    UINT8("UB", BBUByte1.class, "uint8_t", byte.class, Byte.BYTES * 8, null, NativeUInt8Array.class),
+    INT16("S", BBShort1.class, "int16_t", short.class, Short.BYTES * 8, null, null),
+    UINT16("US", BBUShort1.class, "uint16_t", short.class, Short.BYTES * 8, null, null),
+    UINT32("UI", BBUInt1.class, "uint32_t", int.class, Integer.BYTES * 8, IntBitfield.class, null),
+    UINT64("UL", BBULong1.class, "uint64_t", long.class, Long.BYTES * 8, LongBitfield.class, null),
+    INT32("I", BBInt1.class, "int32_t", int.class, Integer.BYTES * 8, IntBitfield.class, NativeInt32Array.class),
+    INT64("L", BBLong1.class, "int64_t", long.class, Long.BYTES * 8, LongBitfield.class, NativeInt64Array.class),
+    SIZE("UL", BBULong1.class, "size_t", long.class, Long.BYTES * 8, null, null),
+    POINTER("P", Pointer64.class, "*", long.class, Long.BYTES * 8, null, null),
 
-    VOID(null,
+    VOID("V", null,
             JavaClass.custom("de.linusdev.cvg4j.nat", "UnknownStruct"),
             "void", void.class, -1, null, null
     ),
 
 
-    STRING_UTF8(TypedPointer64.class,
+    STRING_UTF8("P", TypedPointer64.class,
             JavaClass.ofClass(TypedPointer64.class).withGenerics(
                     JavaClass.ofClass(NullTerminatedUTF8String.class)
             ),
             "char*", String.class, -1, null, null
     ),
 
-    STRING_UTF16(TypedPointer64.class,
+    STRING_UTF16("P", TypedPointer64.class,
                 JavaClass.ofClass(TypedPointer64.class).withGenerics(
             JavaClass.ofClass(NullTerminatedUTF16String.class)
             ),
@@ -91,6 +91,7 @@ public enum CTypes implements Type {
         throw new IllegalStateException("Unknown type " + name);
     }
 
+    private final @NotNull String shortName;
     private final @Nullable Class<? extends Structure> javaStruct;
     private final @Nullable JavaClass javaStructAsJavaClass;
     private final @NotNull String cName;
@@ -100,12 +101,13 @@ public enum CTypes implements Type {
     private final @Nullable Class<?> nativeArrayClass;
 
     CTypes(
-            @Nullable Class<? extends Structure> javaStruct,
+            @NotNull String shortName, @Nullable Class<? extends Structure> javaStruct,
             @Nullable JavaClass javaStructAsJavaClass,
             @NotNull String cName,
             @NotNull Class<?> javaClass,
             int bitWidth, @Nullable Class<?> bitFieldInterface, @Nullable Class<?> nativeArrayClass
     ) {
+        this.shortName = shortName;
         this.javaStruct = javaStruct;
         this.javaStructAsJavaClass = javaStructAsJavaClass;
         this.cName = cName;
@@ -116,13 +118,14 @@ public enum CTypes implements Type {
     }
 
     CTypes(
+            @NotNull String shortName,
             @Nullable Class<? extends Structure> javaStruct,
             @NotNull String cName,
             @NotNull Class<?> javaClass,
             int bitWidth,
             @Nullable Class<?> bitFieldInterface, @Nullable Class<?> nativeArrayClass
     ) {
-        this(javaStruct, (JavaClass) null, cName, javaClass, bitWidth, bitFieldInterface, nativeArrayClass);
+        this(shortName, javaStruct, (JavaClass) null, cName, javaClass, bitWidth, bitFieldInterface, nativeArrayClass);
     }
 
     public @Nullable Class<? extends Structure> getJavaStruct() {
@@ -166,6 +169,10 @@ public enum CTypes implements Type {
 
     public @Nullable JavaClass getJavaStructAsJavaClass() {
         return javaStructAsJavaClass;
+    }
+
+    public @NotNull String getShortName() {
+        return shortName;
     }
 
     @Override

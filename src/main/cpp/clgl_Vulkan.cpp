@@ -25,7 +25,7 @@
 
 typedef VkResult (VKAPI_PTR *PFN_callVulkanFunction1)(void* pCreateInfo, void* pAllocator, void* pInstance);
 
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_vulkan_Vulkan_callVulkanFunction1(
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_vulkan_Vulkan_callVulkanFunction1(
         JNIEnv *, jclass, jlong p_function, jlong p_1, jlong p_2, jlong p_3
 ) {
     auto fun = reinterpret_cast<PFN_callVulkanFunction1>(p_function);

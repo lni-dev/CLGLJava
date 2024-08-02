@@ -18,6 +18,8 @@ package de.linusdev.cvg4j.engine;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
 import de.linusdev.cvg4j.nat.ABISelector;
+import de.linusdev.cvg4j.nat.Load;
+import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
 import de.linusdev.cvg4j.window.CLGLWindow;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
@@ -26,6 +28,7 @@ import de.linusdev.cvg4j.window.queue.ReturnRunnable;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,18 +36,26 @@ import org.jetbrains.annotations.NotNull;
 public interface Engine<G extends Game> {
 
     class StaticSetup {
+
+        static {
+            setup();
+        }
+
         private static boolean staticSetupDone = false;
 
         private static void checkSetup() {
             if(!staticSetupDone)
-                throw new IllegalStateException("Engine.staticSetup() must be called as first line in main.");
+                throw new IllegalStateException("Engine.StaticSetup.setup() must be called as first line in main.");
         }
-    }
 
-
-    static void staticSetup() {
-        ABISelector.retrieveAndSetDefaultABI();
-        StaticSetup.staticSetupDone = true;
+        public static void setup() {
+            if(StaticSetup.staticSetupDone)
+                return;
+            ABISelector.retrieveAndSetDefaultABI();
+            Load.init();
+            BufferUtils.setByteBufferFromPointerMethod(NativeUtils::getBufferFromPointer);
+            StaticSetup.staticSetupDone = true;
+        }
     }
 
     /**

@@ -73,7 +73,7 @@ public class GroupedDefinesType implements Type {
 
     @Override
     public @NotNull TypeType getType() {
-        return TypeType.ENUM;
+        return TypeType.DEFINE_CLASS;
     }
 
     @Override

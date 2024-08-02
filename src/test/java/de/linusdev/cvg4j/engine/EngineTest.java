@@ -27,7 +27,7 @@ class EngineTest {
 
     @Test
     public void test() throws InterruptedException, IOException {
-        Engine.staticSetup();
+        Engine.StaticSetup.setup();
 
         TestGame yourGame = new TestGame();
         Engine<TestGame> engine = Engine.getInstance(yourGame);

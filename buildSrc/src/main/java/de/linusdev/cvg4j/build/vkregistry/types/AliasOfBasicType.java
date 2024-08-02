@@ -47,6 +47,11 @@ public class AliasOfBasicType implements Type{
     }
 
     @Override
+    public @NotNull CTypes getAsBaseType() {
+        return alias.getAsBaseType();
+    }
+
+    @Override
     public void generate(
             @NotNull RegistryLoader registry,
             @NotNull SourceGenerator generator

@@ -18,7 +18,6 @@ package de.linusdev.cvg4j.nat.glfw3.objects;
 
 import de.linusdev.cvg4j.api.misc.annos.CallFromAnyThread;
 import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
-import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.custom.StaticCallbackObject;
 import de.linusdev.cvg4j.nat.custom.StaticCallbackObjects;
@@ -84,7 +83,6 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
             @NotNull RenderAPI renderApi,
             @Nullable GLFWWindowHints hints
     ) throws GLFWException, GladInitException {
-        Load.init();
         glfwInit();
 
         if(hints == null)
@@ -119,9 +117,11 @@ public class GLFWWindow implements AutoCloseable, StaticCallbackObject<GLFWWindo
         glfwSetDropCallback(this.pointer);
 
         //OpenGL
-        if(renderApi == RenderAPI.OPENGL) makeGLContextCurrent();
-        glfwSwapInterval(0);
-        if(renderApi == RenderAPI.OPENGL) gladLoadGL();
+        if(renderApi == RenderAPI.OPENGL) {
+            makeGLContextCurrent();
+            glfwSwapInterval(0);
+            gladLoadGL();
+        }
     }
 
     public void makeGLContextCurrent() {

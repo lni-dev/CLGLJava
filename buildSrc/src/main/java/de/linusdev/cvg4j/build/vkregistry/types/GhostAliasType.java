@@ -54,6 +54,11 @@ public class GhostAliasType implements Type {
     }
 
     @Override
+    public @NotNull CTypes getAsBaseType() {
+        return alias.resolve().getAsBaseType();
+    }
+
+    @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
         return;
     }

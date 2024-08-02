@@ -60,6 +60,11 @@ public class HandleType implements Type {
     }
 
     @Override
+    public @NotNull CTypes getAsBaseType() {
+        return CTypes.POINTER;
+    }
+
+    @Override
     public void generate(
             @NotNull RegistryLoader registry,
             @NotNull SourceGenerator generator

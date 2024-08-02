@@ -31,9 +31,10 @@ public interface Type {
     /**
      * @return {@link CTypes} this type represents
      * @throws UnsupportedOperationException if {@link #getType()} is not
-     * {@link TypeType#BASIC BASIC} or {@link TypeType#ALIAS_OF_BASIC ALIAS_OF_BASIC}
+     * {@link TypeType#BASIC BASIC}, {@link TypeType#ALIAS_OF_BASIC ALIAS_OF_BASIC} or {@link TypeType#ENUM ENUM}
      */
     default @NotNull CTypes getAsBaseType() {
+        System.out.println(getClass().getSimpleName() + ": " + getName());
         throw new UnsupportedOperationException();
     }
 

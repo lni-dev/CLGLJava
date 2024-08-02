@@ -25,8 +25,12 @@ import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.llog.LLog;
 import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
+import de.linusdev.lutils.nat.pointer.TypedPointer64;
+import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
+import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.intellij.lang.annotations.MagicConstant;
 import org.jetbrains.annotations.NotNull;
@@ -298,5 +302,15 @@ public class GLFW {
     public static native int glfwVulkanSupported();
 
     public static native long glfwGetInstanceProcAddress(long p_instance, String procname);
+
+    protected static native long glfwGetRequiredInstanceExtensions(long pCount);
+
+    @NotNull
+    public static StructureArray<TypedPointer64<NullTerminatedUTF8String>> glfwGetRequiredInstanceExtensions() {
+        BBInt1 count = BBInt1.newAllocated(null);
+        long pointer = glfwGetRequiredInstanceExtensions(count.getPointer());
+
+        return StructureArray.ofPointer(false, TypedPointer64.class, count.get(), pointer, TypedPointer64::newUnallocated1);
+    }
 
 }

@@ -562,3 +562,15 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwGetInstancePro
     return reinterpret_cast<jlong>(ret);
 }
 
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwGetRequiredInstanceExtensions
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwGetRequiredInstanceExtensions(
+        JNIEnv * env, jclass clazz,
+        jlong pCount
+) {
+    return (jlong) glfwGetRequiredInstanceExtensions(reinterpret_cast<uint32_t*>(pCount));
+}
+

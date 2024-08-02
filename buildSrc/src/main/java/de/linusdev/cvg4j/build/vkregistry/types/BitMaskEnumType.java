@@ -96,6 +96,16 @@ public class BitMaskEnumType implements Type {
     }
 
     @Override
+    public @NotNull CTypes getAsBaseType() {
+        if(bitWidth == 32)
+            return CTypes.INT32;
+        else if (bitWidth == 64)
+            return CTypes.INT64;
+
+        throw new Error();
+    }
+
+    @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
         var clazz = generator.addJavaFile(SUB_PACKAGE);
         clazz.setName(name);

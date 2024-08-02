@@ -12,10 +12,10 @@ extern "C" {
  * Method:    _vkCreateInstance
  * Signature: (JJJ)I
  */
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_vulkan_Vulkan__1vkCreateInstance
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_vulkan_Vulkan__1vkCreateInstance
   (JNIEnv *, jclass, jlong, jlong, jlong);
 
-JNIEXPORT jint JNICALL Java_de_linusdev_clgl_vulkan_Vulkan_callVulkanFunction1
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_vulkan_Vulkan_callVulkanFunction1
         (JNIEnv *, jclass, jlong, jlong, jlong, jlong);
 
 #ifdef __cplusplus

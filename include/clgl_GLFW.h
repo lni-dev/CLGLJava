@@ -274,6 +274,11 @@ JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW__1glfwGetError
 JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwDefaultWindowHints
         (JNIEnv *, jclass);
 
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwVulkanSupported
+ * Signature: ()I
+ */
 JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwVulkanSupported
         (JNIEnv *, jclass);
 
@@ -284,6 +289,14 @@ JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwVulkanSupported
  */
 JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwGetInstanceProcAddress
         (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwGetRequiredInstanceExtensions
+ * Signature: (J)J
+ */
+JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwGetRequiredInstanceExtensions
+  (JNIEnv *, jclass, jlong);
 
 #ifdef __cplusplus
 }

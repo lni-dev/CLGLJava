@@ -92,7 +92,7 @@ public class StructType implements Type {
         Node typeNode = findInChildren(memberNode, "type");
         Node commentNode = findInChildren(memberNode, "comment");
         boolean isPointer = memberNode.getTextContent().contains("*");
-        boolean isPointerPointer = isPointer && memberNode.getTextContent().replace("\\*", "").contains("*");
+        boolean isPointerPointer = isPointer && memberNode.getTextContent().replaceFirst("\\*", "").contains("*");
         boolean isArray = false;
         PossiblyUnresolvedDefine arrayLength = null;
         Integer arrayLengthNumeric = null;
@@ -190,7 +190,13 @@ public class StructType implements Type {
         int index = 2;
         JavaExpression[] variables = new JavaExpression[members.size() + 2];
         for (Member member : members) {
-            System.out.println("Member: " + member.name + " with type=" + member.type.getName() + " is array=" + member.isArray + ", isPointer=" + member.isPointer);
+            System.out.println(
+                    "Member: " + member.name
+                            + " with type=" + member.type.getName()
+                            + " is array=" + member.isArray
+                            + ", isPointer=" + member.isPointer
+                            + ", isPointerPointer=" + member.isPointerPointer
+            );
 
             Type typeOfMember = member.type.resolve();
             JavaClass javaClassOfMember = typeOfMember.getJavaClass(registry, generator);
@@ -329,7 +335,7 @@ public class StructType implements Type {
 
             // StructValue annotation
             var anno = jVariable.addAnnotation(JavaClass.ofClass(StructValue.class));
-            anno.setValue(JavaVariable.of(StructValue.class, "value"), JavaExpression.numberPrimitive(index-1));
+            anno.setValue(JavaVariable.of(StructValue.class, "value"), JavaExpression.numberPrimitive(index-2));
             if(member.isArray) {
                 if(member.arrayLength == null && member.arrayLengthNumber == null)
                     throw new IllegalStateException("Member without specified arrayLength!");

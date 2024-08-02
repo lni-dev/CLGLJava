@@ -130,6 +130,8 @@ public class RegistryLoader {
     private final @NotNull List<GroupedDefinesType> defines = new ArrayList<>();
     private AtomicInteger iterating = new AtomicInteger(0);
     private final @NotNull Map<String, Type> extraTypes = new HashMap<>();
+    private final @NotNull CommandsGenerator commandsGenerator = new CommandsGenerator(this);
+    public final @NotNull NativeFunctionsGenerator nativeFunctionsGenerator = new NativeFunctionsGenerator(this);
 
     private @Nullable SourceGenerator generator = null;
 
@@ -457,6 +459,8 @@ public class RegistryLoader {
                 handleExtensions(node);
             else if(node.getNodeName().equals("feature"))
                 handleFeature(node);
+            else if(node.getNodeName().equals("commands"))
+                handleCommands(node);
             else
                 System.out.println(COLOR_ORANGE + "Unhandled Node: " + node.getNodeName() + SGR.reset());
         }
@@ -542,6 +546,8 @@ public class RegistryLoader {
                         continue;
                     else if (node.getNodeName().equals("enum"))
                         handleEnumExtension(node, name, extensionNumber, extensionConstants);
+                    else if (node.getNodeName().equals("commands"))
+                        handleCommands(node);
                     else
                         System.out.println("Unhandled Node in '<require>' (extensions): " + node.getNodeName());
                         //TODO: command Node
@@ -550,6 +556,32 @@ public class RegistryLoader {
         }
 
         System.out.println("END handleExtensions");
+    }
+
+    public void handleCommands(
+            @NotNull Node commandsNode
+    ) {
+
+        System.out.println("START handleCommands");
+
+        for (Node node : iterableNode(commandsNode)) {
+            if (node.getNodeName().equals("comment"))
+                continue;
+            else if (node.getNodeType() == Node.TEXT_NODE)
+                continue;
+            else if (node.getNodeName().equals("command"))
+                handleCommand(node);
+            else
+                System.out.println("Unhandled Node in '<commands>': " + node.getNodeName());
+        }
+
+        System.out.println("END handleCommands");
+    }
+
+    public void handleCommand(
+            @NotNull Node cmdNode
+    ) {
+        commandsGenerator.addCommand(cmdNode);
     }
 
     public void handleEnumExtension(
@@ -952,9 +984,15 @@ public class RegistryLoader {
 
     public void generate(@NotNull SourceGenerator generator) {
         this.generator = generator;
+
         iterateTypes((name, type) -> {
             type.generate(this, generator);
             return true;
         });
+
+        var vkInstanceFile = generator.getJavaFile("de.linusdev.cvg4j.nat.vulkan.handles", "VkInstance");
+        assert vkInstanceFile != null;
+        commandsGenerator.generate(this, generator, vkInstanceFile);
+        nativeFunctionsGenerator.generate(this, generator);
     }
 }

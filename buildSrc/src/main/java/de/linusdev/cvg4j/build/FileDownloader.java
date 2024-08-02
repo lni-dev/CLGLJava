@@ -22,17 +22,13 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.work.DisableCachingByDefault;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 
+//TODO handle caching
 @SuppressWarnings("unused")
-@DisableCachingByDefault(because = "File may change on remote")
+//@DisableCachingByDefault(because = "File may change on remote")
 public class FileDownloader extends DefaultTask {
 
     @Input
@@ -57,12 +53,13 @@ public class FileDownloader extends DefaultTask {
 
     @TaskAction
     void download() throws IOException {
-        try(InputStream stream = new URL(url.get()).openStream()) {
+        //TODO uncomment
+        /*try(InputStream stream = new URL(url.get()).openStream()) {
             Files.copy(
                     stream, outputFile.get().getAsFile().toPath(),
                     StandardCopyOption.REPLACE_EXISTING
             );
-        }
+        }*/
     }
 
     public String getUrl() {

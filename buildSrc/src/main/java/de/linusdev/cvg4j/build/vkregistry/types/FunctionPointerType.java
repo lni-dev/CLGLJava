@@ -62,6 +62,10 @@ public class FunctionPointerType implements Type {
         return TypeType.ALIAS_OF_BASIC;
     }
 
+    @Override
+    public @NotNull CTypes getAsBaseType() {
+        return CTypes.POINTER;
+    }
 
     @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {

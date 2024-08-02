@@ -20,5 +20,6 @@ public enum TypeType {
     BASIC,
     ALIAS_OF_BASIC,
     ENUM,
+    DEFINE_CLASS,
     STRUCT,
 }

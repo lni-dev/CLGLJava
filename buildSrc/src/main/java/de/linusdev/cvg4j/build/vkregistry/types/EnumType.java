@@ -90,6 +90,8 @@ public class EnumType implements Type {
         return TypeType.ENUM;
     }
 
+
+
     @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
         var clazz = generator.addJavaFile(SUB_PACKAGE);
@@ -131,6 +133,11 @@ public class EnumType implements Type {
             if(value.writeDoc != null)
                 value.writeDoc.accept(doc);
         }
+    }
+
+    @Override
+    public @NotNull CTypes getAsBaseType() {
+        return CTypes.INT32;
     }
 
     @Override
