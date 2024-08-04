@@ -1,6 +1,6 @@
 
 #include <cstring>
-#include "clgl_NativeUtils.h"
+#include "de_linusdev_cvg4j_nat_NativeUtils.h"
 #include "CL/cl.h"
 
 /*

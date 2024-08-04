@@ -28,7 +28,7 @@ import de.linusdev.lutils.llist.LLinkedList;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;
-import de.linusdev.lutils.nat.pointer.TypedPointer64;
+import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
@@ -306,11 +306,11 @@ public class GLFW {
     protected static native long glfwGetRequiredInstanceExtensions(long pCount);
 
     @NotNull
-    public static StructureArray<TypedPointer64<NullTerminatedUTF8String>> glfwGetRequiredInstanceExtensions() {
+    public static StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> glfwGetRequiredInstanceExtensions() {
         BBInt1 count = BBInt1.newAllocated(null);
         long pointer = glfwGetRequiredInstanceExtensions(count.getPointer());
 
-        return StructureArray.ofPointer(false, TypedPointer64.class, count.get(), pointer, TypedPointer64::newUnallocated1);
+        return StructureArray.ofPointer(false, BBTypedPointer64.class, count.get(), pointer, BBTypedPointer64::newUnallocated1);
     }
 
 }

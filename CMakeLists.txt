@@ -12,21 +12,21 @@ add_link_options(-static-libgcc -static-libstdc++ -static)
 add_subdirectory(libs/glad)
 
 add_library(${PROJECT_NAME} STATIC MODULE
-        src/main/cpp/clgl_Load.cpp
-        src/main/cpp/clgl_Glad.cpp
-        src/main/cpp/clgl_GLFW.cpp
-        src/main/cpp/clgl_CL.cpp
-        src/main/cpp/clgl_NativeUtils.cpp
-        src/main/cpp/clgl_WGL.cpp
-        src/main/cpp/clgl_Vulkan.cpp
+        src/main/cpp/Load.cpp
+        src/main/cpp/Glad.cpp
+        src/main/cpp/GLFW.cpp
+        src/main/cpp/CL.cpp
+        src/main/cpp/NativeUtils.cpp
+        src/main/cpp/WGL.cpp
         src/main/cpp/JniUtils.cpp
+        build/generated/sources/vulkan/src/main/cpp/NativeFunctions.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION 1
         SUFFIX ".jnilib"
-        )
+)
 
 #dependencies
 find_package(Java REQUIRED)
@@ -49,4 +49,10 @@ target_link_libraries(${PROJECT_NAME}
         PRIVATE Vulkan::Vulkan
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${JNI_INCLUDE_DIRS} ${_classDir} ${_stubDir} include)
+target_include_directories(${PROJECT_NAME} PUBLIC
+        ${JNI_INCLUDE_DIRS}
+        ${_classDir}
+        ${_stubDir}
+        include/
+        build/generated/sources/headers/java/main/
+)

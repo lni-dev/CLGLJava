@@ -8,3 +8,6 @@
 /*.lib
 /*.a
 /*.jnilib
+
+# Working Directory for tests
+/wd/

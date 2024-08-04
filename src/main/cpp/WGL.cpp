@@ -1,5 +1,5 @@
 
-#include "clgl_WGL.h"
+#include "de_linusdev_cvg4j_nat_wgl_WGL.h"
 #include <windows.h>
 
 /*

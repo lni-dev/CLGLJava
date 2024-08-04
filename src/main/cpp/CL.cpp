@@ -1,5 +1,5 @@
 
-#include "clgl_CL.h"
+#include "de_linusdev_cvg4j_nat_cl_CL.h"
 
 #include "CL/cl.h"
 #include "CL/cl_gl.h"

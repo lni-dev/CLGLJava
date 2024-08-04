@@ -16,15 +16,16 @@
 
 package de.linusdev.cvg4j.nat.vulkan;
 
+import de.linusdev.cvg4j.nat.NativeFunctions;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkResult;
+import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkAllocationCallbacks;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkInstanceCreateInfo;
 import org.jetbrains.annotations.Nullable;
 
-public class Vulkan {
+public class VulkanUtils {
 
     public static int makeVersion(int major, int minor, int patch) {
         return (major << 22) | (minor << 12) | patch;
@@ -34,44 +35,34 @@ public class Vulkan {
         return (variant << 29) | (major << 22) | (minor << 12) | patch;
     }
 
+    public static boolean vkBool32ToBoolean(int value) {
+        return value == APIConstants.VK_TRUE;
+    }
+
+    public static int booleanToVkBool32(boolean value) {
+        return value ? APIConstants.VK_TRUE : APIConstants.VK_FALSE;
+    }
+
     public static int VK_API_VERSION_1_0 = makeApiVersion(0, 1, 0, 0);
     public static int VK_API_VERSION_1_1 = makeApiVersion(0, 1, 1, 0);
     public static int VK_API_VERSION_1_2 = makeApiVersion(0, 1, 2, 0);
     public static int VK_API_VERSION_1_3 = makeApiVersion(0, 1, 3, 0);
 
-    protected static native int _vkCreateInstance(
-            long pCreateInfo,
-            long pAllocator,
-            long pInstance
-    );
-
-    protected static native int callVulkanFunction1(
-            long p_function,
-            long p_1,
-            long p_2,
-            long p3
-    );
-
-    public static VkResult vkCreateInstance(
+    public static ReturnedVkResult vkCreateInstance(
             VkInstanceCreateInfo vkInstanceCreateInfo,
             @Nullable VkAllocationCallbacks pAllocator,
             VkInstance pInstance
     ) {
         long pointer = GLFW.glfwGetInstanceProcAddress(NativeUtils.getNullPointer(), "vkCreateInstance");
 
-        int res = callVulkanFunction1(
+        int res = NativeFunctions.callNativeIFunctionPPP(
                 pointer,
                 vkInstanceCreateInfo.getPointer(),
                 pAllocator == null ? NativeUtils.getNullPointer() : pAllocator.getPointer(),
                 pInstance.getPointer()
         );
 
-        for (VkResult value : VkResult.values()) {
-            if(value.getValue() == res)
-                return value;
-        }
-
-        throw new Error();
+        return new ReturnedVkResult(res);
     }
 
 }

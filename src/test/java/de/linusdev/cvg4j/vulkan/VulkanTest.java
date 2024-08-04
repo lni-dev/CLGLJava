@@ -24,13 +24,12 @@ import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.cvg4j.nat.vulkan.Vulkan;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkResult;
+import de.linusdev.cvg4j.nat.vulkan.VulkanUtils;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkApplicationInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkInstanceCreateInfo;
-import de.linusdev.lutils.nat.pointer.TypedPointer64;
+import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -44,7 +43,6 @@ public class VulkanTest {
     void test() throws GLFWException, GladInitException {
         Engine.StaticSetup.setup();
         GLFWWindow window = new GLFWWindow(RenderAPI.VULKAN, null);
-        System.out.println(GLFW.glfwVulkanSupported());
 
         if(GLFW.glfwVulkanSupported() != GLFWValues.GLFW_TRUE) {
             System.err.println("Cannot run Vulkan test: Vulkan is not supported on this machine.");
@@ -53,16 +51,16 @@ public class VulkanTest {
 
         var array = GLFW.glfwGetRequiredInstanceExtensions();
 
-        for (TypedPointer64<NullTerminatedUTF8String> pointer : array) {
+        for (BBTypedPointer64<NullTerminatedUTF8String> pointer : array) {
             System.out.println(BufferUtils.readString(NativeUtils.getBufferFromPointer(pointer.get(), 0), false));
         }
 
         //Validation layer strings
-        StructureArray<TypedPointer64<NullTerminatedUTF8String>> vLayerStrings = StructureArray.newAllocated(
+        StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> vLayerStrings = StructureArray.newAllocated(
                 false,
-                SVWrapper.of(1, TypedPointer64.class),
+                SVWrapper.of(1, BBTypedPointer64.class),
                 null,
-                TypedPointer64::newUnallocated1
+                BBTypedPointer64::newUnallocated1
         );
         vLayerStrings.getOrCreate(0).set(NullTerminatedUTF8String.ofString("VK_LAYER_KHRONOS_validation"));
 
@@ -73,10 +71,10 @@ public class VulkanTest {
         vkApplicationInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO);
         vkApplicationInfo.pNext.set(0);
         vkApplicationInfo.pApplicationName.set(NullTerminatedUTF8String.ofString("Test Application"));
-        vkApplicationInfo.applicationVersion.set(Vulkan.makeVersion(1, 0, 0));
+        vkApplicationInfo.applicationVersion.set(VulkanUtils.makeVersion(1, 0, 0));
         vkApplicationInfo.pEngineName.set(NullTerminatedUTF8String.ofString("CVG4J"));
-        vkApplicationInfo.engineVersion.set(Vulkan.makeVersion(0, 1, 0));
-        vkApplicationInfo.apiVersion.set(Vulkan.VK_API_VERSION_1_3);
+        vkApplicationInfo.engineVersion.set(VulkanUtils.makeVersion(0, 1, 0));
+        vkApplicationInfo.apiVersion.set(VulkanUtils.VK_API_VERSION_1_3);
 
         // VkInstanceCreateInfo
         VkInstanceCreateInfo vkInstanceCreateInfo = new VkInstanceCreateInfo();
@@ -94,10 +92,11 @@ public class VulkanTest {
 
         VkInstance vkInstance = new VkInstance();
         vkInstance.allocate();
-        VkResult result = Vulkan.vkCreateInstance(vkInstanceCreateInfo, null, vkInstance);
+        var result = VulkanUtils.vkCreateInstance(vkInstanceCreateInfo, null, vkInstance);
         vkInstance.initMethodPointers();
 
-        System.out.println(result);
+
+        System.out.println(result.getAsVkResult());
         System.out.println(vkInstance.get());
 
     }

@@ -19,8 +19,13 @@ package de.linusdev.cvg4j.build.vkregistry;
 import de.linusdev.cvg4j.build.vkregistry.types.CTypes;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.PossiblyUnresolvedType;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
+import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
+import de.linusdev.lutils.nat.enums.NativeEnumValue32;
+import de.linusdev.lutils.nat.pointer.BBPointer64;
+import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
+import de.linusdev.lutils.nat.pointer.Pointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
@@ -65,6 +70,9 @@ public class CommandsGenerator {
 
         String name = nameNode.getTextContent();
         String type = typeNode.getTextContent();
+
+        if(protoNode.getTextContent().contains("*"))
+            throw new RuntimeException("Pointer in proto node of: " + nameNode.getTextContent());
 
         // C-Definition
 
@@ -130,12 +138,17 @@ public class CommandsGenerator {
             // Actual method
             Type returnType = cmd.type.resolve();
             List<Type> paramTypes = new ArrayList<>();
+            List<JavaExpression> nativeMethodParams = new ArrayList<>(List.of(JavaExpression.ofCode("get()")));
             JavaClass returnClass;
 
             if(returnType == CTypes.VOID) {
                 returnClass = JavaClass.ofClass(void.class);
+            } else if (returnType.getName().equals("VkResult")) {
+                returnClass = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "ReturnedVkResult");
+            } else if (returnType.getName().equals("VkBool32")) {
+                returnClass = JavaClass.ofClass(boolean.class);
             } else {
-                returnClass = returnType.getJavaClass(registry, generator);
+                returnClass = JavaClass.ofClass(returnType.getAsBaseType().getJavaClass());
             }
 
 
@@ -145,18 +158,55 @@ public class CommandsGenerator {
 
             for(Command.Param param : cmd.params) {
                 Type actualParamType = param.type.resolve();
-                Type paramType = actualParamType;
 
-                if(param.isPointer)
-                    paramType = CTypes.POINTER;
+                {
+                    // Param type for native function
+                    Type paramType = actualParamType;
+                    if(param.isPointer)
+                        paramType = CTypes.POINTER;
+                    paramTypes.add(paramType);
+                }
 
-                paramTypes.add(paramType);
 
                 JavaClass actualParamClass = actualParamType.getJavaClass(registry, generator);
+
+                if(param.isPointer && actualParamType.getType() == TypeType.ENUM)
+                    actualParamClass = JavaClass.ofClass(NativeEnumValue32.class).withGenerics(actualParamClass);
+
                 JavaClass paramClass = actualParamClass;
 
-                if(param.isPointer)
+                //TODO pointer to char (string): currently Byte*
+                if(param.isPointer && actualParamType != CTypes.VOID)
                     paramClass = JavaClass.ofClass(TypedPointer64.class).withGenerics(actualParamClass);
+                else if(param.isPointer && actualParamType == CTypes.VOID)
+                    paramClass = JavaClass.ofClass(Pointer64.class);
+
+                if(param.isPointerPointer && actualParamType != CTypes.VOID)
+                    paramClass = JavaClass.ofClass(TypedPointer64.class).withGenerics(
+                                    JavaClass.ofClass(BBTypedPointer64.class).withGenerics(actualParamClass)
+                    );
+                else if(param.isPointerPointer && actualParamType == CTypes.VOID)
+                    paramClass = JavaClass.ofClass(TypedPointer64.class).withGenerics(JavaClass.ofClass(BBPointer64.class));
+
+                if(!param.isPointer) {
+                    if(actualParamType == CTypes.INT32 || actualParamType == CTypes.UINT32) {
+                        paramClass = JavaClass.ofClass(int.class);
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name));
+
+                    } else if (actualParamType == CTypes.INT) {
+                        paramClass = JavaClass.ofClass(long.class);
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name));
+
+                    } else if (actualParamType.getType() == TypeType.ENUM) {
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name + ".getValue()"));
+
+                    } else {
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
+
+                    }
+                } else {
+                    nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
+                }
 
                 var addedParam = method.addParameter(param.name, paramClass);
             }
@@ -164,7 +214,40 @@ public class CommandsGenerator {
             NativeFunctionsGenerator.NativeFunction toCall = registry.nativeFunctionsGenerator
                     .getNativeFunction(returnType, paramTypes.toArray(new Type[0]));
 
-            //TODO call in body
+            method.body(block -> {
+                var methodCall = JavaExpression.callMethod(toCall.getNativeMethod(registry, generator), nativeMethodParams.toArray(new JavaExpression[0]));
+
+                if(returnType.getName().equals("VkResult")) {
+                    block.addExpression(
+                            JavaExpression.returnExpr(
+                                    JavaExpression.callConstructorOf(
+                                            JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "ReturnedVkResult"),
+                                            methodCall
+                                    )
+                            )
+                    );
+                }  else if (returnType.getName().equals("VkBool32")) {
+                    JavaClass vulkanUtilsClass = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "VulkanUtils");
+                    block.addExpression(
+                            JavaExpression.returnExpr(
+                                    JavaExpression.callMethod(
+                                            JavaMethod.of(
+                                                    vulkanUtilsClass,
+                                                    JavaClass.ofClass(boolean.class),
+                                                    "vkBool32ToBoolean",
+                                                    true
+                                            ),
+                                            methodCall
+                                    )
+                            )
+                    );
+                } else if(returnType == CTypes.VOID) {
+                    block.addExpression(methodCall);
+                } else {
+                    block.addExpression(JavaExpression.returnExpr(methodCall));
+                }
+            });
+
         }
 
         var glfwGetVkProcAddressMethod = JavaMethod.of(
@@ -235,11 +318,13 @@ public class CommandsGenerator {
             String name = nameNode.getTextContent();
             String type = typeNode.getTextContent();
             boolean isPointer = paramNode.getTextContent().contains("*");
+            boolean isPointerPointer = isPointer && paramNode.getTextContent().replaceFirst("\\*", "").contains("*");
 
             params.add(new Param(
                     name,
                     registry.getPUType(type),
-                    isPointer
+                    isPointer,
+                    isPointerPointer
             ));
         }
 
@@ -247,11 +332,13 @@ public class CommandsGenerator {
             private final @NotNull String name;
             private final @NotNull PossiblyUnresolvedType type;
             private final boolean isPointer;
+            private final boolean isPointerPointer;
 
-            public Param(@NotNull String name, @NotNull PossiblyUnresolvedType type, boolean isPointer) {
+            public Param(@NotNull String name, @NotNull PossiblyUnresolvedType type, boolean isPointer, boolean isPointerPointer) {
                 this.name = name;
                 this.type = type;
                 this.isPointer = isPointer;
+                this.isPointerPointer = isPointerPointer;
             }
         }
     }

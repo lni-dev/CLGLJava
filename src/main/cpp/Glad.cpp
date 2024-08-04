@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "clgl_Glad.h"
+#include "de_linusdev_cvg4j_nat_glad_Glad.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "JniUtils.h"

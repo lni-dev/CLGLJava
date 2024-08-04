@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "clgl_Load.h"
+#include "de_linusdev_cvg4j_nat_Load.h"
 
 #include "JniUtils.h"
 

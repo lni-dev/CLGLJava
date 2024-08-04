@@ -25,6 +25,10 @@ import org.gradle.api.tasks.TaskAction;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 //TODO handle caching
 @SuppressWarnings("unused")
@@ -53,13 +57,13 @@ public class FileDownloader extends DefaultTask {
 
     @TaskAction
     void download() throws IOException {
-        //TODO uncomment
-        /*try(InputStream stream = new URL(url.get()).openStream()) {
+
+        try(InputStream stream = new URL(url.get()).openStream()) {
             Files.copy(
                     stream, outputFile.get().getAsFile().toPath(),
                     StandardCopyOption.REPLACE_EXISTING
             );
-        }*/
+        }
     }
 
     public String getUrl() {

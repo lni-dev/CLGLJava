@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include <cstring>
-#include "clgl_GLFW.h"
+#include "de_linusdev_cvg4j_nat_glfw3_GLFW.h"
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 #include "JniUtils.h"

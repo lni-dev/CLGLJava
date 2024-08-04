@@ -16,8 +16,21 @@ This Additional Cmake Option must be set:
 This option can be set in
 `File` -> `Settings` -> `Build, Execution, Deployment`-> `CMake` -> `Profiles` -> `CMake options`.
 
+### Building the Project
+The project must be build in three steps:
+- Generate the vulkan related sources from the vk.xml file
+- Generate the native jnilib
+- Compile Java
+
+The easiest way to accomplish this is:
+- Run any existing java test case inside this project (you will likely get an UnsatisfiedLinkError at runtime. 
+  This error can be ignored), to generate the vulkan related sources
+- Run the CMakeLists.txt and build the native library
+- Compile Java
+  
+
 ## Vulkan
 
 ### Vulkan Validation Layers
-The environment variable `VK_ADD_LAYER_PATH` must contain the path
-to the validation layer installation: `vulkan-validationlayers_x64-windows/bin`
+Install LunarG Vulkan SDK and Vulkan Configurator.
+Validation Layers can be enabled globally in the Vulkan Configurator.

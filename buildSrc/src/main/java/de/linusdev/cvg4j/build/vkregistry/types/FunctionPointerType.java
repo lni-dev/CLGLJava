@@ -21,7 +21,7 @@ import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
-import de.linusdev.lutils.nat.pointer.Pointer64;
+import de.linusdev.lutils.nat.pointer.BBPointer64;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Node;
 
@@ -76,7 +76,7 @@ public class FunctionPointerType implements Type {
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
         clazz.setJavaDoc("<pre>{@code " + cDefinition + "}</pre>");
-        clazz.setExtendedClass(JavaClass.ofClass(Pointer64.class));
+        clazz.setExtendedClass(JavaClass.ofClass(BBPointer64.class));
         var constructor = clazz.addConstructor();
         constructor.body(block ->
                 block.addExpression(JavaExpression.callSuper(

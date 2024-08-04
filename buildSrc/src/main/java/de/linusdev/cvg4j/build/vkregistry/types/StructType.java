@@ -24,8 +24,8 @@ import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
-import de.linusdev.lutils.nat.pointer.Pointer64;
-import de.linusdev.lutils.nat.pointer.TypedPointer64;
+import de.linusdev.lutils.nat.pointer.BBPointer64;
+import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.abstracts.ComplexStructure;
 import de.linusdev.lutils.nat.struct.abstracts.ComplexUnion;
@@ -204,42 +204,42 @@ public class StructType implements Type {
 
             if(member.isPointer && !member.isPointerPointer) {
                 if (typeOfMember == CTypes.VOID) {
-                    jVariable = clazz.addVariable(JavaClass.ofClass(Pointer64.class), member.name);
-                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(Pointer64.class)));
+                    jVariable = clazz.addVariable(JavaClass.ofClass(BBPointer64.class), member.name);
+                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBPointer64.class)));
                 } else if (typeOfMember == CTypes.CHAR && member.len != null && member.len.contains("null-terminated")) {
                     jVariable = clazz.addVariable(
-                            JavaClass.ofClass(TypedPointer64.class).withGenerics(JavaClass.ofClass(NullTerminatedUTF8String.class)),
+                            JavaClass.ofClass(BBTypedPointer64.class).withGenerics(JavaClass.ofClass(NullTerminatedUTF8String.class)),
                             member.name
                     );
-                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                 } else {
                     // We need to differentiate between arrays of enum types and others
                     if (typeOfMember.getType() == TypeType.ENUM) {
                         jVariable = clazz.addVariable(
-                                JavaClass.ofClass(TypedPointer64.class).withGenerics(
+                                JavaClass.ofClass(BBTypedPointer64.class).withGenerics(
                                         JavaClass.ofClass(NativeEnumValue32.class).withGenerics(javaClassOfMember)
                                 ),
                                 member.name
                         );
-                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                     } else {
-                        jVariable = clazz.addVariable(JavaClass.ofClass(TypedPointer64.class).withGenerics(javaClassOfMember), member.name);
-                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                        jVariable = clazz.addVariable(JavaClass.ofClass(BBTypedPointer64.class).withGenerics(javaClassOfMember), member.name);
+                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                     }
                 }
 
             } else if (member.isPointerPointer) {
-                JavaClass tp64 = JavaClass.ofClass(TypedPointer64.class);
+                JavaClass tp64 = JavaClass.ofClass(BBTypedPointer64.class);
 
                 if (typeOfMember == CTypes.VOID) {
-                    jVariable = clazz.addVariable(tp64.withGenerics(JavaClass.ofClass(Pointer64.class)), member.name);
-                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                    jVariable = clazz.addVariable(tp64.withGenerics(JavaClass.ofClass(BBPointer64.class)), member.name);
+                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                 } else if (typeOfMember == CTypes.CHAR && member.len != null && member.len.contains("null-terminated")) {
                     jVariable = clazz.addVariable(
                             tp64.withGenerics(tp64.withGenerics(JavaClass.ofClass(NullTerminatedUTF8String.class))),
                             member.name
                     );
-                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                    jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                 } else {
                     // We need to differentiate between arrays of enum types and others
                     if (typeOfMember.getType() == TypeType.ENUM) {
@@ -251,10 +251,10 @@ public class StructType implements Type {
                                 ),
                                 member.name
                         );
-                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                     } else {
                         jVariable = clazz.addVariable(tp64.withGenerics(tp64.withGenerics(javaClassOfMember)), member.name);
-                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(TypedPointer64.class)));
+                        jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
                     }
                 }
 
