@@ -20,9 +20,9 @@ import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.custom.ErrorCallback;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.custom.NativeErrorCallback;
+import de.linusdev.cvg4j.nat.glfw3.custom.window.GLFWNativeCallbacks;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWError;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.llog.LLog;
 import de.linusdev.lutils.llist.LLinkedList;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
@@ -64,7 +64,7 @@ public class GLFW {
 
             Runtime.getRuntime().addShutdownHook(new Thread(GLFW::_glfwTerminate));
 
-            setJavaGLFWWindowClass(GLFWWindow.class);
+            setJavaGLFWWindowClass(GLFWNativeCallbacks.class);
 
             //Callbacks
             _glfwSetErrorCallback(staticErrorCallback);
@@ -227,8 +227,12 @@ public class GLFW {
             @NotNull ByteBuffer p_width_height
     );
 
+    /**
+     *
+     * @param clazz usually class of {@link GLFWNativeCallbacks}
+     */
     public static native void setJavaGLFWWindowClass(
-            Class<GLFWWindow> clazz
+            Class<?> clazz
     );
 
     public static native void glfwSetWindowSizeCallback(
@@ -312,5 +316,7 @@ public class GLFW {
 
         return StructureArray.ofPointer(false, BBTypedPointer64.class, count.get(), pointer, BBTypedPointer64::newUnallocated1);
     }
+
+    public static native int glfwCreateWindowSurface(long vkInstance, long pGlfwWindow, long pAllocator, long pVkSurfaceKHR);
 
 }

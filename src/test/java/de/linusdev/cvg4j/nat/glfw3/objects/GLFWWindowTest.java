@@ -16,11 +16,11 @@
 
 package de.linusdev.cvg4j.nat.glfw3.objects;
 
+import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.nat.glad.Glad;
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
-import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +31,8 @@ class GLFWWindowTest {
 
     @Test
     void show() throws GladInitException, GLFWException {
+        Engine.StaticSetup.setup();
+
         GLFWWindowHints hints = new GLFWWindowHints();
 
         hints.setContextVersion(4, 6);
@@ -38,12 +40,21 @@ class GLFWWindowTest {
         hints.samples = 4;
         hints.openglProfile = GLFWValues.OpenGlProfiles.GLFW_OPENGL_CORE_PROFILE;
 
-        GLFWWindow window = new GLFWWindow(RenderAPI.OPENGL, hints);
+        OpenGLWindow window = new OpenGLWindow(hints);
         window.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message: " + message));
 
         window.setSize(800, 500);
         window.setTitle("Nice");
+        window.listeners().addTextInputListener((chars, supplementaryChar) -> {
+            System.out.println("Textinput: " + new String(chars, 0, supplementaryChar ? 2 : 1));
+        });
+        window.listeners().addMouseButtonListener((button, action, mods) -> {
+            System.out.println("Button press/release: " + button);
+        });
+        window.listeners().addCursorPositionListener((xpos, ypos) -> {
+            System.out.println("Cursor pos: " + xpos + ", " + ypos);
+        });
 
         int vertexArrayId = Glad.glGenVertexArray();
         Glad.glBindVertexArray(vertexArrayId);

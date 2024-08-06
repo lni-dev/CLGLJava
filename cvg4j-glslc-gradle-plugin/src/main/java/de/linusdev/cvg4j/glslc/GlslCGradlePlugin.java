@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,16 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.glfw3.custom;
+package de.linusdev.cvg4j.glslc;
 
-public interface WindowSizeListener {
-    void onWindowSizeChanged(int width, int height);
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.jetbrains.annotations.NotNull;
+
+public class GlslCGradlePlugin implements Plugin<Project> {
+
+    @Override
+    public void apply(@NotNull Project target) {
+        target.getTasks().register("glslc", GlslCTask.class);
+    }
 }

@@ -201,6 +201,7 @@ public class StructType implements Type {
             Type typeOfMember = member.type.resolve();
             JavaClass javaClassOfMember = typeOfMember.getJavaClass(registry, generator);
             JavaVariable jVariable;
+            boolean requiresElementTypeAnnotation = true; // only for array types
 
             if(member.isPointer && !member.isPointerPointer) {
                 if (typeOfMember == CTypes.VOID) {
@@ -212,6 +213,7 @@ public class StructType implements Type {
                             member.name
                     );
                     jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(BBTypedPointer64.class)));
+                    requiresElementTypeAnnotation = false;
                 } else {
                     // We need to differentiate between arrays of enum types and others
                     if (typeOfMember.getType() == TypeType.ENUM) {
@@ -264,11 +266,13 @@ public class StructType implements Type {
                     // Null Terminated Utf8 String
                     jVariable = clazz.addVariable(JavaClass.ofClass(NullTerminatedUTF8String.class), member.name);
                     jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(NullTerminatedUTF8String.class)));
+                    requiresElementTypeAnnotation = false;
 
                 } else if(typeOfMember instanceof CTypes ctype && ctype.getNativeArrayClass() != null) {
                     // NativeInt16Array, ...
                     jVariable = clazz.addVariable(JavaClass.ofClass(ctype.getNativeArrayClass()), member.name);
                     jVariable.setDefaultValue(JavaExpression.callMethod(SSMUtils.getNewUnallocatedMethod(ctype.getNativeArrayClass())));
+                    requiresElementTypeAnnotation = false;
 
                 } else {
                     // StructureArray
@@ -340,6 +344,7 @@ public class StructType implements Type {
                 if(member.arrayLength == null && member.arrayLengthNumber == null)
                     throw new IllegalStateException("Member without specified arrayLength!");
 
+                // StructValue.length
                 if(member.arrayLength != null) {
                     GroupedDefinesType.Define define = member.arrayLength.resolve();
                     define.parent.ensureGenerated(registry, generator);
@@ -350,6 +355,20 @@ public class StructType implements Type {
                             JavaExpression.numberPrimitive(member.arrayLengthNumber)
                     );
                 }
+
+                // StructValue.elementType
+                if(requiresElementTypeAnnotation) {
+                    if(typeOfMember.getType() == TypeType.ENUM) {
+                        anno.setValue(
+                                JavaVariable.of(StructValue.class, "elementType"),
+                                JavaExpression.classInstanceOfClass(JavaClass.ofClass(NativeEnumValue32.class)));
+                    } else {
+                        anno.setValue(
+                                JavaVariable.of(StructValue.class, "elementType"),
+                                JavaExpression.classInstanceOfClass(javaClassOfMember));
+                    }
+                }
+
 
             }
 

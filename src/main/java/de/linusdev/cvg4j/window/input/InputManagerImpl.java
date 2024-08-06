@@ -55,9 +55,9 @@ public class InputManagerImpl implements InputManger, KeyListener, MouseButtonLi
     public InputManagerImpl(@Nullable GLFWWindow window) {
         this.scancodes = new int[SCANCODE_ARRAY_SIZE];
         if(window != null) {
-            window.setKeyListener(this);
-            window.setMouseButtonListener(this);
-            window.setTextInputListener(this);
+            window.listeners().addKeyListener(this);
+            window.listeners().addMouseButtonListener(this);
+            window.listeners().addTextInputListener(this);
         }
         this.keyListeners = listenerListSupplier.supply();
         this.mouseButtonListeners = listenerListSupplier.supply();

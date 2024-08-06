@@ -16,8 +16,6 @@
 
 package de.linusdev.cvg4j.nat.glfw3.custom;
 
-import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
-
 public interface FramebufferSizeListener {
-    void onFramebufferSizeChanged(GLFWWindow window, int width, int height);
+    void onFramebufferSizeChanged(int width, int height);
 }

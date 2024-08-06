@@ -26,10 +26,10 @@ import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glad.objects.GLFrameBuffer;
 import de.linusdev.cvg4j.nat.glad.objects.GLRenderBuffer;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
-import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.cvg4j.nat.glfw3.objects.OpenGLWindow;
 import de.linusdev.cvg4j.window.args.AutoUpdateArgManager;
 import de.linusdev.cvg4j.window.args.KernelView;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
@@ -59,7 +59,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
     public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = UITaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
 
-    protected final @NotNull GLFWWindow glfwWindow;
+    protected final @NotNull OpenGLWindow glfwWindow;
     protected final @NotNull InputManger inputManger;
 
     //Window stuff
@@ -94,7 +94,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
 
     public CLGLWindow(@NotNull Handler handler, long maxQueuedTaskMillisPerFrame) throws GLFWException, GladInitException {
-        this.glfwWindow = new GLFWWindow(RenderAPI.OPENGL, null);
+        this.glfwWindow = new OpenGLWindow(null);
         this.glfwWindow.enableGLDebugMessageListener((source, type, id, severity, message, userParam) ->
                 System.out.println("OpenGl Debug Message (source=" + source + ", type=" + type + "): " + message));
 
@@ -174,7 +174,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
                 uiImageFormat, uiImageDescription, null
         );
 
-        glfwWindow.addFramebufferSizeListener((window, width, height) ->
+        glfwWindow.listeners().addFramebufferSizeListener((width, height) ->
                 uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, () ->
                         {
                             this.updateSharedFramebuffer();

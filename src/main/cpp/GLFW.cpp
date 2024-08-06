@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstring>
 #include "de_linusdev_cvg4j_nat_glfw3_GLFW.h"
+#include "JniUtils.h"
+
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
-#include "JniUtils.h"
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFWWindow
@@ -572,5 +572,16 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwGetRequiredIns
         jlong pCount
 ) {
     return (jlong) glfwGetRequiredInstanceExtensions(reinterpret_cast<uint32_t*>(pCount));
+}
+
+JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwCreateWindowSurface(
+        JNIEnv *, jclass, jlong instance, jlong pWindow, jlong pAllocator, jlong pSurface
+) {
+    return glfwCreateWindowSurface(
+            reinterpret_cast<VkInstance>(instance),
+            reinterpret_cast<GLFWwindow*>(pWindow),
+            reinterpret_cast<const VkAllocationCallbacks*>(pAllocator),
+            reinterpret_cast<VkSurfaceKHR*>(pSurface)
+    );
 }
 

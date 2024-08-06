@@ -1,6 +1,7 @@
 /cmake-build-*/
 /build/
 /buildSrc/build/
+/cvg4j-glslc-gradle-plugin/build/
 /.gradle/
 /buildSrc/.gradle/
 *.log

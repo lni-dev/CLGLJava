@@ -1,0 +1,43 @@
+plugins {
+    id 'java-gradle-plugin'
+    id 'com.gradle.plugin-publish' version '+'
+}
+
+group = 'de.linusdev'
+version = '1.0.0'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    implementation(implementation("de.linusdev:lutils:+"))
+}
+
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+    title = "CVG4J GlslC"
+}
+
+publishing {
+    repositories {
+        mavenLocal()
+    }
+}
+
+gradlePlugin {
+    // Define the plugin
+    website = 'https://www.linudev.de'
+    vcsUrl = 'https://github.com/lni-dev/CLGLJava.git'
+    plugins {
+        "cvg4j-glslc-gradle-plugin" {
+            id = 'de.linusdev.cvg4j.glslc'
+            displayName = 'CVG4J GlslC'
+            description = 'Compile Glsl shaders using glslc'
+            tags.addAll('glslc', 'vulkan', 'spir-v')
+            implementationClass = 'de.linusdev.cvg4j.glslc.GlslCGradlePlugin'
+        }
+    }
+}

@@ -3,12 +3,14 @@ import de.linusdev.cvg4j.build.FileDownloader
 import de.linusdev.cvg4j.build.codegen.VulkanXMLGeneratorTask
 
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 
 plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
+    id 'de.linusdev.cvg4j.glslc' version '+'
 }
 
 group 'de.linusdev'
@@ -33,6 +35,11 @@ def generateVulkanFromXML = tasks.register("genFromVulkanXML", VulkanXMLGenerato
     vulkanVideoXmlFile = downloadVKVideoTask
 }
 
+glslc {
+    shaderLocation = Paths.get('/shaders/test/')
+    compiledShadersRootResourcesPackage = 'de.linusdev.cvg4j.vulkan.shaders'
+}
+
 java {
     withJavadocJar()
     withSourcesJar()
@@ -42,6 +49,11 @@ sourceSets {
     main {
         java {
             srcDir(generateVulkanFromXML)
+        }
+    }
+    test {
+        resources {
+            srcDir(glslc)
         }
     }
 }

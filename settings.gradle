@@ -1,2 +1,11 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'CVG4J'
+
+include 'cvg4j-glslc-gradle-plugin'
 

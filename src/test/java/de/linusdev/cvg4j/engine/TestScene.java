@@ -46,7 +46,7 @@ public class TestScene extends Scene<TestGame> {
     @Override
     protected @Nullable KernelSourceInfo getUIKernelInfo() {
         return KernelSourceInfo.ofUTF8StringFile(
-                Paths.get("src/test/resources/enginetest/ui.cl"),
+                Paths.get("../src/test/resources/enginetest/ui.cl"),
                 "render"
         );
     }
@@ -54,7 +54,7 @@ public class TestScene extends Scene<TestGame> {
     @Override
     protected @Nullable KernelSourceInfo getRenderKernelInfo() {
         return KernelSourceInfo.ofUTF8StringFile(
-                Paths.get("src/test/resources/enginetest/render.cl"),
+                Paths.get("../src/test/resources/enginetest/render.cl"),
                 "render"
         );
     }

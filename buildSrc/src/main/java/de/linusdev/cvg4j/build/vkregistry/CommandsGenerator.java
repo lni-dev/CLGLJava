@@ -138,7 +138,7 @@ public class CommandsGenerator {
             // Actual method
             Type returnType = cmd.type.resolve();
             List<Type> paramTypes = new ArrayList<>();
-            List<JavaExpression> nativeMethodParams = new ArrayList<>(List.of(JavaExpression.ofCode("get()")));
+            List<JavaExpression> nativeMethodParams = new ArrayList<>(List.of(JavaExpression.ofCode("methodPointers." + cmd.name)));
             JavaClass returnClass;
 
             if(returnType == CTypes.VOID) {
@@ -200,15 +200,22 @@ public class CommandsGenerator {
                     } else if (actualParamType.getType() == TypeType.ENUM) {
                         nativeMethodParams.add(JavaExpression.ofCode(param.name + ".getValue()"));
 
+                    } else if (actualParamType.getName().equals("VkInstance")) {
+                        nativeMethodParams.add(JavaExpression.ofCode("get()"));
                     } else {
                         nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
 
                     }
                 } else {
-                    nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
+                    // isPointer = true
+                    if(actualParamType.getName().equals("VkInstance") && cmd.name.equals("vkCreateInstance"))
+                        nativeMethodParams.add(JavaExpression.ofCode("getPointer()"));
+                    else
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
                 }
 
-                var addedParam = method.addParameter(param.name, paramClass);
+                if(!actualParamType.getName().equals("VkInstance"))
+                    method.addParameter(param.name, paramClass);
             }
 
             NativeFunctionsGenerator.NativeFunction toCall = registry.nativeFunctionsGenerator

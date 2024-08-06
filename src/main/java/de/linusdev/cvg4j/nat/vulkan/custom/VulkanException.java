@@ -14,35 +14,29 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.vulkan;
+package de.linusdev.cvg4j.nat.vulkan.custom;
 
-import de.linusdev.cvg4j.nat.vulkan.custom.VulkanException;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkResult;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public class ReturnedVkResult {
+public class VulkanException extends RuntimeException {
 
-    private final int result;
+    private final @NotNull VkResult result;
 
-    public ReturnedVkResult(int result) {
+    public VulkanException(
+            @Nullable String customMessage,
+            @NotNull VkResult result
+    ) {
+        super(
+                "Vulkan function returned with result '" + result + "' (code: " + result.getValue() + ")"
+                + (customMessage == null ? "." : (": " + customMessage))
+        );
+
         this.result = result;
     }
 
-    public int get() {
+    public @NotNull VkResult getResult() {
         return result;
-    }
-
-    public @NotNull VkResult getAsVkResult() {
-        for (VkResult value : VkResult.values()) {
-            if(value.getValue() == result)
-                return value;
-        }
-
-        throw new Error("Unknown VkResult with value=" + result);
-    }
-
-    public void check() throws VulkanException {
-        if(result != VkResult.VK_SUCCESS.getValue())
-            throw new VulkanException(null, getAsVkResult());
     }
 }
