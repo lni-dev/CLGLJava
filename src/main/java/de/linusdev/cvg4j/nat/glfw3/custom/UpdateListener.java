@@ -22,19 +22,19 @@ import org.jetbrains.annotations.MustBeInvokedByOverriders;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
-public interface UpdateListener<W> {
+public interface UpdateListener {
 
     @CallOnlyFromUIThread("glfw")
     @ApiStatus.Internal
     @MustBeInvokedByOverriders
     @NonBlocking
-    default void update0(@NotNull W window, @NotNull FrameInfo frameInfo) {
-        update(window, frameInfo);
+    default void update0(@NotNull FrameInfo frameInfo) {
+        update(frameInfo);
     }
 
     @CallOnlyFromUIThread("glfw")
     @ApiStatus.OverrideOnly
     @NonBlocking
-    void update(@NotNull W window, @NotNull FrameInfo frameInfo);
+    void update(@NotNull FrameInfo frameInfo);
 
 }

@@ -186,7 +186,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
     }
 
     @Override
-    public void update(@NotNull GLFWWindow window, @NotNull FrameInfo frameInfo) {
+    public void update(@NotNull FrameInfo frameInfo) {
         //clear screen
         glClear(GL_COLOR_BUFFER_BIT);
 

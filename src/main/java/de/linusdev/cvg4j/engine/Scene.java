@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class Scene<GAME extends Game> implements
         HasEngine<GAME>,
-        UpdateListener<Engine<GAME>>,
+        UpdateListener,
         Tickable
 {
 
@@ -147,7 +147,7 @@ public abstract class Scene<GAME extends Game> implements
     @CallOnlyFromUIThread("glfw")
     @ApiStatus.OverrideOnly
     @Override
-    public abstract void update(@NotNull Engine<GAME> engine, @NotNull FrameInfo frameInfo);
+    public abstract void update(@NotNull FrameInfo frameInfo);
 
     @ApiStatus.Internal
     @NonBlocking

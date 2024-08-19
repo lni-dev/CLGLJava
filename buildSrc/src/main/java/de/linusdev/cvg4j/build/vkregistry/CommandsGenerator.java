@@ -116,6 +116,12 @@ public class CommandsGenerator {
             @NotNull JavaClassGenerator vkInstanceClassGenerator
     ) {
 
+        // Some stuff we may need later
+        JavaClass vulkanUtilsClass = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "VulkanUtils");
+        JavaMethod booleanToVkBool32Method = JavaMethod.of(vulkanUtilsClass, JavaClass.ofClass(int.class), "booleanToVkBool32", true);
+        JavaMethod vkBool32ToBooleanMethod = JavaMethod.of(vulkanUtilsClass, JavaClass.ofClass(boolean.class), "vkBool32ToBoolean", true);
+
+        // code
         JavaClassGenerator vulkanMethodPointersClazz = generator.addJavaFile(VULKAN_PACKAGE + ".commands");
 
         vulkanMethodPointersClazz.setName("VulkanMethodPointers");
@@ -193,6 +199,10 @@ public class CommandsGenerator {
                         paramClass = JavaClass.ofClass(int.class);
                         nativeMethodParams.add(JavaExpression.ofCode(param.name));
 
+                    } else if (actualParamType == CTypes.INT64 || actualParamType == CTypes.UINT64) {
+                        paramClass = JavaClass.ofClass(long.class);
+                        nativeMethodParams.add(JavaExpression.ofCode(param.name));
+
                     } else if (actualParamType == CTypes.INT) {
                         paramClass = JavaClass.ofClass(long.class);
                         nativeMethodParams.add(JavaExpression.ofCode(param.name));
@@ -202,6 +212,9 @@ public class CommandsGenerator {
 
                     } else if (actualParamType.getName().equals("VkInstance")) {
                         nativeMethodParams.add(JavaExpression.ofCode("get()"));
+                    } else if (actualParamType.getName().equals("VkBool32")) {
+                        paramClass = JavaClass.ofClass(boolean.class);
+                        nativeMethodParams.add(JavaExpression.callMethod(booleanToVkBool32Method, JavaExpression.ofCode(param.name)));
                     } else {
                         nativeMethodParams.add(JavaExpression.ofCode(param.name + ".get()"));
 
@@ -234,16 +247,10 @@ public class CommandsGenerator {
                             )
                     );
                 }  else if (returnType.getName().equals("VkBool32")) {
-                    JavaClass vulkanUtilsClass = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "VulkanUtils");
                     block.addExpression(
                             JavaExpression.returnExpr(
                                     JavaExpression.callMethod(
-                                            JavaMethod.of(
-                                                    vulkanUtilsClass,
-                                                    JavaClass.ofClass(boolean.class),
-                                                    "vkBool32ToBoolean",
-                                                    true
-                                            ),
+                                            vkBool32ToBooleanMethod,
                                             methodCall
                                     )
                             )

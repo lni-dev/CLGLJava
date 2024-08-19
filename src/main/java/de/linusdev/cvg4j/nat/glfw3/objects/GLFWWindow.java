@@ -105,7 +105,7 @@ public class GLFWWindow implements
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     @Blocking
-    public void show(@NotNull UpdateListener<GLFWWindow> updateListener) {
+    public void show(@NotNull UpdateListener updateListener) {
         glfwShowWindow(pointer);
 
         long frameStartMillis = System.currentTimeMillis();
@@ -113,14 +113,23 @@ public class GLFWWindow implements
         while (!glfwWindowShouldClose(pointer)) {
             updateListener.update0(this, frameInfo);
 
-            //swap buffers and poll for events
-            glfwSwapBuffers(pointer);
-            glfwPollEvents();
+            perFrameOperations();
 
             //submit frame time
             frameInfo.submitFrame(System.currentTimeMillis() - frameStartMillis);
             frameStartMillis = System.currentTimeMillis();
         }
+
+        windowCloseOperations();
+    }
+
+    protected void perFrameOperations() {
+        // poll for events
+        glfwPollEvents();
+    }
+
+    protected void windowCloseOperations() {
+
     }
 
     @Override

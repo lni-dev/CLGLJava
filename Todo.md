@@ -22,3 +22,9 @@ A solution for both of these problems, would be a self-managed stack. Basically 
 large bytebuffer, in which we store the different small structs and then release them from
 the stack once we don't need them anymore (e.g. at the end of a function call). This stack could
 be stored on a per-thread basis utilising a custom Thread subclass.
+
+## Proper Logging using llog
+Add Logging (DEBUG, WARN and ERROR)
+
+## Small stuff
+- Add a .pointer() / .ref() function to Structure to quickly get a TypedPointer

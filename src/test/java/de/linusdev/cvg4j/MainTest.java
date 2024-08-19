@@ -72,7 +72,7 @@ public class MainTest {
                     }
 
                     @Override
-                    public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
+                    public void update(@NotNull FrameInfo frameInfo) {
 
                     }
                 }, 10);

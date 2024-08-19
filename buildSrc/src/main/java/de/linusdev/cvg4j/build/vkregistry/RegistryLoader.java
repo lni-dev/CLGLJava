@@ -931,8 +931,11 @@ public class RegistryLoader {
         }
         else if(category.equals("struct") || category.equals("union")) {
             boolean union = false;
-            if(category.equals("union")) System.out.println("START handle struct");
-            else System.out.println("START handle union");
+            if(category.equals("union")) {
+                union = true;
+                System.out.println("START handle union");
+            }
+            else System.out.println("START handle struct");
 
             Node nameAttr = typeNode.getAttributes().getNamedItem("name");
             Node commentAttr = typeNode.getAttributes().getNamedItem("comment");

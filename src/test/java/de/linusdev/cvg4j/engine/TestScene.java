@@ -146,7 +146,7 @@ public class TestScene extends Scene<TestGame> {
     }
 
     @Override
-    public void update(@NotNull Engine<TestGame> engine, @NotNull FrameInfo frameInfo) {
+    public void update(@NotNull FrameInfo frameInfo) {
 
     }
 }

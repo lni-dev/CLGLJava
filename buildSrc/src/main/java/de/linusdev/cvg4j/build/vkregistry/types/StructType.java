@@ -176,7 +176,7 @@ public class StructType implements Type {
             @NotNull SourceGenerator generator
     ) {
 
-        System.out.println("GEN Struct " + name);
+        System.out.println("GEN Struct " + name + ", isUnion: " + union);
         var clazz = generator.addJavaFile(getSubPackage());
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);

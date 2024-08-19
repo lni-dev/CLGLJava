@@ -38,7 +38,7 @@ import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.async.manager.AsyncManager;
-import de.linusdev.lutils.thready.var.SyncVar;
+import de.linusdev.lutils.thread.var.SyncVar;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -251,7 +251,7 @@ public class EngineImpl<G extends Game> implements Engine<G>, Handler, Tickable,
     }
 
     @Override
-    public void update(@NotNull CLGLWindow window, @NotNull FrameInfo frameInfo) {
+    public void update(@NotNull FrameInfo frameInfo) {
         Scene<G> scene = currentScene.get();
         if(scene == null) return;
 

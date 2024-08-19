@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.vulkan;
+package de.linusdev.cvg4j.nat.vulkan.utils;
 
-import de.linusdev.cvg4j.nat.NativeFunctions;
-import de.linusdev.cvg4j.nat.NativeUtils;
-import de.linusdev.cvg4j.nat.glfw3.GLFW;
-import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkAllocationCallbacks;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkInstanceCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkShaderModuleCreateInfo;
 import de.linusdev.lutils.nat.NativeParsable;
-import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,56 +27,27 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class VulkanUtils {
+public interface VulkanSpirVUtils {
 
-    public static int makeVersion(int major, int minor, int patch) {
-        return (major << 22) | (minor << 12) | patch;
+    @FunctionalInterface
+    interface BufferCreator {
+        @NotNull ByteBuffer create(int size, int alignment);
     }
 
-    public static int makeApiVersion(int variant, int major, int minor, int patch) {
-        return (variant << 29) | (major << 22) | (minor << 12) | patch;
-    }
-
-    public static boolean vkBool32ToBoolean(int value) {
-        return value == APIConstants.VK_TRUE;
-    }
-
-    public static boolean vkBool32ToBoolean(@NotNull VkBool32 value) {
-        return vkBool32ToBoolean(value.get());
-    }
-
-    public static int booleanToVkBool32(boolean value) {
-        return value ? APIConstants.VK_TRUE : APIConstants.VK_FALSE;
-    }
-
-    public static int VK_API_VERSION_1_0 = makeApiVersion(0, 1, 0, 0);
-    public static int VK_API_VERSION_1_1 = makeApiVersion(0, 1, 1, 0);
-    public static int VK_API_VERSION_1_2 = makeApiVersion(0, 1, 2, 0);
-    public static int VK_API_VERSION_1_3 = makeApiVersion(0, 1, 3, 0);
-
-    public static long VK_NULL_HANDLE = 0L;
-
-    public static ReturnedVkResult vkCreateInstance(
-            VkInstanceCreateInfo vkInstanceCreateInfo,
-            @Nullable VkAllocationCallbacks pAllocator,
-            VkInstance pInstance
-    ) {
-        long pointer = GLFW.glfwGetInstanceProcAddress(NativeUtils.getNullPointer(), "vkCreateInstance");
-
-        int res = NativeFunctions.callNativeIFunctionPPP(
-                pointer,
-                vkInstanceCreateInfo.getPointer(),
-                pAllocator == null ? NativeUtils.getNullPointer() : pAllocator.getPointer(),
-                pInstance.getPointer()
-        );
-
-        return new ReturnedVkResult(res);
-    }
-
-    //TODO: doc comment
-    public static @NotNull NativeParsable readSpirVBinary(
+    /**
+     * Reads spir-v binary from given stream. The binary size will automatically be extended to confirm to
+     * the vulkan specification for creating a shader module. That means, the binary size will be a multiple of
+     * 4 and the alignment will be at least 4 (in reality it will always be 8).
+     * @param stream stream containing spir-v binary.
+     * @param byteCount exactly the amount of bytes given {@code stream} provides
+     * @param bufferCreator function to create a {@link ByteBuffer} with given size and alignment
+     * @return {@link NativeParsable} containing the binary data
+     * @throws IOException possible while reading {@code stream}.
+     */
+    static @NotNull NativeParsable readSpirVBinary(
             @NotNull InputStream stream,
-            int byteCount
+            int byteCount,
+            @NotNull BufferCreator bufferCreator
     ) throws IOException {
         try (stream) {
             // size must be a multiple of 4 (https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkShaderModuleCreateInfo.html)
@@ -103,7 +65,7 @@ public class VulkanUtils {
             // the pointer to the byte data is an int32_t pointer (https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkShaderModuleCreateInfo.html)
             // and must point to a valid int32_t aligned value. that means, the bytes must be aligned to the next 4 byte boundary.
             // Since all Structures are aligned to 8 byte, we will align this to 8 byte too, to avoid complications
-            ByteBuffer buffer = BufferUtils.create64BitAligned(byteCount);
+            ByteBuffer buffer = bufferCreator.create(byteCount, 8);
             buffer.put(bytes);
             buffer.clear(); // reset buffer position
 
@@ -136,8 +98,18 @@ public class VulkanUtils {
         }
     }
 
-    public static @NotNull NativeParsable readSpirVBinary(
-            @NotNull InputStream stream
+    /**
+     * Reads spir-v binary from given stream. The binary size will automatically be extended to confirm to
+     * the vulkan specification for creating a shader module. That means, the binary size will be a multiple of
+     * 4 and the alignment will be at least 4 (in reality it will always be 8).
+     * @param stream {@link InputStream} containing spir-v binary data.
+     * @param bufferCreator function to create a {@link ByteBuffer} with given size and alignment
+     * @return {@link NativeParsable} containing the binary data
+     * @throws IOException possible while reading {@code stream}.
+     */
+    static @NotNull NativeParsable readSpirVBinary(
+            @NotNull InputStream stream,
+            @NotNull BufferCreator bufferCreator
     ) throws IOException {
         try (stream) {
 
@@ -165,7 +137,7 @@ public class VulkanUtils {
             // the pointer to the byte data is an int32_t pointer (https://registry.khronos.org/vulkan/specs/1.3-extensions/man/html/VkShaderModuleCreateInfo.html)
             // and must point to a valid int32_t aligned value. that means, the bytes must be aligned to the next 4 byte boundary.
             // Since all Structures are aligned to 8 byte, we will align this to 8 byte too, to avoid complications
-            ByteBuffer buffer = BufferUtils.create64BitAligned(byteCount);
+            ByteBuffer buffer = bufferCreator.create(byteCount, 8);
             for (int i = 0; i < readBuffers.size() - 1; i++) {
                 buffer.put(readBuffers.get(i));
             }
@@ -202,11 +174,21 @@ public class VulkanUtils {
 
     }
 
-    public static @NotNull VkShaderModuleCreateInfo createShaderModuleInfo(@NotNull InputStream stream) throws IOException {
-        var shader = VulkanUtils.readSpirVBinary(stream);
+    /**
+     *
+     * @param createInfo already allocated {@link VkShaderModuleCreateInfo}.
+     * @param bufferCreator function to create a {@link ByteBuffer} with given size and alignment
+     * @param stream stream to read spir-v binary from
+     * @return given {@code createInfo} filled with required data, including sType, codeSize and pCode.
+     * @throws IOException see {@link #readSpirVBinary(InputStream, BufferCreator) readSpirVBinary}.
+     */
+    static @NotNull VkShaderModuleCreateInfo createShaderModuleInfo(
+            @NotNull VkShaderModuleCreateInfo createInfo,
+            @NotNull BufferCreator bufferCreator,
+            @NotNull InputStream stream
+    ) throws IOException {
+        var shader = readSpirVBinary(stream, bufferCreator);
 
-        VkShaderModuleCreateInfo createInfo = new VkShaderModuleCreateInfo();
-        createInfo.allocate();
         createInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
         createInfo.codeSize.set(shader.getRequiredSize());
         createInfo.pCode.set(shader.getPointer());

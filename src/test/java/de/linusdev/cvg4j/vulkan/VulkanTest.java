@@ -24,12 +24,16 @@ import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.cvg4j.nat.vulkan.VkBool32;
-import de.linusdev.cvg4j.nat.vulkan.VulkanUtils;
+import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkPipelineStageFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
+import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
+import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
 import de.linusdev.lutils.ansi.sgr.SGR;
 import de.linusdev.lutils.ansi.sgr.SGRParameters;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
@@ -47,6 +51,11 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.Consumer;
+
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanSpirVUtils.createShaderModuleInfo;
+import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class VulkanTest {
 
@@ -75,7 +84,7 @@ public class VulkanTest {
                 null,
                 BBTypedPointer64::newUnallocated1
         );
-        vLayerStrings.getOrCreate(0).set(NullTerminatedUTF8String.ofString("VK_LAYER_KHRONOS_validation"));
+        vLayerStrings.getOrCreate(0).set(NullTerminatedUTF8String.newAllocated("VK_LAYER_KHRONOS_validation"));
 
         // VkApplicationInfo
         VkApplicationInfo vkApplicationInfo = new VkApplicationInfo();
@@ -83,11 +92,11 @@ public class VulkanTest {
 
         vkApplicationInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO);
         vkApplicationInfo.pNext.set(0);
-        vkApplicationInfo.pApplicationName.set(NullTerminatedUTF8String.ofString("Test Application"));
-        vkApplicationInfo.applicationVersion.set(VulkanUtils.makeVersion(1, 0, 0));
-        vkApplicationInfo.pEngineName.set(NullTerminatedUTF8String.ofString("CVG4J"));
-        vkApplicationInfo.engineVersion.set(VulkanUtils.makeVersion(0, 1, 0));
-        vkApplicationInfo.apiVersion.set(VulkanUtils.VK_API_VERSION_1_3);
+        vkApplicationInfo.pApplicationName.set(NullTerminatedUTF8String.newAllocated("Test Application"));
+        vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(1, 0, 0));
+        vkApplicationInfo.pEngineName.set(NullTerminatedUTF8String.newAllocated("CVG4J"));
+        vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(0, 1, 0));
+        vkApplicationInfo.apiVersion.set(VulkanApiVersion.V_1_3_0.getAsInt());
 
         // VkInstanceCreateInfo
         VkInstanceCreateInfo vkInstanceCreateInfo = new VkInstanceCreateInfo();
@@ -105,7 +114,7 @@ public class VulkanTest {
         // Create VkInstance
         VkInstance vkInstance = new VkInstance();
         vkInstance.allocate();
-        VulkanUtils.vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
+        vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
         vkInstance.initMethodPointers();
 
         // Create window surface
@@ -138,7 +147,7 @@ public class VulkanTest {
         );
 
         for (int i = 0; i < _requiredDeviceExtensions.size(); i++) {
-            requiredDeviceExtensions.getOrCreate(i).set(NullTerminatedUTF8String.ofString(_requiredDeviceExtensions.get(i)));
+            requiredDeviceExtensions.getOrCreate(i).set(NullTerminatedUTF8String.newAllocated(_requiredDeviceExtensions.get(i)));
         }
 
         VkSurfaceFormatKHR selectedSurfaceFormat = null;
@@ -474,11 +483,16 @@ public class VulkanTest {
         }
 
         // Read binary shaders and create Shader Modules
+        VkShaderModuleCreateInfo fragShaderInfo = allocate(new VkShaderModuleCreateInfo());
+        VkShaderModuleCreateInfo vertShaderInfo = allocate(new VkShaderModuleCreateInfo());
+
         VkShaderModule fragShader = new VkShaderModule();
         fragShader.allocate();
         vkInstance.vkCreateShaderModule(
                 device,
-                TypedPointer64.of(VulkanUtils.createShaderModuleInfo(
+                TypedPointer64.of(createShaderModuleInfo(
+                        fragShaderInfo,
+                        BufferUtils::createAligned,
                         getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest1.frag.spv")
                 )),
                 TypedPointer64.of(null),
@@ -488,7 +502,9 @@ public class VulkanTest {
         vertShader.allocate();
         vkInstance.vkCreateShaderModule(
                 device,
-                TypedPointer64.of(VulkanUtils.createShaderModuleInfo(
+                TypedPointer64.of(createShaderModuleInfo(
+                        vertShaderInfo,
+                        BufferUtils::createAligned,
                         getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest1.vert.spv")
                 )),
                 TypedPointer64.of(null),
@@ -506,13 +522,13 @@ public class VulkanTest {
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
         vkPipelineShaderStageCreateInfo.module.set(vertShader.get());
-        vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.ofString("main"));
+        vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main"));
 
         vkPipelineShaderStageCreateInfo = shaderStages.getOrCreate(1);
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
         vkPipelineShaderStageCreateInfo.module.set(fragShader.get());
-        vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.ofString("main")); //TODO: This string "main" is unsafe. The JVM may garbage collect it at any time
+        vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main")); //TODO: This string "main" is unsafe. The JVM may garbage collect it at any time
 
         VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateCreateInfo = new VkPipelineVertexInputStateCreateInfo();
         vkPipelineVertexInputStateCreateInfo.allocate();
@@ -636,6 +652,18 @@ public class VulkanTest {
         vkRenderPassCreateInfo.subpassCount.set(1);
         vkRenderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
 
+        VkSubpassDependency vkSubpassDependency = new VkSubpassDependency();
+        vkSubpassDependency.allocate();
+        vkSubpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
+        vkSubpassDependency.dstSubpass.set(0);
+        vkSubpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        vkSubpassDependency.srcAccessMask.set(0);
+        vkSubpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        vkSubpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+
+        vkRenderPassCreateInfo.dependencyCount.set(1);
+        vkRenderPassCreateInfo.pDependencies.set(vkSubpassDependency);
+
         VkRenderPass vkRenderPass = new VkRenderPass();
         vkRenderPass.allocate();
         vkInstance.vkCreateRenderPass(
@@ -663,8 +691,8 @@ public class VulkanTest {
         vkGraphicsPipelineCreateInfo.renderPass.set(vkRenderPass.get());
         vkGraphicsPipelineCreateInfo.subpass.set(0);
 
-        VkPipeline vkPipeline = new VkPipeline();
-        vkPipeline.allocate();
+        VkPipeline graphicsPipeline = new VkPipeline();
+        graphicsPipeline.allocate();
         VkPipelineCache cache = new VkPipelineCache();
         cache.allocate();
         cache.set(VulkanUtils.VK_NULL_HANDLE);
@@ -674,7 +702,7 @@ public class VulkanTest {
                 1,
                 TypedPointer64.of(vkGraphicsPipelineCreateInfo),
                 TypedPointer64.of(null),
-                TypedPointer64.of(vkPipeline)
+                TypedPointer64.of(graphicsPipeline)
         ).check();
 
         // Create Framebuffers
@@ -688,6 +716,7 @@ public class VulkanTest {
         int i = 0;
         for (VkFramebuffer vkFramebuffer : vkFramebuffers) {
             VkFramebufferCreateInfo vkFramebufferCreateInfo = new VkFramebufferCreateInfo();
+            vkFramebufferCreateInfo.allocate();
             vkFramebufferCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO);
             vkFramebufferCreateInfo.renderPass.set(vkRenderPass.get());
             vkFramebufferCreateInfo.attachmentCount.set(1);
@@ -706,11 +735,169 @@ public class VulkanTest {
             i++;
         }
 
+        // Command pool and buffer
+        VkCommandPoolCreateInfo vkCommandPoolCreateInfo = new VkCommandPoolCreateInfo();
+        vkCommandPoolCreateInfo.allocate();
+        vkCommandPoolCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO);
+        vkCommandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        vkCommandPoolCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
+
+        VkCommandPool vkCommandPool = new VkCommandPool();
+        vkCommandPool.allocate();
+
+        vkInstance.vkCreateCommandPool(device, TypedPointer64.of(vkCommandPoolCreateInfo), TypedPointer64.of(null), TypedPointer64.of(vkCommandPool)).check();
+
+        VkCommandBufferAllocateInfo vkCommandBufferAllocateInfo = new VkCommandBufferAllocateInfo();
+        vkCommandBufferAllocateInfo.allocate();
+        vkCommandBufferAllocateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
+        vkCommandBufferAllocateInfo.commandPool.set(vkCommandPool.get());
+        vkCommandBufferAllocateInfo.level.set(VkCommandBufferLevel.VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        vkCommandBufferAllocateInfo.commandBufferCount.set(1);
+
+        VkCommandBuffer commandBuffer = new VkCommandBuffer();
+        commandBuffer.allocate();
+
+        vkInstance.vkAllocateCommandBuffers(device, TypedPointer64.of(vkCommandBufferAllocateInfo), TypedPointer64.of(commandBuffer)).check();
+
+        VkCommandBufferBeginInfo vkCommandBufferBeginInfo = new VkCommandBufferBeginInfo();
+        vkCommandBufferBeginInfo.allocate();
+        vkCommandBufferBeginInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+        VkExtent2D finalSelectedExtent = selectedExtent;
+
+        VkClearValue vkClearValue = new VkClearValue();
+        vkClearValue.allocate();
+        vkClearValue.color.float32.getOrCreate(0).set(0f);
+        vkClearValue.color.float32.getOrCreate(1).set(0f);
+        vkClearValue.color.float32.getOrCreate(2).set(0f);
+        vkClearValue.color.float32.getOrCreate(3).set(1f);
+
+        VkRenderPassBeginInfo vkRenderPassBeginInfo = new VkRenderPassBeginInfo();
+        vkRenderPassBeginInfo.allocate();
+        vkRenderPassBeginInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+        vkRenderPassBeginInfo.renderPass.set(vkRenderPass.get());
+
+        vkRenderPassBeginInfo.renderArea.offset.x.set(0);
+        vkRenderPassBeginInfo.renderArea.offset.y.set(0);
+        vkRenderPassBeginInfo.renderArea.extent.width.set(finalSelectedExtent.width.get());
+        vkRenderPassBeginInfo.renderArea.extent.height.set(finalSelectedExtent.height.get());
+        vkRenderPassBeginInfo.clearValueCount.set(1);
+
+
+        Consumer<BBUInt1> recordCommandBuffer = imageIndex -> {
+            vkInstance.vkBeginCommandBuffer(commandBuffer, TypedPointer64.of(vkCommandBufferBeginInfo)).check();
+
+            vkRenderPassBeginInfo.framebuffer.set(vkFramebuffers.get(imageIndex.get()).get());
+            vkRenderPassBeginInfo.pClearValues.set(vkClearValue); // make sure it is not GCed
+
+            vkInstance.vkCmdBeginRenderPass(commandBuffer, TypedPointer64.of(vkRenderPassBeginInfo), VkSubpassContents.VK_SUBPASS_CONTENTS_INLINE);
+            vkInstance.vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+            vkInstance.vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+            vkInstance.vkCmdEndRenderPass(commandBuffer);
+            vkInstance.vkEndCommandBuffer(commandBuffer).check();
+        };
+
+        // Draw the frame!
+
+        // We need Synchronization
+        VkSemaphore imageAvailableSemaphore = new VkSemaphore();
+        VkSemaphore renderFinishedSemaphore = new VkSemaphore();
+        VkFence frameSubmittedFence = new VkFence();
+
+        imageAvailableSemaphore.allocate();
+        renderFinishedSemaphore.allocate();
+        frameSubmittedFence.allocate();
+
+        VkSemaphoreCreateInfo vkSemaphoreCreateInfo = new VkSemaphoreCreateInfo();
+        vkSemaphoreCreateInfo.allocate();
+        vkSemaphoreCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO);
+
+        VkFenceCreateInfo vkFenceCreateInfo = new VkFenceCreateInfo();
+        vkFenceCreateInfo.allocate();
+        vkFenceCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
+        vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
+
+        vkInstance.vkCreateSemaphore(
+                device,
+                TypedPointer64.of(vkSemaphoreCreateInfo),
+                TypedPointer64.of(null),
+                TypedPointer64.of(imageAvailableSemaphore)
+        ).check();
+        vkInstance.vkCreateSemaphore(
+                device,
+                TypedPointer64.of(vkSemaphoreCreateInfo),
+                TypedPointer64.of(null),
+                TypedPointer64.of(renderFinishedSemaphore)
+        ).check();
+        vkInstance.vkCreateFence(
+                device,
+                TypedPointer64.of(vkFenceCreateInfo),
+                TypedPointer64.of(null),
+                TypedPointer64.of(frameSubmittedFence)
+        ).check();
+
+        // variables required in drawable
+        BBUInt1 imageIndex = BBUInt1.newAllocated(null);
+        VkFence nullHandleFence = new VkFence();
+        nullHandleFence.allocate();
+        nullHandleFence.set(VulkanUtils.VK_NULL_HANDLE);
+        VkCommandBufferResetFlags noResetFlag = new VkCommandBufferResetFlags();
+        noResetFlag.allocate();
+        noResetFlag.set(0);
+
+        VkSubmitInfo vkSubmitInfo = new VkSubmitInfo();
+        vkSubmitInfo.allocate();
+        vkSubmitInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO);
+        vkSubmitInfo.waitSemaphoreCount.set(1);
+        vkSubmitInfo.pWaitSemaphores.set(imageAvailableSemaphore);
+        VkPipelineStageFlags vkPipelineStageFlags = new VkPipelineStageFlags();
+        vkPipelineStageFlags.allocate();
+        vkPipelineStageFlags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        vkSubmitInfo.pWaitDstStageMask.set(vkPipelineStageFlags);
+        vkSubmitInfo.commandBufferCount.set(1);
+        vkSubmitInfo.pCommandBuffers.set(commandBuffer);
+        vkSubmitInfo.signalSemaphoreCount.set(1);
+        vkSubmitInfo.pSignalSemaphores.set(renderFinishedSemaphore);
+
+        window.show((frameInfo) -> {
+            // wait for previous frame to be submitted
+            vkInstance.vkWaitForFences(device, 1, TypedPointer64.of(frameSubmittedFence), true, Long.MAX_VALUE).check();
+            vkInstance.vkResetFences(device, 1, TypedPointer64.of(frameSubmittedFence)).check();
+
+            // acquire Image from the swapchain
+            vkInstance.vkAcquireNextImageKHR(device, swapchain, Long.MAX_VALUE, imageAvailableSemaphore, nullHandleFence, TypedPointer64.of(imageIndex));
+            vkInstance.vkResetCommandBuffer(commandBuffer, noResetFlag);
+            recordCommandBuffer.accept(imageIndex);
+
+            // submit
+            vkInstance.vkQueueSubmit(graphicsQueue, 1, TypedPointer64.of(vkSubmitInfo), frameSubmittedFence).check();
+
+            // present
+            VkPresentInfoKHR vkPresentInfo = new VkPresentInfoKHR();
+            vkPresentInfo.allocate();
+            vkPresentInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
+            vkPresentInfo.waitSemaphoreCount.set(1);
+            vkPresentInfo.pWaitSemaphores.set(renderFinishedSemaphore);
+            vkPresentInfo.swapchainCount.set(1);
+            vkPresentInfo.pSwapchains.set(swapchain);
+            vkPresentInfo.pImageIndices.set(imageIndex);
+
+            vkInstance.vkQueuePresentKHR(graphicsQueue, TypedPointer64.of(vkPresentInfo)).check();
+        });
+
+        // wait till devices has finished
+        vkInstance.vkDeviceWaitIdle(device);
+
+
+
         // Cleanup
+        vkInstance.vkDestroySemaphore(device, imageAvailableSemaphore, TypedPointer64.of(null));
+        vkInstance.vkDestroySemaphore(device, renderFinishedSemaphore, TypedPointer64.of(null));
+        vkInstance.vkDestroyCommandPool(device, vkCommandPool, TypedPointer64.of(null));
+        vkInstance.vkDestroyFence(device, frameSubmittedFence, TypedPointer64.of(null));
         for (VkFramebuffer vkFramebuffer : vkFramebuffers) {
             vkInstance.vkDestroyFramebuffer(device, vkFramebuffer, TypedPointer64.of(null));
         }
-        vkInstance.vkDestroyPipeline(device, vkPipeline, TypedPointer64.of(null));
+        vkInstance.vkDestroyPipeline(device, graphicsPipeline, TypedPointer64.of(null));
         vkInstance.vkDestroyRenderPass(device, vkRenderPass, TypedPointer64.of(null));
         vkInstance.vkDestroyPipelineLayout(device, vkPipelineLayout, TypedPointer64.of(null));
         vkInstance.vkDestroyShaderModule(device, vertShader, TypedPointer64.of(null));
