@@ -111,7 +111,7 @@ public class GLFWWindow implements
         long frameStartMillis = System.currentTimeMillis();
 
         while (!glfwWindowShouldClose(pointer)) {
-            updateListener.update0(this, frameInfo);
+            updateListener.update0(frameInfo);
 
             perFrameOperations();
 

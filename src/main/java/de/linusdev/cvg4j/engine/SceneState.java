@@ -75,7 +75,7 @@ public enum SceneState {
 
         @Override
         <G extends Game> void update(@NotNull Scene<G> scene, @NotNull Engine<G> engine, @NotNull FrameInfo info) {
-            scene.update0(engine, info);
+            scene.update0(info);
         }
 
         @Override
@@ -117,7 +117,7 @@ public enum SceneState {
 
         @Override
         <G extends Game> void update(@NotNull Scene<G> scene, @NotNull Engine<G> engine, @NotNull FrameInfo info) {
-            scene.update0(engine, info);
+            scene.update0(info);
         }
 
         @Override
@@ -157,7 +157,7 @@ public enum SceneState {
 
         @Override
         <G extends Game> void update(@NotNull Scene<G> scene, @NotNull Engine<G> engine, @NotNull FrameInfo info) {
-            scene.update0(engine, info);
+            scene.update0(info);
         }
 
         @Override

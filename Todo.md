@@ -26,5 +26,5 @@ be stored on a per-thread basis utilising a custom Thread subclass.
 ## Proper Logging using llog
 Add Logging (DEBUG, WARN and ERROR)
 
-## Small stuff
-- Add a .pointer() / .ref() function to Structure to quickly get a TypedPointer
+### llog missing some docs
+e.g. How to activate logger, which properties are supported, what do they do.

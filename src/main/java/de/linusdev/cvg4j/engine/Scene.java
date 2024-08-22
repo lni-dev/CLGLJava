@@ -215,9 +215,9 @@ public abstract class Scene<GAME extends Game> implements
     }
 
     @Override
-    public void update0(@NotNull Engine<GAME> engine, @NotNull FrameInfo frameInfo) {
+    public void update0(@NotNull FrameInfo frameInfo) {
 
-        UpdateListener.super.update0(engine, frameInfo);
+        UpdateListener.super.update0(frameInfo);
     }
 
     @NotNull

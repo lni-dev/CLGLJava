@@ -30,6 +30,7 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.pointer.Pointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
+import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,14 +57,22 @@ public interface VulkanNonInstanceMethods {
         return new ReturnedVkResult(res);
     }
 
+    interface ArraySupplier<T extends Structure> {
+        @NotNull StructureArray<T> supply(
+                int size,
+                @NotNull Class<T> elementClazz,
+                @NotNull StructureArray.ElementCreator<T> creator
+        );
+    }
+
     static @NotNull StructureArray<VkExtensionProperties> vkEnumerateInstanceExtensionProperties(
             @NotNull TypedPointer64<NullTerminatedUTF8String> pLayerName,
             @NotNull BBUInt1 count,
-            @NotNull Function<Integer, StructureArray<VkExtensionProperties>> arraySupplier
+            @NotNull ArraySupplier<VkExtensionProperties> arraySupplier
     ) {
         long pointer = GLFW.glfwGetInstanceProcAddress(NativeUtils.getNullPointer(), "vkEnumerateInstanceExtensionProperties");
         new ReturnedVkResult(NativeFunctions.callNativeIFunctionPPP(pointer, pLayerName.get(), count.getPointer(), Pointer64.NULL_POINTER)).check();
-        var array = arraySupplier.apply(count.get());
+        var array = arraySupplier.supply(count.get(), VkExtensionProperties.class, VkExtensionProperties::new);
         new ReturnedVkResult(NativeFunctions.callNativeIFunctionPPP(pointer, pLayerName.get(), count.getPointer(), array.getPointer())).check();
         return array;
     }
@@ -79,6 +88,10 @@ public interface VulkanNonInstanceMethods {
         return array;
     }
 
+    /**
+     * If the function "vkEnumerateInstanceVersion" is not available, {@link VulkanApiVersion#V_1_0_0} will be returned.
+     * @param version already allocated {@link BBUInt1} to store retrieved version
+     */
     static @NotNull BBUInt1 vkEnumerateInstanceVersion(
             @NotNull BBUInt1 version
     ) {

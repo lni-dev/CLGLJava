@@ -21,17 +21,23 @@ import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
-import de.linusdev.cvg4j.nat.vulkan.utils.VulkanApiVersionUtils;
-import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkApplicationInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkInstanceCreateInfo;
+import de.linusdev.cvg4j.nat.vulkan.utils.VulkanApiVersionUtils;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
 import de.linusdev.cvg4j.nengine.Engine;
 import de.linusdev.cvg4j.nengine.RenderThread;
 import de.linusdev.cvg4j.nengine.exception.EngineException;
 import de.linusdev.cvg4j.nengine.info.Game;
+import de.linusdev.cvg4j.nengine.vulkan.extension.VulkanExtension;
+import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanEngineInfo;
+import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanRequirements;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
+import de.linusdev.llog.base.Logger;
+import de.linusdev.llog.base.impl.StandardLogLevel;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
@@ -44,22 +50,29 @@ import de.linusdev.lutils.version.SimpleVersion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_TRUE;
-import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.*;
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkEnumerateInstanceVersion;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManager, UpdateListener {
 
+    private final static @NotNull LogInstance LOG = LLog.getLogInstance();
+
     private final @NotNull GAME game;
-    private final @NotNull VulkanApiVersion minRequiredInstanceVersion;
+    private final @NotNull VulkanRequirements requirements;
 
     private final @NotNull RenderThread<GAME, Nothing, VulkanRasterizationWindow> renderThread;
+    private final @NotNull VulkanEngineInfo vulkanInfo;
 
     public VulkanEngine(
             @NotNull GAME game,
-            @NotNull VulkanApiVersion minRequiredInstanceVersion
+            @NotNull VulkanRequirements requirements
     ) throws GLFWException, EngineException {
-        this.minRequiredInstanceVersion = minRequiredInstanceVersion;
+        this.requirements = requirements;
+        this.vulkanInfo = new VulkanEngineInfo();
 
         // Check if Vulkan is supported
         GLFW.glfwInit();
@@ -68,26 +81,24 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
         }
 
         this.game = game;
+
+        LOG.logDebug("Creating render-thread");
         this.renderThread = new RenderThread<>(
                 this,
                 rt -> {
                     DirectMemoryStack64 stack = rt.getStack();
                     assert stack.createSafePoint();
 
+                    vulkanInfo.load(stack);
+
                     // Check minRequiredInstanceVersion
-                    BBUInt1 version = stack.push(BBUInt1.newAllocatable(null));
-                    vkEnumerateInstanceVersion(version);
-                    SimpleVersion maxApiVersion = VulkanApiVersionUtils.toSimpleVersion(version.get());
-                    stack.pop(); version = null; // version
-
-                    if(maxApiVersion.compareTo(minRequiredInstanceVersion) < 0)
-                        throw new EngineException(minRequiredInstanceVersion + " is not supported. Maximum supported is: " + maxApiVersion);
-
-
-                    NullTerminatedUTF8String appName = stack.push(NullTerminatedUTF8String.newAllocatable(game.name()));
-                    NullTerminatedUTF8String engineName = stack.push(NullTerminatedUTF8String.newAllocatable(Engine.name()));
+                    requirements.checkMinRequiredInstanceVersion(vulkanInfo);
+                    requirements.checkRequiredInstanceExtensions(vulkanInfo);
 
                     // VkApplicationInfo
+                    NullTerminatedUTF8String appName = stack.pushString(game.name());
+                    NullTerminatedUTF8String engineName = stack.pushString(Engine.name());
+
                     VkApplicationInfo vkApplicationInfo = stack.push(new VkApplicationInfo());
                     vkApplicationInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO);
                     vkApplicationInfo.pNext.set(0);
@@ -95,7 +106,8 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
                     vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
                     vkApplicationInfo.pEngineName.set(engineName);
                     vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
-                    vkApplicationInfo.apiVersion.set(minRequiredInstanceVersion.getAsInt());
+                    vkApplicationInfo.apiVersion.set(requirements.getMinRequiredInstanceVersion().getAsInt());
+                    LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
 
                     // VkInstanceCreateInfo
                     VkInstanceCreateInfo vkInstanceCreateInfo = stack.push(new VkInstanceCreateInfo());

@@ -310,8 +310,9 @@ public class GLFW {
     protected static native long glfwGetRequiredInstanceExtensions(long pCount);
 
     @NotNull
-    public static StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> glfwGetRequiredInstanceExtensions() {
-        BBInt1 count = BBInt1.newAllocated(null);
+    public static StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> glfwGetRequiredInstanceExtensions(
+            @NotNull BBInt1 count
+    ) {
         long pointer = glfwGetRequiredInstanceExtensions(count.getPointer());
 
         return StructureArray.ofPointer(false, BBTypedPointer64.class, count.get(), pointer, BBTypedPointer64::newUnallocated1);

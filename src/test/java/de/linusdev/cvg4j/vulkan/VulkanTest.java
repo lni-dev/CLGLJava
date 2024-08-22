@@ -69,8 +69,8 @@ public class VulkanTest {
             System.err.println("Cannot run Vulkan test: Vulkan is not supported on this machine.");
             return;
         }
-
-        var array = GLFW.glfwGetRequiredInstanceExtensions();
+        BBUInt1 count = BBUInt1.newAllocated(null);
+        var array = GLFW.glfwGetRequiredInstanceExtensions(count);
 
         System.out.println("glfwGetRequiredInstanceExtensions:");
         for (BBTypedPointer64<NullTerminatedUTF8String> pointer : array) {
@@ -124,7 +124,6 @@ public class VulkanTest {
         window.createVkWindowSurface(vkInstance, null, vkSurfaceKHR).check();
 
         // Pick GPU
-        BBUInt1 count = BBUInt1.newAllocated(null);
         vkInstance.vkEnumeratePhysicalDevices(TypedPointer64.of(count), TypedPointer64.of(null)).check();
         System.out.println("Physical Device count: " + count.get());
         StructureArray<VkPhysicalDevice> vkPhysicalDevices = StructureArray.newAllocated(

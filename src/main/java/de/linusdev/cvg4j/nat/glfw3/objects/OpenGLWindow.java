@@ -33,7 +33,7 @@ import static de.linusdev.cvg4j.nat.glad.GLConstants.GL_DEBUG_OUTPUT_SYNCHRONOUS
 import static de.linusdev.cvg4j.nat.glad.Glad.*;
 import static de.linusdev.cvg4j.nat.glfw3.GLFW.*;
 
-public class OpenGLWindow extends GLFWWindow<OpenGLWindow> implements DebugMessageCallback {
+public class OpenGLWindow extends GLFWWindow implements DebugMessageCallback {
     public OpenGLWindow(@Nullable GLFWWindowHints hints) throws GLFWException, GladInitException {
         super(RenderAPI.OPENGL, hints);
 

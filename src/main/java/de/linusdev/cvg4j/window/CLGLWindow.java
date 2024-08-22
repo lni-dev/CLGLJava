@@ -55,7 +55,7 @@ import static de.linusdev.cvg4j.nat.glad.GLConstants.*;
 import static de.linusdev.cvg4j.nat.glad.Glad.glClear;
 
 @SuppressWarnings("unused")
-public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, AutoCloseable {
+public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = UITaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
 
@@ -194,7 +194,7 @@ public class CLGLWindow implements UpdateListener<GLFWWindow>, AsyncManager, Aut
 
         argumentManager.check();
 
-        handler.update0(this, frameInfo);
+        handler.update0(frameInfo);
 
         if(renderKernel != null) {
             clQueue.enqueueAcquireGLObjects(glObjects, null, null);
