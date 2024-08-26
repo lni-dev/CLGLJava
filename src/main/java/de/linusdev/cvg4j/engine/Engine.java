@@ -43,12 +43,12 @@ public interface Engine<G extends Game> {
 
         private static boolean staticSetupDone = false;
 
-        private static void checkSetup() {
+        private static synchronized void checkSetup() {
             if(!staticSetupDone)
                 throw new IllegalStateException("Engine.StaticSetup.setup() must be called as first line in main.");
         }
 
-        public static void setup() {
+        public static synchronized void setup() {
             if(StaticSetup.staticSetupDone)
                 return;
             ABISelector.retrieveAndSetDefaultABI();

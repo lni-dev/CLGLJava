@@ -534,8 +534,10 @@ public class RegistryLoader {
                 if (reqNode.getNodeType() == Node.TEXT_NODE)
                     continue;
 
-                if (!reqNode.getNodeName().equals("require"))
-                    throw new IllegalStateException("Unexpected Node in <extension>: " + extNode.getNodeName());
+                if (reqNode.getNodeName().equals("remove"))
+                    System.out.println("Ignored remove node.");
+                else if (!reqNode.getNodeName().equals("require"))
+                    throw new IllegalStateException("Unexpected Node in <extension>: " + reqNode.getNodeName());
 
                 for (Node node : iterableNode(reqNode)) {
                     if (node.getNodeName().equals("comment"))
@@ -631,6 +633,7 @@ public class RegistryLoader {
                 if(valueAttr != null) {
                     enumToExtend.addValue(new EnumType.Value(
                             nameAttr.getNodeValue(),
+                            enumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             valueAttr.getNodeValue(),
                             comment,
                             null,
@@ -639,7 +642,8 @@ public class RegistryLoader {
                 } else if(aliasAttr != null) {
                     enumToExtend.addValue(new EnumType.Value(
                             nameAttr.getNodeValue(),
-                            aliasAttr.getNodeValue() + ".getValue()",
+                            enumToExtend.getEnumValueName(nameAttr.getNodeValue()),
+                            enumToExtend.getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()",
                             comment, null,
                             javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
                     ));
@@ -656,6 +660,7 @@ public class RegistryLoader {
 
                     enumToExtend.addValue(new EnumType.Value(
                             nameAttr.getNodeValue(),
+                            enumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             "" + value,
                             comment, null,
                             javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)

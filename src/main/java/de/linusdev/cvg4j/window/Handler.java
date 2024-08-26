@@ -21,7 +21,7 @@ import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.window.args.KernelView;
 import org.jetbrains.annotations.NotNull;
 
-public interface Handler extends UpdateListener<CLGLWindow> {
+public interface Handler extends UpdateListener {
 
     /**
      * Called if the render kernel args must be set (again). <br>

@@ -14,7 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nengine.vulkan.selector;
+package de.linusdev.cvg4j.build.vkregistry;
 
-public interface VulkanSelector {
+import de.linusdev.lutils.codegen.java.JavaClass;
+import org.jetbrains.annotations.NotNull;
+
+public interface ClassesOfMainProject {
+
+    public static @NotNull JavaClass VULKAN_UTILS_CLASS = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan.utils", "VulkanUtils");
+
 }

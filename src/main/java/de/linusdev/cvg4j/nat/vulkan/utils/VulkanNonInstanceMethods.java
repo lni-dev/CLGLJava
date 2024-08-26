@@ -30,7 +30,7 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.pointer.Pointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
-import de.linusdev.lutils.nat.struct.abstracts.Structure;
+import de.linusdev.lutils.nat.struct.array.StructureArraySupplier;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -57,18 +57,10 @@ public interface VulkanNonInstanceMethods {
         return new ReturnedVkResult(res);
     }
 
-    interface ArraySupplier<T extends Structure> {
-        @NotNull StructureArray<T> supply(
-                int size,
-                @NotNull Class<T> elementClazz,
-                @NotNull StructureArray.ElementCreator<T> creator
-        );
-    }
-
     static @NotNull StructureArray<VkExtensionProperties> vkEnumerateInstanceExtensionProperties(
             @NotNull TypedPointer64<NullTerminatedUTF8String> pLayerName,
             @NotNull BBUInt1 count,
-            @NotNull ArraySupplier<VkExtensionProperties> arraySupplier
+            @NotNull StructureArraySupplier<VkExtensionProperties> arraySupplier
     ) {
         long pointer = GLFW.glfwGetInstanceProcAddress(NativeUtils.getNullPointer(), "vkEnumerateInstanceExtensionProperties");
         new ReturnedVkResult(NativeFunctions.callNativeIFunctionPPP(pointer, pLayerName.get(), count.getPointer(), Pointer64.NULL_POINTER)).check();

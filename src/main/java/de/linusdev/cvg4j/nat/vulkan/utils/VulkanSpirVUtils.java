@@ -189,7 +189,7 @@ public interface VulkanSpirVUtils {
     ) throws IOException {
         var shader = readSpirVBinary(stream, bufferCreator);
 
-        createInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
+        createInfo.sType.set(VkStructureType.SHADER_MODULE_CREATE_INFO);
         createInfo.codeSize.set(shader.getRequiredSize());
         createInfo.pCode.set(shader.getPointer());
 

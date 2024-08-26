@@ -34,6 +34,10 @@ public interface VulkanExtension {
         };
     }
 
+    static @NotNull VulkanExtension of(@NotNull String name) {
+        return of(name, 0);
+    }
+
     static boolean isSufficient(@NotNull VulkanExtension required, @NotNull VulkanExtension available) {
         if(!required.extensionName().equals(available.extensionName()))
             return false;

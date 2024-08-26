@@ -26,10 +26,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.w3c.dom.Node;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
@@ -40,6 +40,8 @@ public class EnumType implements Type {
 
     private final @NotNull String name;
     private final @Nullable String comment;
+    private final @NotNull String namePrefixToIgnore;
+    private final @NotNull String namePrefixFix;
 
     private final @NotNull Map<String, Value> values = new LinkedHashMap<>();
 
@@ -49,6 +51,34 @@ public class EnumType implements Type {
     ) {
         this.name = name;
         this.comment = comment;
+
+        Pattern wordExtractor = Pattern.compile("^(?<word>[A-Z]+[a-z0-9]*)([A-Z]|$)");
+
+        List<String> nameWords = new ArrayList<>();
+
+        while (!name.isBlank()) {
+            Matcher matcher = wordExtractor.matcher(name);
+            if(!matcher.find()) break;
+            String word = matcher.group("word");
+
+            if(!word.equals("KHR")) nameWords.add(word);
+            name = name.substring(word.length());
+        }
+
+        namePrefixToIgnore = nameWords.stream().reduce((cur, add) -> cur.toUpperCase(Locale.ROOT) + "_" + add.toUpperCase(Locale.ROOT)).orElse("") + "_";
+        namePrefixFix = nameWords.get(nameWords.size()-1).toUpperCase(Locale.ROOT) + "_";
+        System.out.println("enumName: " + this.name + ", namePrefixToIgnore: " + namePrefixToIgnore);
+    }
+
+    public String getEnumValueName(String vkName) {
+        if(vkName.startsWith(namePrefixToIgnore))
+            vkName = vkName.substring(namePrefixToIgnore.length());
+
+        if(Pattern.compile("^\\d").matcher(vkName).find()) {
+            vkName = namePrefixFix + vkName;
+        }
+
+        return vkName;
     }
 
     public void addValue(@NotNull Node enumNode) {
@@ -67,10 +97,12 @@ public class EnumType implements Type {
 
         Value v = new Value(
                 nameAttr.getNodeValue(),
-                valueAttr == null ? aliasAttr.getNodeValue() + ".getValue()" : valueAttr.getNodeValue(),
+                getEnumValueName(nameAttr.getNodeValue()),
+                valueAttr == null ? getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()" : valueAttr.getNodeValue(),
                 commentAttr == null ? null : commentAttr.getNodeValue(),
                 deprecatedAttr == null ? null : deprecatedAttr.getNodeValue(),
                 null);
+
 
         values.put(v.name, v);
 
@@ -156,13 +188,15 @@ public class EnumType implements Type {
     }
 
     public static class Value {
+        private final @NotNull String vkName;
         private final @NotNull String name;
         private final @NotNull String stringValue;
         private final @Nullable String comment;
         private final @Nullable String deprecated;
         private final @Nullable Consumer<JavaDocGenerator> writeDoc;
 
-        public Value(@NotNull String name, @NotNull String stringValue, @Nullable String comment, @Nullable String deprecated, @Nullable Consumer<JavaDocGenerator> writeDoc) {
+        public Value(@NotNull String vkName, @NotNull String name, @NotNull String stringValue, @Nullable String comment, @Nullable String deprecated, @Nullable Consumer<JavaDocGenerator> writeDoc) {
+            this.vkName = vkName;
             this.name = name;
             this.stringValue = stringValue;
             this.comment = comment;

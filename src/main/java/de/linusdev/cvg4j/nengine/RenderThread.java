@@ -71,6 +71,7 @@ public class RenderThread<GAME extends Game, CR, WINDOW> extends Thread {
 
             threadDeathFuture.complete(window, this, null);
         } catch (Throwable t) {
+            creationFuture.complete(null, Nothing.INSTANCE, new ThrowableAsyncError(t));
             threadDeathFuture.complete(null, this, new ThrowableAsyncError(t));
         }
     }

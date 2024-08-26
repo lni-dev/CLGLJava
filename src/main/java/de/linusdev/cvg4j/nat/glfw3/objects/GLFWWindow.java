@@ -25,14 +25,9 @@ import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.custom.window.AbstractGLFWWindowListeners;
 import de.linusdev.cvg4j.nat.glfw3.custom.window.GLFWWindowListeners;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.vulkan.ReturnedVkResult;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkSurfaceKHR;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkAllocationCallbacks;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
-import de.linusdev.lutils.nat.pointer.Pointer64;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -140,18 +135,5 @@ public class GLFWWindow implements
 
     public boolean isClosed() {
         return closed;
-    }
-
-    public ReturnedVkResult createVkWindowSurface(
-            @NotNull VkInstance vkInstance,
-            @Nullable VkAllocationCallbacks allocationCallbacks,
-            @NotNull VkSurfaceKHR surface
-    ) {
-        return new ReturnedVkResult(glfwCreateWindowSurface(
-                vkInstance.get(),
-                pointer,
-                Pointer64.of(allocationCallbacks).get(),
-                surface.getPointer()
-        ));
     }
 }

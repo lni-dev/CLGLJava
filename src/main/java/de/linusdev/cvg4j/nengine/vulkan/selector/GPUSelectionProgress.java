@@ -16,51 +16,55 @@
 
 package de.linusdev.cvg4j.nengine.vulkan.selector;
 
+import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceCapabilitiesKHR;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Predicate;
+public class GPUSelectionProgress {
 
-public interface PriorityModifier {
+    private final @NotNull VulkanGPUSelector selector;
 
+    private @Nullable VkPhysicalDevice best;
+    private int bestValue = 0;
 
-    @NotNull PriorityModifierType type();
-
-    int modifier();
-
-    boolean test(@NotNull GpuInfo info);
-
-    default int apply(int current, @NotNull GpuInfo info) {
-        if(!test(info))
-            return current;
-
-        return type().apply(current, modifier());
+    public GPUSelectionProgress(@NotNull VulkanGPUSelector selector) {
+        this.selector = selector;
     }
 
-    record GpuInfo(
+    public int addGpu(
+            @NotNull VkPhysicalDevice handle,
             @NotNull VkPhysicalDeviceProperties props,
             int extensionCount,
-            @NotNull StructureArray<VkExtensionProperties> extensions,
+            StructureArray<VkExtensionProperties> extensions,
             @NotNull VkSurfaceCapabilitiesKHR surfacesCaps,
             int surfaceFormatCount,
-            @NotNull StructureArray<VkSurfaceFormatKHR> surfaceFormats
-    ) { }
+            StructureArray<VkSurfaceFormatKHR> surfaceFormats
+    ) {
+        PriorityModifier.GpuInfo info = new PriorityModifier.GpuInfo(
+                props,
+                extensionCount,
+                extensions,
+                surfacesCaps,
+                surfaceFormatCount,
+                surfaceFormats
+        );
 
-    record Impl(
-            @NotNull PriorityModifierType type,
-            int modifier,
-            @NotNull Predicate<GpuInfo> tester
-    ) implements PriorityModifier {
-
-        @Override
-        public boolean test(@NotNull GpuInfo info) {
-            return tester.test(info);
+        int p = selector.getPriority(info);
+        if(p > bestValue) {
+            bestValue = p;
+            best = handle;
         }
 
+        return p;
+    }
+
+    public @Nullable VkPhysicalDevice getBestGPU() {
+        return best;
     }
 
 }

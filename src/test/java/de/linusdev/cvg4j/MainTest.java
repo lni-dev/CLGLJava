@@ -126,7 +126,7 @@ public class MainTest {
 
         window.setSize(800, 500);
         window.setTitle("Nice");
-        window.show((window1, frameInfo) -> {
+        window.show((frameInfo) -> {
             glClear(GL_COLOR_BUFFER_BIT);
         });
         window.close();

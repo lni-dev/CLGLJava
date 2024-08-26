@@ -17,13 +17,39 @@
 package de.linusdev.cvg4j.nengine;
 
 import de.linusdev.cvg4j.de.linusdev.cvg4j.GeneratedConstants;
+import de.linusdev.cvg4j.nat.ABISelector;
+import de.linusdev.cvg4j.nat.Load;
+import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nengine.info.Game;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
 
-public interface Engine<GAME extends Game>
-{
+public interface Engine<GAME extends Game> {
+
+    class StaticSetup {
+
+        static {
+            setup();
+        }
+
+        private static boolean staticSetupDone = false;
+
+        public static synchronized void checkSetup() {
+            if(!staticSetupDone)
+                throw new IllegalStateException("Engine.StaticSetup.setup() must be called as first line in main.");
+        }
+
+        public static synchronized void setup() {
+            if(staticSetupDone)
+                return;
+            ABISelector.retrieveAndSetDefaultABI();
+            Load.init();
+            BufferUtils.setByteBufferFromPointerMethod(NativeUtils::getBufferFromPointer);
+            staticSetupDone = true;
+        }
+    }
 
     static @NotNull Version version() {
         return GeneratedConstants.ENGINE_VERSION;

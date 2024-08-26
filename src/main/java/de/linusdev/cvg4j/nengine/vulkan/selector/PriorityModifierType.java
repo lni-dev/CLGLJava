@@ -18,8 +18,26 @@ package de.linusdev.cvg4j.nengine.vulkan.selector;
 
 public enum PriorityModifierType {
 
-    ADD,
-    MULTIPLY,
-    MIN,
+    ADD {
+        @Override
+        public int apply(int current, int arg) {
+            return current + arg;
+        }
+    },
+    MULTIPLY {
+        @Override
+        public int apply(int current, int arg) {
+            return current * arg;
+        }
+    },
+    MIN {
+        @Override
+        public int apply(int current, int arg) {
+            return Math.max(current, arg);
+        }
+    },
 
+    ;
+
+    public abstract int apply(int current, int arg);
 }

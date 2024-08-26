@@ -20,9 +20,7 @@ import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
-import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
@@ -34,6 +32,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
+import de.linusdev.cvg4j.nengine.vulkan.VulkanRasterizationWindow;
 import de.linusdev.lutils.ansi.sgr.SGR;
 import de.linusdev.lutils.ansi.sgr.SGRParameters;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
@@ -41,6 +40,7 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.array.NativeInt32Array;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
+import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
@@ -63,8 +63,8 @@ public class VulkanTest {
     @Test
     void test() throws GLFWException, IOException {
         Engine.StaticSetup.setup();
-        GLFWWindow window = new GLFWWindow(RenderAPI.VULKAN, null);
 
+        GLFW.glfwInit();
         if(GLFW.glfwVulkanSupported() != GLFWValues.GLFW_TRUE) {
             System.err.println("Cannot run Vulkan test: Vulkan is not supported on this machine.");
             return;
@@ -90,7 +90,7 @@ public class VulkanTest {
         VkApplicationInfo vkApplicationInfo = new VkApplicationInfo();
         vkApplicationInfo.allocate();
 
-        vkApplicationInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_APPLICATION_INFO);
+        vkApplicationInfo.sType.set(VkStructureType.APPLICATION_INFO);
         vkApplicationInfo.pNext.set(0);
         vkApplicationInfo.pApplicationName.set(NullTerminatedUTF8String.newAllocated("Test Application"));
         vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(1, 0, 0));
@@ -102,7 +102,7 @@ public class VulkanTest {
         VkInstanceCreateInfo vkInstanceCreateInfo = new VkInstanceCreateInfo();
         vkInstanceCreateInfo.allocate();
 
-        vkInstanceCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO);
+        vkInstanceCreateInfo.sType.set(VkStructureType.INSTANCE_CREATE_INFO);
         vkInstanceCreateInfo.pNext.set(0);
         vkInstanceCreateInfo.pApplicationInfo.set(vkApplicationInfo);
         vkInstanceCreateInfo.enabledExtensionCount.set(array.length());
@@ -117,11 +117,11 @@ public class VulkanTest {
         vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
         vkInstance.initMethodPointers();
 
-        // Create window surface
-        VkSurfaceKHR vkSurfaceKHR = new VkSurfaceKHR();
-        vkSurfaceKHR.allocate();
+        VulkanRasterizationWindow window = new VulkanRasterizationWindow(null, vkInstance, new DirectMemoryStack64());
 
-        window.createVkWindowSurface(vkInstance, null, vkSurfaceKHR).check();
+        // Create window surface
+        window.createVkWindowSurface(null).check();
+        VkSurfaceKHR vkSurfaceKHR = window.getVkSurface();
 
         // Pick GPU
         vkInstance.vkEnumeratePhysicalDevices(TypedPointer64.of(count), TypedPointer64.of(null)).check();
@@ -163,13 +163,13 @@ public class VulkanTest {
             System.out.println("\t- " + deviceProperties.deviceName.get() + ": " + deviceProperties.deviceType.get(VkPhysicalDeviceType.class));
 
             // get count extension props count
-            System.out.println("\t\t+ Extensions:");
             vkInstance.vkEnumerateDeviceExtensionProperties(
                     vkPhysicalDevice,
                     TypedPointer64.of(null),
                     TypedPointer64.of(count),
                     TypedPointer64.of(null)
             );
+            System.out.println("\t\t+ Extensions (" + count.get() + "):");
             StructureArray<VkExtensionProperties> vkExtensionPropertiesArray = StructureArray.newAllocated(
                     false,
                     SVWrapper.of(count.get(), VkExtensionProperties.class),
@@ -199,7 +199,7 @@ public class VulkanTest {
             vkInstance.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(vkPhysicalDevice, vkSurfaceKHR, TypedPointer64.of(vkSurfaceCapabilitiesKHR));
             System.out.println("\t\t\t* minImageCount: " + vkSurfaceCapabilitiesKHR.minImageCount.get());
             System.out.println("\t\t\t* maxImageCount: " + vkSurfaceCapabilitiesKHR.maxImageCount.get());
-            System.out.println("\t\t\t* maxImageCount: (" + vkSurfaceCapabilitiesKHR.currentExtent.width.get() + ", " + vkSurfaceCapabilitiesKHR.currentExtent.height.get() + ")");
+            System.out.println("\t\t\t* currentExtent: (" + vkSurfaceCapabilitiesKHR.currentExtent.width.get() + ", " + vkSurfaceCapabilitiesKHR.currentExtent.height.get() + ")");
 
             // Surface Formats
             System.out.println("\t\t+ Surface Capabilities:");
@@ -214,8 +214,8 @@ public class VulkanTest {
 
             // search the one we want
             for (VkSurfaceFormatKHR vkSurfaceFormat : vkSurfaceFormats) {
-                if(vkSurfaceFormat.format.get() == VkFormat.VK_FORMAT_B8G8R8A8_SRGB.getValue()
-                && vkSurfaceFormat.colorSpace.get() == VkColorSpaceKHR.VK_COLOR_SPACE_SRGB_NONLINEAR_KHR.getValue()) {
+                if(vkSurfaceFormat.format.get() == VkFormat.B8G8R8A8_SRGB.getValue()
+                && vkSurfaceFormat.colorSpace.get() == VkColorSpaceKHR.SRGB_NONLINEAR_KHR.getValue()) {
                     selectedSurfaceFormat = vkSurfaceFormat;
                     break;
                 }
@@ -248,15 +248,15 @@ public class VulkanTest {
             vkInstance.vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, vkSurfaceKHR, TypedPointer64.of(count), TypedPointer64.ofArray(vkPresentModes));
 
             for (NativeEnumValue32<VkPresentModeKHR> vkPresentMode : vkPresentModes) {
-                if(vkPresentMode.get() == VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR.getValue()) {
-                    selectedPresentMode = VkPresentModeKHR.VK_PRESENT_MODE_MAILBOX_KHR;
+                if(vkPresentMode.get() == VkPresentModeKHR.MAILBOX_KHR.getValue()) {
+                    selectedPresentMode = VkPresentModeKHR.MAILBOX_KHR;
                     break;
                 }
             }
 
             // if we didn't find it, select the one that is always there.
             if(selectedPresentMode == null) {
-                selectedPresentMode = VkPresentModeKHR.VK_PRESENT_MODE_FIFO_KHR;
+                selectedPresentMode = VkPresentModeKHR.FIFO_KHR;
                 sgr = new SGR(SGRParameters.BACKGROUND_BRIGHT_YELLOW);
             } else {
                 sgr = new SGR(SGRParameters.BACKGROUND_GREEN);
@@ -358,7 +358,7 @@ public class VulkanTest {
 
         // Graphics Queue create info
         vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.getOrCreate(0);
-        vkDeviceQueueCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
+        vkDeviceQueueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
         vkDeviceQueueCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
         vkDeviceQueueCreateInfo.queueCount.set(1);
         vkDeviceQueueCreateInfo.pQueuePriorities.set(prio);
@@ -366,7 +366,7 @@ public class VulkanTest {
         if(differentQueueIndices) {
             // Presentation Queue create info
             vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.getOrCreate(1);
-            vkDeviceQueueCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO);
+            vkDeviceQueueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
             vkDeviceQueueCreateInfo.queueFamilyIndex.set(presentationQueueIndex);
             vkDeviceQueueCreateInfo.queueCount.set(1);
             vkDeviceQueueCreateInfo.pQueuePriorities.set(prio);
@@ -379,7 +379,7 @@ public class VulkanTest {
         // Device Create Info
         VkDeviceCreateInfo vkDeviceCreateInfo = new VkDeviceCreateInfo();
         vkDeviceCreateInfo.allocate();
-        vkDeviceCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO);
+        vkDeviceCreateInfo.sType.set(VkStructureType.DEVICE_CREATE_INFO);
         vkDeviceCreateInfo.queueCreateInfoCount.set(vkDeviceQueueCreateInfos.length());
         vkDeviceCreateInfo.pQueueCreateInfos.set(vkDeviceQueueCreateInfos.getPointer());
         vkDeviceCreateInfo.pEnabledFeatures.set(vkPhysicalDeviceFeatures);
@@ -411,7 +411,7 @@ public class VulkanTest {
         // Create Swap Chain using selectedSurfaceFormat, selectedPresentMode and selectedExtent
         VkSwapchainCreateInfoKHR swapchainCreateInfo = new VkSwapchainCreateInfoKHR();
         swapchainCreateInfo.allocate();
-        swapchainCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR);
+        swapchainCreateInfo.sType.set(VkStructureType.SWAPCHAIN_CREATE_INFO_KHR);
         swapchainCreateInfo.surface.set(vkSurfaceKHR.get());
         swapchainCreateInfo.minImageCount.set(selectedImageCount);
         swapchainCreateInfo.imageFormat.set(selectedSurfaceFormat.format.get());
@@ -425,14 +425,14 @@ public class VulkanTest {
         swapchainCreateInfo.imageUsage.set(VkImageUsageFlagBits.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
 
         if(differentQueueIndices) {
-            swapchainCreateInfo.imageSharingMode.set(VkSharingMode.VK_SHARING_MODE_CONCURRENT);
+            swapchainCreateInfo.imageSharingMode.set(VkSharingMode.CONCURRENT);
             swapchainCreateInfo.queueFamilyIndexCount.set(2);
             NativeInt32Array queueFamilyIndices = NativeInt32Array.newAllocated(SVWrapper.length(2));
             queueFamilyIndices.setInt(0, graphicsQueueIndex);
             queueFamilyIndices.setInt(1, presentationQueueIndex);
             swapchainCreateInfo.pQueueFamilyIndices.set(queueFamilyIndices.getPointer());
         } else {
-            swapchainCreateInfo.imageSharingMode.set(VkSharingMode.VK_SHARING_MODE_EXCLUSIVE);
+            swapchainCreateInfo.imageSharingMode.set(VkSharingMode.EXCLUSIVE);
         }
 
         swapchainCreateInfo.preTransform.set(selectedTransform);
@@ -464,14 +464,14 @@ public class VulkanTest {
         for (int i = 0; i < swapchainImageViews.length(); i++) {
             VkImageViewCreateInfo vkImageViewCreateInfo = new VkImageViewCreateInfo();
             vkImageViewCreateInfo.allocate();
-            vkImageViewCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO);
+            vkImageViewCreateInfo.sType.set(VkStructureType.IMAGE_VIEW_CREATE_INFO);
             vkImageViewCreateInfo.image.set(swapchainImages.getOrCreate(i).get());
-            vkImageViewCreateInfo.viewType.set(VkImageViewType.VK_IMAGE_VIEW_TYPE_2D);
+            vkImageViewCreateInfo.viewType.set(VkImageViewType.TYPE_2D);
             vkImageViewCreateInfo.format.set(selectedSurfaceFormat.format.get());
-            vkImageViewCreateInfo.components.r.set(VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY);
-            vkImageViewCreateInfo.components.g.set(VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY);
-            vkImageViewCreateInfo.components.b.set(VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY);
-            vkImageViewCreateInfo.components.a.set(VkComponentSwizzle.VK_COMPONENT_SWIZZLE_IDENTITY);
+            vkImageViewCreateInfo.components.r.set(VkComponentSwizzle.IDENTITY);
+            vkImageViewCreateInfo.components.g.set(VkComponentSwizzle.IDENTITY);
+            vkImageViewCreateInfo.components.b.set(VkComponentSwizzle.IDENTITY);
+            vkImageViewCreateInfo.components.a.set(VkComponentSwizzle.IDENTITY);
             vkImageViewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
             vkImageViewCreateInfo.subresourceRange.baseMipLevel.set(0);
             vkImageViewCreateInfo.subresourceRange.levelCount.set(1);
@@ -518,27 +518,27 @@ public class VulkanTest {
                 VkPipelineShaderStageCreateInfo::new
         );
         VkPipelineShaderStageCreateInfo vkPipelineShaderStageCreateInfo = shaderStages.getOrCreate(0);
-        vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+        vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
         vkPipelineShaderStageCreateInfo.module.set(vertShader.get());
         vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main"));
 
         vkPipelineShaderStageCreateInfo = shaderStages.getOrCreate(1);
-        vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO);
+        vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
         vkPipelineShaderStageCreateInfo.module.set(fragShader.get());
         vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main")); //TODO: This string "main" is unsafe. The JVM may garbage collect it at any time
 
         VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateCreateInfo = new VkPipelineVertexInputStateCreateInfo();
         vkPipelineVertexInputStateCreateInfo.allocate();
-        vkPipelineVertexInputStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
+        vkPipelineVertexInputStateCreateInfo.sType.set(VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
         vkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount.set(0);
         vkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount.set(0);
 
         VkPipelineInputAssemblyStateCreateInfo vkPipelineInputAssemblyStateCreateInfo = new VkPipelineInputAssemblyStateCreateInfo();
         vkPipelineInputAssemblyStateCreateInfo.allocate();
-        vkPipelineInputAssemblyStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO);
-        vkPipelineInputAssemblyStateCreateInfo.topology.set(VkPrimitiveTopology.VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+        vkPipelineInputAssemblyStateCreateInfo.sType.set(VkStructureType.PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO);
+        vkPipelineInputAssemblyStateCreateInfo.topology.set(VkPrimitiveTopology.TRIANGLE_LIST);
         vkPipelineInputAssemblyStateCreateInfo.primitiveRestartEnable.set(VulkanUtils.booleanToVkBool32(false));
 
         VkViewport vkViewport = new VkViewport();
@@ -559,7 +559,7 @@ public class VulkanTest {
 
         VkPipelineViewportStateCreateInfo vkPipelineViewportStateCreateInfo = new VkPipelineViewportStateCreateInfo();
         vkPipelineViewportStateCreateInfo.allocate();
-        vkPipelineViewportStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO);
+        vkPipelineViewportStateCreateInfo.sType.set(VkStructureType.PIPELINE_VIEWPORT_STATE_CREATE_INFO);
         vkPipelineViewportStateCreateInfo.viewportCount.set(1);
         vkPipelineViewportStateCreateInfo.pViewports.set(vkViewport);
         vkPipelineViewportStateCreateInfo.scissorCount.set(1);
@@ -567,18 +567,18 @@ public class VulkanTest {
 
         VkPipelineRasterizationStateCreateInfo vkPipelineRasterizationStateCreateInfo = new VkPipelineRasterizationStateCreateInfo();
         vkPipelineRasterizationStateCreateInfo.allocate();
-        vkPipelineRasterizationStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO);
+        vkPipelineRasterizationStateCreateInfo.sType.set(VkStructureType.PIPELINE_RASTERIZATION_STATE_CREATE_INFO);
         vkPipelineRasterizationStateCreateInfo.depthClampEnable.set(VulkanUtils.booleanToVkBool32(false));
         vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable.set(VulkanUtils.booleanToVkBool32(false));
-        vkPipelineRasterizationStateCreateInfo.polygonMode.set(VkPolygonMode.VK_POLYGON_MODE_FILL);
+        vkPipelineRasterizationStateCreateInfo.polygonMode.set(VkPolygonMode.FILL);
         vkPipelineRasterizationStateCreateInfo.lineWidth.set(1.0f);
         vkPipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT);
-        vkPipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.VK_FRONT_FACE_CLOCKWISE);
+        vkPipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.CLOCKWISE);
         vkPipelineRasterizationStateCreateInfo.depthBiasEnable.set(VulkanUtils.booleanToVkBool32(false));
 
         VkPipelineMultisampleStateCreateInfo vkPipelineMultisampleStateCreateInfo = new VkPipelineMultisampleStateCreateInfo();
         vkPipelineMultisampleStateCreateInfo.allocate();
-        vkPipelineMultisampleStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO);
+        vkPipelineMultisampleStateCreateInfo.sType.set(VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO);
         vkPipelineMultisampleStateCreateInfo.sampleShadingEnable.set(VulkanUtils.booleanToVkBool32(false));
         vkPipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
 
@@ -595,7 +595,7 @@ public class VulkanTest {
 
         VkPipelineColorBlendStateCreateInfo vkPipelineColorBlendStateCreateInfo = new VkPipelineColorBlendStateCreateInfo();
         vkPipelineColorBlendStateCreateInfo.allocate();
-        vkPipelineColorBlendStateCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO);
+        vkPipelineColorBlendStateCreateInfo.sType.set(VkStructureType.PIPELINE_COLOR_BLEND_STATE_CREATE_INFO);
         vkPipelineColorBlendStateCreateInfo.logicOpEnable.set(VulkanUtils.booleanToVkBool32(false));
         vkPipelineColorBlendStateCreateInfo.attachmentCount.set(1);
         vkPipelineColorBlendStateCreateInfo.pAttachments.set(vkPipelineColorBlendAttachmentState);
@@ -603,7 +603,7 @@ public class VulkanTest {
         // Create Pipeline Layout
         VkPipelineLayoutCreateInfo vkPipelineLayoutCreateInfo = new VkPipelineLayoutCreateInfo();
         vkPipelineLayoutCreateInfo.allocate();
-        vkPipelineLayoutCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO);
+        vkPipelineLayoutCreateInfo.sType.set(VkStructureType.PIPELINE_LAYOUT_CREATE_INFO);
         vkPipelineLayoutCreateInfo.setLayoutCount.set(0);
         vkPipelineLayoutCreateInfo.pSetLayouts.set(null);
         vkPipelineLayoutCreateInfo.pushConstantRangeCount.set(0);
@@ -623,29 +623,29 @@ public class VulkanTest {
         vkAttachmentDescription.allocate();
         vkAttachmentDescription.format.set(selectedSurfaceFormat.format.get());
         vkAttachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
-        vkAttachmentDescription.loadOp.set(VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_CLEAR);
-        vkAttachmentDescription.storeOp.set(VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_STORE);
-        vkAttachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.VK_ATTACHMENT_LOAD_OP_DONT_CARE);
-        vkAttachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.VK_ATTACHMENT_STORE_OP_DONT_CARE);
-        vkAttachmentDescription.initialLayout.set(VkImageLayout.VK_IMAGE_LAYOUT_UNDEFINED);
-        vkAttachmentDescription.finalLayout.set(VkImageLayout.VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+        vkAttachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
+        vkAttachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
+        vkAttachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
+        vkAttachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
+        vkAttachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
+        vkAttachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
 
         // Render Subpass for fragment shader
         VkAttachmentReference vkAttachmentReference = new VkAttachmentReference();
         vkAttachmentReference.allocate();
         vkAttachmentReference.attachment.set(0);
-        vkAttachmentReference.layout.set(VkImageLayout.VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        vkAttachmentReference.layout.set(VkImageLayout.COLOR_ATTACHMENT_OPTIMAL);
 
         VkSubpassDescription fragmentSubpassDescription = new VkSubpassDescription();
         fragmentSubpassDescription.allocate();
-        fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS);
+        fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.GRAPHICS);
         fragmentSubpassDescription.colorAttachmentCount.set(1);
         fragmentSubpassDescription.pColorAttachments.set(vkAttachmentReference);
 
         // create the render pass
         VkRenderPassCreateInfo vkRenderPassCreateInfo = new VkRenderPassCreateInfo();
         vkRenderPassCreateInfo.allocate();
-        vkRenderPassCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO);
+        vkRenderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
         vkRenderPassCreateInfo.attachmentCount.set(1);
         vkRenderPassCreateInfo.pAttachments.set(vkAttachmentDescription);
         vkRenderPassCreateInfo.subpassCount.set(1);
@@ -675,7 +675,7 @@ public class VulkanTest {
         // Finally Create the Graphics Pipeline!
         VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo = new VkGraphicsPipelineCreateInfo();
         vkGraphicsPipelineCreateInfo.allocate();
-        vkGraphicsPipelineCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO);
+        vkGraphicsPipelineCreateInfo.sType.set(VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO);
         vkGraphicsPipelineCreateInfo.stageCount.set(2);
         vkGraphicsPipelineCreateInfo.pStages.set(shaderStages.getPointer());
         vkGraphicsPipelineCreateInfo.pVertexInputState.set(vkPipelineVertexInputStateCreateInfo);
@@ -716,7 +716,7 @@ public class VulkanTest {
         for (VkFramebuffer vkFramebuffer : vkFramebuffers) {
             VkFramebufferCreateInfo vkFramebufferCreateInfo = new VkFramebufferCreateInfo();
             vkFramebufferCreateInfo.allocate();
-            vkFramebufferCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO);
+            vkFramebufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
             vkFramebufferCreateInfo.renderPass.set(vkRenderPass.get());
             vkFramebufferCreateInfo.attachmentCount.set(1);
             vkFramebufferCreateInfo.pAttachments.set(swapchainImageViews.get(i));
@@ -737,7 +737,7 @@ public class VulkanTest {
         // Command pool and buffer
         VkCommandPoolCreateInfo vkCommandPoolCreateInfo = new VkCommandPoolCreateInfo();
         vkCommandPoolCreateInfo.allocate();
-        vkCommandPoolCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO);
+        vkCommandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
         vkCommandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
         vkCommandPoolCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
 
@@ -748,9 +748,9 @@ public class VulkanTest {
 
         VkCommandBufferAllocateInfo vkCommandBufferAllocateInfo = new VkCommandBufferAllocateInfo();
         vkCommandBufferAllocateInfo.allocate();
-        vkCommandBufferAllocateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO);
+        vkCommandBufferAllocateInfo.sType.set(VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO);
         vkCommandBufferAllocateInfo.commandPool.set(vkCommandPool.get());
-        vkCommandBufferAllocateInfo.level.set(VkCommandBufferLevel.VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+        vkCommandBufferAllocateInfo.level.set(VkCommandBufferLevel.PRIMARY);
         vkCommandBufferAllocateInfo.commandBufferCount.set(1);
 
         VkCommandBuffer commandBuffer = new VkCommandBuffer();
@@ -760,7 +760,7 @@ public class VulkanTest {
 
         VkCommandBufferBeginInfo vkCommandBufferBeginInfo = new VkCommandBufferBeginInfo();
         vkCommandBufferBeginInfo.allocate();
-        vkCommandBufferBeginInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO);
+        vkCommandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
         VkExtent2D finalSelectedExtent = selectedExtent;
 
         VkClearValue vkClearValue = new VkClearValue();
@@ -772,7 +772,7 @@ public class VulkanTest {
 
         VkRenderPassBeginInfo vkRenderPassBeginInfo = new VkRenderPassBeginInfo();
         vkRenderPassBeginInfo.allocate();
-        vkRenderPassBeginInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO);
+        vkRenderPassBeginInfo.sType.set(VkStructureType.RENDER_PASS_BEGIN_INFO);
         vkRenderPassBeginInfo.renderPass.set(vkRenderPass.get());
 
         vkRenderPassBeginInfo.renderArea.offset.x.set(0);
@@ -788,8 +788,8 @@ public class VulkanTest {
             vkRenderPassBeginInfo.framebuffer.set(vkFramebuffers.get(imageIndex.get()).get());
             vkRenderPassBeginInfo.pClearValues.set(vkClearValue); // make sure it is not GCed
 
-            vkInstance.vkCmdBeginRenderPass(commandBuffer, TypedPointer64.of(vkRenderPassBeginInfo), VkSubpassContents.VK_SUBPASS_CONTENTS_INLINE);
-            vkInstance.vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint.VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+            vkInstance.vkCmdBeginRenderPass(commandBuffer, TypedPointer64.of(vkRenderPassBeginInfo), VkSubpassContents.INLINE);
+            vkInstance.vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint.GRAPHICS, graphicsPipeline);
             vkInstance.vkCmdDraw(commandBuffer, 3, 1, 0, 0);
             vkInstance.vkCmdEndRenderPass(commandBuffer);
             vkInstance.vkEndCommandBuffer(commandBuffer).check();
@@ -808,11 +808,11 @@ public class VulkanTest {
 
         VkSemaphoreCreateInfo vkSemaphoreCreateInfo = new VkSemaphoreCreateInfo();
         vkSemaphoreCreateInfo.allocate();
-        vkSemaphoreCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO);
+        vkSemaphoreCreateInfo.sType.set(VkStructureType.SEMAPHORE_CREATE_INFO);
 
         VkFenceCreateInfo vkFenceCreateInfo = new VkFenceCreateInfo();
         vkFenceCreateInfo.allocate();
-        vkFenceCreateInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_FENCE_CREATE_INFO);
+        vkFenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
         vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
 
         vkInstance.vkCreateSemaphore(
@@ -845,7 +845,7 @@ public class VulkanTest {
 
         VkSubmitInfo vkSubmitInfo = new VkSubmitInfo();
         vkSubmitInfo.allocate();
-        vkSubmitInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_SUBMIT_INFO);
+        vkSubmitInfo.sType.set(VkStructureType.SUBMIT_INFO);
         vkSubmitInfo.waitSemaphoreCount.set(1);
         vkSubmitInfo.pWaitSemaphores.set(imageAvailableSemaphore);
         VkPipelineStageFlags vkPipelineStageFlags = new VkPipelineStageFlags();
@@ -873,7 +873,7 @@ public class VulkanTest {
             // present
             VkPresentInfoKHR vkPresentInfo = new VkPresentInfoKHR();
             vkPresentInfo.allocate();
-            vkPresentInfo.sType.set(VkStructureType.VK_STRUCTURE_TYPE_PRESENT_INFO_KHR);
+            vkPresentInfo.sType.set(VkStructureType.PRESENT_INFO_KHR);
             vkPresentInfo.waitSemaphoreCount.set(1);
             vkPresentInfo.pWaitSemaphores.set(renderFinishedSemaphore);
             vkPresentInfo.swapchainCount.set(1);
@@ -906,8 +906,6 @@ public class VulkanTest {
         }
         vkInstance.vkDestroySwapchainKHR(device, swapchain, TypedPointer64.of(null));
         vkInstance.vkDestroyDevice(device, TypedPointer64.of(null));
-        vkInstance.vkDestroySurfaceKHR(vkSurfaceKHR, TypedPointer64.of(null));
-        vkInstance.vkDestroyInstance(TypedPointer64.of(null));
         window.close();
 
     }

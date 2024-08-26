@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static de.linusdev.cvg4j.build.vkregistry.ClassesOfMainProject.VULKAN_UTILS_CLASS;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.*;
 
 public class CommandsGenerator {
@@ -117,9 +118,8 @@ public class CommandsGenerator {
     ) {
 
         // Some stuff we may need later
-        JavaClass vulkanUtilsClass = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan", "VulkanUtils");
-        JavaMethod booleanToVkBool32Method = JavaMethod.of(vulkanUtilsClass, JavaClass.ofClass(int.class), "booleanToVkBool32", true);
-        JavaMethod vkBool32ToBooleanMethod = JavaMethod.of(vulkanUtilsClass, JavaClass.ofClass(boolean.class), "vkBool32ToBoolean", true);
+        JavaMethod booleanToVkBool32Method = JavaMethod.of(VULKAN_UTILS_CLASS, JavaClass.ofClass(int.class), "booleanToVkBool32", true);
+        JavaMethod vkBool32ToBooleanMethod = JavaMethod.of(VULKAN_UTILS_CLASS, JavaClass.ofClass(boolean.class), "vkBool32ToBoolean", true);
 
         // code
         JavaClassGenerator vulkanMethodPointersClazz = generator.addJavaFile(VULKAN_PACKAGE + ".commands");

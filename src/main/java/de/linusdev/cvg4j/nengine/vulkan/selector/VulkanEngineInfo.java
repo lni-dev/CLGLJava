@@ -87,4 +87,11 @@ public class VulkanEngineInfo {
         }
         return availableInstanceExtensions;
     }
+
+    public @NotNull VulkanExtension @NotNull [] getGlfwRequiredInstanceExtensions() {
+        if(glfwRequiredInstanceExtensions == null) {
+            throw new IllegalStateException("call load();");
+        }
+        return glfwRequiredInstanceExtensions;
+    }
 }
