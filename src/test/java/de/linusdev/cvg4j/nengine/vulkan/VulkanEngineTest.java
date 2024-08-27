@@ -19,9 +19,7 @@ package de.linusdev.cvg4j.nengine.vulkan;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nengine.Engine;
 import de.linusdev.cvg4j.nengine.exception.EngineException;
-import de.linusdev.cvg4j.nengine.info.Game;
-import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanGPUSelectorBuilder;
-import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanRequirements;
+import de.linusdev.cvg4j.nengine.vulkan.extension.VulkanExtension;
 import de.linusdev.lutils.version.ReleaseType;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +29,7 @@ import java.util.List;
 
 class VulkanEngineTest {
 
-    static class TestGame implements Game {
+    static class TestGame implements VulkanGame {
 
         @Override
         public @NotNull String name() {
@@ -42,22 +40,29 @@ class VulkanEngineTest {
         public @NotNull Version version() {
             return Version.of(ReleaseType.DEVELOPMENT_BUILD, 1, 0, 0);
         }
+
+        @Override
+        public @NotNull VulkanApiVersion minRequiredInstanceVersion() {
+            return VulkanApiVersion.V_1_0_0;
+        }
+
+        @Override
+        public @NotNull List<VulkanExtension> requiredInstanceExtensions() {
+            return List.of();
+        }
+
+        @Override
+        public @NotNull List<String> activatedVulkanLayers() {
+            return List.of();
+        }
     }
 
     @Test
     void test() throws EngineException, InterruptedException {
         Engine.StaticSetup.setup();
 
-        VulkanEngine<TestGame> engine = new VulkanEngine<>(
-                new TestGame(),
-                new VulkanRequirements(
-                        VulkanApiVersion.V_1_0_0,
-                        List.of(),
-                        VulkanGPUSelectorBuilder.getDefault().build(),
-                        List.of()
-                )
-        );
+        VulkanEngine<TestGame> engine = new VulkanEngine<>(new TestGame());
 
-        Thread.sleep(1000);
+        engine.getEngineDeathFuture().getResult();
     }
 }

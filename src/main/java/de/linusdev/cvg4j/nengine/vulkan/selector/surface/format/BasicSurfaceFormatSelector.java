@@ -41,7 +41,7 @@ class BasicSurfaceFormatSelector implements SurfaceFormatSelector {
             int formatCounts,
             @NotNull StructureArray<VkSurfaceFormatKHR> formats
     ) {
-        int bestFormatPriority = 0;
+        int bestFormatPriority = NOTHING_SELECTED_PRIORITY;
         VkSurfaceFormatKHR best = null;
 
         for (int i = 0; i < formatCounts; i++) {

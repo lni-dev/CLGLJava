@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nengine.vulkan.selector.priority;
+package de.linusdev.cvg4j.nengine.vulkan.selector;
 
-import org.jetbrains.annotations.NotNull;
+public interface Selector {
 
-public interface Priority {
+    int NOTHING_SELECTED_PRIORITY = -1;
 
-    static @NotNull Priority of(int priority) {
-        return () -> priority;
-    }
-
-    @NotNull Priority MAX = of(Integer.MAX_VALUE);
-
-    int priority();
-
-    default boolean isNegative() {
-        return priority() < 0;
-    }
 }

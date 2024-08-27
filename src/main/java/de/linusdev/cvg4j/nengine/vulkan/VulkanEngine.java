@@ -20,35 +20,38 @@ import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkSurfaceKHR;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
 import de.linusdev.cvg4j.nengine.Engine;
 import de.linusdev.cvg4j.nengine.RenderThread;
 import de.linusdev.cvg4j.nengine.exception.EngineException;
-import de.linusdev.cvg4j.nengine.info.Game;
+import de.linusdev.cvg4j.nengine.vulkan.device.VkDeviceBuilder;
 import de.linusdev.cvg4j.nengine.vulkan.extension.VulkanExtensionList;
-import de.linusdev.cvg4j.nengine.vulkan.selector.GPUSelectionProgress;
+import de.linusdev.cvg4j.nengine.vulkan.selector.GpuInfo;
 import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanEngineInfo;
-import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanGPUSelector;
-import de.linusdev.cvg4j.nengine.vulkan.selector.VulkanRequirements;
+import de.linusdev.cvg4j.nengine.vulkan.selector.gpu.GPUSelectionProgress;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.llog.base.impl.StandardLogLevel;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
+import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.exception.ErrorException;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.math.VMath;
+import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
+import de.linusdev.lutils.math.vector.buffer.intn.BBUInt2;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
-import de.linusdev.lutils.nat.pointer.TypedPointer64;
+import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
@@ -60,13 +63,13 @@ import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
+import static de.linusdev.lutils.nat.struct.abstracts.Structure.unionWith;
 
-public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManager, UpdateListener {
+public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, AsyncManager, UpdateListener {
 
     private final static @NotNull LogInstance LOG = LLog.getLogInstance();
 
     private final @NotNull GAME game;
-    private final @NotNull VulkanRequirements requirements;
 
     private final @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> renderThread;
     private final @NotNull VulkanRasterizationWindow window;
@@ -77,11 +80,9 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
     private final @NotNull VkPhysicalDevice vkPhysicalDevice;
 
     public VulkanEngine(
-            @NotNull GAME game,
-            @NotNull VulkanRequirements requirements
+            @NotNull GAME game
     ) throws EngineException {
         StaticSetup.checkSetup();
-        this.requirements = requirements;
         this.vulkanInfo = new VulkanEngineInfo();
         this.vkInstance = allocate(new VkInstance());
         this.vkPhysicalDevice = allocate(new VkPhysicalDevice());
@@ -103,8 +104,9 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
                 this,
                 rt -> {
                     createVkInstance(rt);
-
-                    return new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
+                    VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
+                    pickGPU(rt, win);
+                    return win;
                 },
                 (rt, win, fut) -> {
                     fut.complete(win, Nothing.INSTANCE, null);
@@ -165,6 +167,19 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
 
     }
 
+    public @NotNull Future<Nothing, VulkanEngine<GAME>> getEngineDeathFuture() {
+        var fut = CompletableFuture.<Nothing, VulkanEngine<GAME>>create(this, false);
+
+        renderThread.getThreadDeathFuture().then((result, secondary, error) -> {
+            if(error != null)
+                fut.complete(null, this, error);
+            else
+                fut.complete(Nothing.INSTANCE, this, null);
+        });
+
+        return fut;
+    }
+
     private void createVkInstance(
             @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt
     ) throws EngineException {
@@ -176,11 +191,11 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
         vulkanInfo.load(stack);
 
         // Check minRequiredInstanceVersion
-        requirements.checkMinRequiredInstanceVersion(vulkanInfo);
-        requirements.checkRequiredInstanceExtensions(vulkanInfo);
+        vulkanInfo.isVulkanApiVersionAvailable(game.minRequiredInstanceVersion());
+        vulkanInfo.areInstanceExtensionsAvailable(game.requiredInstanceExtensions());
 
         // add all required vulkan extensions
-        vulkanExtensions.addAll(requirements.getRequiredInstanceExtensions());
+        vulkanExtensions.addAll(game.requiredInstanceExtensions());
         vulkanExtensions.addAll(vulkanInfo.getGlfwRequiredInstanceExtensions());
 
         // VkApplicationInfo
@@ -194,12 +209,20 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
         vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
         vkApplicationInfo.pEngineName.set(engineName);
         vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
-        vkApplicationInfo.apiVersion.set(requirements.getMinRequiredInstanceVersion().getAsInt());
+        vkApplicationInfo.apiVersion.set(game.minRequiredInstanceVersion().getAsInt());
         LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
 
         // VkInstanceCreateInfo
-        var enabledExtensionsNatArray = vulkanExtensions.toNativeArray(stack::pushArray, stack::pushString);
-        @Nullable var enabledLayersNatArray = requirements.getVulkanLayersAsNatArray(stack::pushArray, stack::pushString);
+        StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledExtensionsNatArray = vulkanExtensions.toNativeArray(stack::pushArray, stack::pushString);
+        @Nullable StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledLayersNatArray = null;
+
+        if(!game.activatedVulkanLayers().isEmpty()) {
+            enabledLayersNatArray = stack.pushArray(game.activatedVulkanLayers().size(), BBTypedPointer64.class, BBTypedPointer64::newUnallocated1);
+            int i = 0;
+            for (String ext : game.activatedVulkanLayers())
+                enabledLayersNatArray.getOrCreate(i++).set(stack.pushString(ext));
+        }
+
 
         VkInstanceCreateInfo vkInstanceCreateInfo = stack.push(new VkInstanceCreateInfo());
         vkInstanceCreateInfo.sType.set(VkStructureType.INSTANCE_CREATE_INFO);
@@ -240,8 +263,7 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
      */
     private void pickGPU(
             @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt,
-            @NotNull VkSurfaceKHR vkSurface,
-            @NotNull VulkanGPUSelector selector
+            @NotNull VulkanRasterizationWindow window
     ) throws EngineException {
         LOG.logDebug("Start picking gpu.");
         DirectMemoryStack64 stack = rt.getStack();
@@ -249,65 +271,35 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
         assert stack.createSafePoint();
 
         BBUInt1 integer = stack.pushUnsignedInt();
-        vkInstance.vkEnumeratePhysicalDevices(TypedPointer64.of(integer), TypedPointer64.of(null)).check();
+        vkInstance.vkEnumeratePhysicalDevices(ref(integer), ref(null)).check();
 
         StructureArray<VkPhysicalDevice> vkPhysicalDevices = stack.pushArray(integer.get(), VkPhysicalDevice.class, VkPhysicalDevice::new);
-        vkInstance.vkEnumeratePhysicalDevices(TypedPointer64.of(integer), TypedPointer64.ofArray(vkPhysicalDevices)).check();
+        vkInstance.vkEnumeratePhysicalDevices(ref(integer), ofArray(vkPhysicalDevices)).check();
 
 
-        GPUSelectionProgress progress = new GPUSelectionProgress(selector);
+        GPUSelectionProgress progress = game.gpuSelector().startSelection();
 
+        VkPhysicalDevice lastChecked = null;
+        GpuInfo info = null;
         VkPhysicalDeviceProperties props = stack.push(new VkPhysicalDeviceProperties());
         StructureArray<VkExtensionProperties> extensions = stack.pushArray(200, VkExtensionProperties.class, VkExtensionProperties::new);
         VkSurfaceCapabilitiesKHR surfacesCaps = stack.push(new VkSurfaceCapabilitiesKHR());
         StructureArray<VkSurfaceFormatKHR> surfaceFormats = stack.pushArray(100, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
         StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes = stack.pushArray(100, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
+        StructureArray<VkQueueFamilyProperties> queueFamilies = stack.pushArray(100, VkQueueFamilyProperties.class, VkQueueFamilyProperties::new);
+        VkBool32 queueFamilySupportsSurface = stack.push(new VkBool32());
         for (VkPhysicalDevice dev : vkPhysicalDevices) {
-            // Props
-            vkInstance.vkGetPhysicalDeviceProperties(dev, TypedPointer64.of(props));
+            if(progress.canSelectionStop()) break;
+            lastChecked = dev;
 
-            // Extensions
-            vkInstance.vkEnumerateDeviceExtensionProperties(dev, ref(null), ref(integer), ref(null));
-            int extensionCount = integer.get();
-            if(extensionCount > extensions.length()) {
-                // unlikely, if this happens just allocate one outside the stack
-                extensions = StructureArray.newAllocated(extensionCount, VkExtensionProperties.class, VkExtensionProperties::new);
-            }
-            vkInstance.vkEnumerateDeviceExtensionProperties(dev, ref(null), ref(integer), ofArray(extensions));
-
-            // Surface caps
-            vkInstance.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(dev, vkSurface, ref(surfacesCaps));
-
-            // Surface formats
-            vkInstance.vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurface, ref(integer), ref(null));
-            int surfaceFormatCount = integer.get();
-            if(surfaceFormatCount > surfaceFormats.length()) {
-                // unlikely, if this happens just allocate one outside the stack
-                surfaceFormats = StructureArray.newAllocated(surfaceFormatCount, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
-            }
-            vkInstance.vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurface, ref(integer), ofArray(surfaceFormats));
-
-            // Presentation Modes
-            vkInstance.vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, vkSurface, ref(integer), ref(null));
-            int presentModeCount = integer.get();
-            if(presentModeCount > presentModes.length()) {
-                // unlikely, if this happens just allocate one outside the stack
-                presentModes = StructureArray.newAllocated(presentModeCount, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
-            }
-            vkInstance.vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, vkSurface, ref(integer), ofArray(presentModes));
-
-
-            int priority = progress.addGpu(dev,
-                    props,
-                    extensionCount, extensions,
-                    surfacesCaps,
-                    surfaceFormatCount,
-                    surfaceFormats,
-                    presentModeCount,
-                    presentModes
+            info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), dev,
+                    integer, props, extensions, surfacesCaps, surfaceFormats,
+                    presentModes, queueFamilies, queueFamilySupportsSurface
             );
-            LOG.logDebug("Checking gpu '"+ props.deviceName.get() + "': " + priority);
 
+            // calculate gpu priority
+            int priority = progress.addGpu(dev, info);
+            LOG.logDebug("Checking gpu '"+ props.deviceName.get() + "': " + priority);
 
         }
 
@@ -318,9 +310,62 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
 
         this.vkPhysicalDevice.set(best.get());
 
-        vkInstance.vkGetPhysicalDeviceProperties(best, TypedPointer64.of(props));
-        LOG.logDebug("Selected gpu: " + props.deviceName.get());
+        // get the gpu information again (if required)...
+        if(lastChecked != best) {
+            info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), best,
+                    integer, props, extensions, surfacesCaps, surfaceFormats,
+                    presentModes, queueFamilies, queueFamilySupportsSurface
+            );
+        }
 
+        // Chose surface format and present mode
+        LOG.logDebug("Selected gpu: " + info.props().deviceName.get());
+
+        // Next create the actual vulkan device from the picked gpu
+        VkDeviceBuilder builder = new VkDeviceBuilder()
+                .setSurfaceFormat(
+                        game.surfaceFormatSelector().select(info.surfaceFormatCount(), info.surfaceFormats()).result1()
+                ).setPresentMode(
+                        game.presentModeSelector().select(info.presentModeCount(), info.presentModes()).result1()
+                );
+
+
+        // Calculate swap extend
+        LOG.logDebug("Calculate swap extend");
+        VkExtent2D selectedExtent = stack.push(new VkExtent2D());
+        if(info.surfacesCaps().currentExtent.width.get() != 0xFFFFFFFF) {
+            LOG.logDebug("Swap extend is fixed");
+            selectedExtent = info.surfacesCaps().currentExtent;
+        } else {
+            LOG.logDebug("Swap extend is not fixed, select it based on frame buffer size.");
+            BBInt2 size = unionWith(BBInt2.newAllocatable(null), selectedExtent);
+            window.getFrameBufferSize(size);
+
+            BBUInt2 maxImageExtend = unionWith(BBUInt2.newAllocatable(null), info.surfacesCaps().maxImageExtent);
+            BBUInt2 minImageExtend = unionWith(BBUInt2.newAllocatable(null), info.surfacesCaps().minImageExtent);
+
+            VMath.clamp(size, minImageExtend, maxImageExtend, size);
+        }
+
+        builder.setSwapExtend(selectedExtent);
+
+        // Swap chain image count
+        int max = info.surfacesCaps().maxImageCount.get();
+        int min = info.surfacesCaps().minImageCount.get();
+        builder.setSwapChainImageCount(game.swapChainImageCount(min, max == 0 ? Integer.MAX_VALUE : max));
+
+        // Set surface transform (current is fine)
+        builder.setSurfaceTransform(info.surfacesCaps().currentTransform.get());
+
+        // Queue families
+        builder.setGraphicsQueueIndex(game.queueFamilySelector().selectGraphicsQueue(info.queueFamilyInfoList()).result1().index());
+        builder.setPresentationQueueIndex(game.queueFamilySelector().selectPresentationQueue(info.queueFamilyInfoList()).result1().index());
+
+
+        stack.pop(); // selectedExtent
+        stack.pop(); // queueFamilySupportsSurface
+        stack.pop(); // queueFamilies
+        stack.pop(); // presentModes
         stack.pop(); // surfaceFormats
         stack.pop(); // surfacesCaps
         stack.pop(); // extensions

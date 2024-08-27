@@ -37,13 +37,13 @@ class BasicPresentModeSelector implements PresentModeSelector {
 
     @Override
     public @NotNull BiResult<@Nullable VkPresentModeKHR, @NotNull Priority> select(
-            int formatCounts,
+            int presentModeCounts,
             @NotNull StructureArray<NativeEnumValue32<VkPresentModeKHR>> formats
     ) {
-        int bestModePriority = 0;
+        int bestModePriority = NOTHING_SELECTED_PRIORITY;
         NativeEnumValue32<VkPresentModeKHR> best = null;
 
-        for (int i = 0; i < formatCounts; i++) {
+        for (int i = 0; i < presentModeCounts; i++) {
             NativeEnumValue32<VkPresentModeKHR> availableMode = formats.getOrCreate(i);
 
             for (PresentModeWithPriority pm : this.modes) {

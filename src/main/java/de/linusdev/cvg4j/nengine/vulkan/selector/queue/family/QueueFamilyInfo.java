@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nengine.vulkan.selector.priority;
+package de.linusdev.cvg4j.nengine.vulkan.selector.queue.family;
 
+import de.linusdev.cvg4j.nat.vulkan.structs.VkQueueFamilyProperties;
 import org.jetbrains.annotations.NotNull;
 
-public interface Priority {
-
-    static @NotNull Priority of(int priority) {
-        return () -> priority;
-    }
-
-    @NotNull Priority MAX = of(Integer.MAX_VALUE);
-
-    int priority();
-
-    default boolean isNegative() {
-        return priority() < 0;
-    }
-}
+public record QueueFamilyInfo(
+        int index,
+        @NotNull VkQueueFamilyProperties props,
+        boolean supportsSurface
+) { }

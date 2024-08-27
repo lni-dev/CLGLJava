@@ -16,12 +16,7 @@
 
 package de.linusdev.cvg4j.nengine.vulkan.selector;
 
-import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceCapabilitiesKHR;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
 import de.linusdev.cvg4j.nengine.vulkan.selector.priority.Priority;
-import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;

@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.nengine;
 
+import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.cvg4j.nengine.info.Game;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
@@ -53,6 +54,9 @@ public class RenderThread<GAME extends Game, CR, WINDOW> extends Thread {
         this.creationFuture = CompletableFuture.create(engine.getAsyncManager(), false);
         this.threadDeathFuture = CompletableFuture.create(engine.getAsyncManager(), false);
         this.stack = new DirectMemoryStack64();
+
+        // Don't let the jvm shutdown
+        setDaemon(false);
     }
 
     public @NotNull Future<CR, Nothing> create() {
@@ -80,7 +84,9 @@ public class RenderThread<GAME extends Game, CR, WINDOW> extends Thread {
         return threadDeathFuture;
     }
 
+    @CallOnlyFromUIThread("render-thread")
     public @NotNull DirectMemoryStack64 getStack() {
+        assert Thread.currentThread() == this;
         return stack;
     }
 }

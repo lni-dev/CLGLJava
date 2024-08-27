@@ -202,7 +202,7 @@ public class VulkanTest {
             System.out.println("\t\t\t* currentExtent: (" + vkSurfaceCapabilitiesKHR.currentExtent.width.get() + ", " + vkSurfaceCapabilitiesKHR.currentExtent.height.get() + ")");
 
             // Surface Formats
-            System.out.println("\t\t+ Surface Capabilities:");
+            System.out.println("\t\t+ Surface Formats:");
             vkInstance.vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurfaceKHR, TypedPointer64.of(count), TypedPointer64.of(null));
             StructureArray<VkSurfaceFormatKHR> vkSurfaceFormats = StructureArray.newAllocated(
                     false,
@@ -233,7 +233,7 @@ public class VulkanTest {
             for (VkSurfaceFormatKHR vkSurfaceFormat : vkSurfaceFormats) {
                 if(vkSurfaceFormat == selectedSurfaceFormat)
                     System.out.print(sgr.construct());
-                System.out.println("\t\t\t* " + vkSurfaceFormat.format.get(VkFormat.class) + SGR.reset());
+                System.out.println("\t\t\t* " + vkSurfaceFormat.format.get(VkFormat.class) + " | " + vkSurfaceFormat.colorSpace.get(VkColorSpaceKHR.class) + SGR.reset());
             }
 
             // Presentation Modes
@@ -314,7 +314,7 @@ public class VulkanTest {
         );
 
         vkInstance.vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, TypedPointer64.of(count), TypedPointer64.ofArray(vkQueueFamilyProperties));
-
+        System.out.println("queue family count: " + count.get());
         int graphicsQueueIndex = -1;
         int presentationQueueIndex = -1;
         for (int i = 0; i < vkQueueFamilyProperties.length(); i++) {

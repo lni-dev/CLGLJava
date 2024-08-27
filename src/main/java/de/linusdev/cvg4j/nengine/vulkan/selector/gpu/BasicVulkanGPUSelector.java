@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nengine.vulkan.selector.priority;
+package de.linusdev.cvg4j.nengine.vulkan.selector.gpu;
 
+import de.linusdev.cvg4j.nengine.vulkan.selector.PriorityModifier;
+import de.linusdev.cvg4j.nengine.vulkan.selector.PriorityModifierType;
+import de.linusdev.cvg4j.nengine.vulkan.selector.priority.Priority;
 import org.jetbrains.annotations.NotNull;
 
-public interface Priority {
+import java.util.List;
+import java.util.Map;
 
-    static @NotNull Priority of(int priority) {
-        return () -> priority;
-    }
+public record BasicVulkanGPUSelector(
+        @NotNull Map<PriorityModifierType, List<PriorityModifier>> modifiers,
+        @NotNull Priority maxPriority,
+        @NotNull Priority startPriority
+) implements VulkanGPUSelector {
 
-    @NotNull Priority MAX = of(Integer.MAX_VALUE);
-
-    int priority();
-
-    default boolean isNegative() {
-        return priority() < 0;
-    }
 }

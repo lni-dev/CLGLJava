@@ -17,18 +17,25 @@
 package de.linusdev.cvg4j.nengine.vulkan.selector.surface.format;
 
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
+import de.linusdev.cvg4j.nengine.vulkan.selector.Selector;
 import de.linusdev.cvg4j.nengine.vulkan.selector.priority.Priority;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.result.BiResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public interface SurfaceFormatSelector {
+public interface SurfaceFormatSelector extends Selector {
 
     static @NotNull BasicSurfaceFormatSelector.Builder builder() {
         return new BasicSurfaceFormatSelector.Builder();
     }
 
+    /**
+     * Select the best format.
+     * @param formatCounts count of formats
+     * @param formats array of format with {@code formatCounts} formats
+     * @return the best format and it's priority or {@code null} and {@value NOTHING_SELECTED_PRIORITY}
+     */
     @NotNull BiResult<@Nullable VkSurfaceFormatKHR, @NotNull Priority> select(
             int formatCounts,
             @NotNull StructureArray<VkSurfaceFormatKHR> formats

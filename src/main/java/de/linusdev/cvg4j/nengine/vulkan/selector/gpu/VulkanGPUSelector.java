@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nengine.vulkan.selector;
+package de.linusdev.cvg4j.nengine.vulkan.selector.gpu;
 
+import de.linusdev.cvg4j.nengine.vulkan.selector.GpuInfo;
+import de.linusdev.cvg4j.nengine.vulkan.selector.PriorityModifier;
+import de.linusdev.cvg4j.nengine.vulkan.selector.PriorityModifierType;
+import de.linusdev.cvg4j.nengine.vulkan.selector.priority.Priority;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -23,7 +27,19 @@ import java.util.Map;
 
 public interface VulkanGPUSelector {
 
+    static @NotNull VulkanGPUSelectorBuilder builder() {
+        return new VulkanGPUSelectorBuilder();
+    }
+
     @NotNull Map<PriorityModifierType, List<PriorityModifier>> modifiers();
+
+    @NotNull Priority maxPriority();
+
+    @NotNull Priority startPriority();
+
+    default @NotNull GPUSelectionProgress startSelection() {
+        return new GPUSelectionProgress(this);
+    }
 
     default int getPriority(
             @NotNull GpuInfo info
@@ -34,7 +50,7 @@ public interface VulkanGPUSelector {
         List<PriorityModifier> multi = modifiers.get(PriorityModifierType.MULTIPLY);
         List<PriorityModifier> min = modifiers.get(PriorityModifierType.MIN);
 
-        int value = 100;
+        int value = startPriority().priority();
 
         for (PriorityModifier mod : add)
             value = mod.apply(value, info);
