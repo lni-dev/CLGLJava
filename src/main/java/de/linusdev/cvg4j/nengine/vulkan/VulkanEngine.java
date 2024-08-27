@@ -20,6 +20,7 @@ import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
@@ -45,6 +46,7 @@ import de.linusdev.lutils.async.exception.ErrorException;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
+import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
@@ -259,6 +261,7 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
         StructureArray<VkExtensionProperties> extensions = stack.pushArray(200, VkExtensionProperties.class, VkExtensionProperties::new);
         VkSurfaceCapabilitiesKHR surfacesCaps = stack.push(new VkSurfaceCapabilitiesKHR());
         StructureArray<VkSurfaceFormatKHR> surfaceFormats = stack.pushArray(100, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
+        StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes = stack.pushArray(100, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
         for (VkPhysicalDevice dev : vkPhysicalDevices) {
             // Props
             vkInstance.vkGetPhysicalDeviceProperties(dev, TypedPointer64.of(props));
@@ -284,12 +287,24 @@ public class VulkanEngine<GAME extends Game> implements Engine<GAME>, AsyncManag
             }
             vkInstance.vkGetPhysicalDeviceSurfaceFormatsKHR(vkPhysicalDevice, vkSurface, ref(integer), ofArray(surfaceFormats));
 
+            // Presentation Modes
+            vkInstance.vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, vkSurface, ref(integer), ref(null));
+            int presentModeCount = integer.get();
+            if(presentModeCount > presentModes.length()) {
+                // unlikely, if this happens just allocate one outside the stack
+                presentModes = StructureArray.newAllocated(presentModeCount, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
+            }
+            vkInstance.vkGetPhysicalDeviceSurfacePresentModesKHR(vkPhysicalDevice, vkSurface, ref(integer), ofArray(presentModes));
+
+
             int priority = progress.addGpu(dev,
                     props,
                     extensionCount, extensions,
                     surfacesCaps,
                     surfaceFormatCount,
-                    surfaceFormats
+                    surfaceFormats,
+                    presentModeCount,
+                    presentModes
             );
             LOG.logDebug("Checking gpu '"+ props.deviceName.get() + "': " + priority);
 

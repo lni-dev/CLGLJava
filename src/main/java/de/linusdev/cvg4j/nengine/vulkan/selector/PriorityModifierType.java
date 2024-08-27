@@ -24,6 +24,12 @@ public enum PriorityModifierType {
             return current + arg;
         }
     },
+    SUBTRACT {
+        @Override
+        public int apply(int current, int arg) {
+            return current - arg;
+        }
+    },
     MULTIPLY {
         @Override
         public int apply(int current, int arg) {

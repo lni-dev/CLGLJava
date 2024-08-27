@@ -282,7 +282,6 @@ public class VulkanTest {
                 int minHeight = vkSurfaceCapabilitiesKHR.minImageExtent.height.get();
                 selectedExtent.width.set(Math.max(Math.min(size.x(), maxWidth), minWidth));
                 selectedExtent.height.set(Math.max(Math.min(size.y(), maxHeight), minHeight));
-                //TODO: add min, max, clamp to VMath
             }
 
             // Chose image count
@@ -295,7 +294,7 @@ public class VulkanTest {
             // Chose transform (choosing current is enough)
             selectedTransform = vkSurfaceCapabilitiesKHR.currentTransform.get(VkSurfaceTransformFlagBitsKHR.class);
 
-            // TODO: Physical device selection:
+            // Physical device selection Notes:
             // deviceType: Prioritize VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU
             // Extensions: VK_KHR_swapchain must be present
             // Surface Format: require at least one. choose SRGB_... (see above)

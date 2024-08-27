@@ -20,9 +20,11 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceCapabilitiesKHR;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
+import de.linusdev.cvg4j.nengine.vulkan.selector.priority.Priority;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public interface PriorityModifier {
@@ -30,37 +32,44 @@ public interface PriorityModifier {
 
     @NotNull PriorityModifierType type();
 
-    int modifier();
+    int apply(int current, @NotNull GpuInfo info);
 
-    boolean test(@NotNull GpuInfo info);
 
-    default int apply(int current, @NotNull GpuInfo info) {
-        if(!test(info))
-            return current;
-
-        return type().apply(current, modifier());
-    }
-
-    record GpuInfo(
-            @NotNull VkPhysicalDeviceProperties props,
-            int extensionCount,
-            @NotNull StructureArray<VkExtensionProperties> extensions,
-            @NotNull VkSurfaceCapabilitiesKHR surfacesCaps,
-            int surfaceFormatCount,
-            @NotNull StructureArray<VkSurfaceFormatKHR> surfaceFormats
-    ) { }
 
     record Impl(
             @NotNull PriorityModifierType type,
-            int modifier,
+            @NotNull Priority modifier,
             @NotNull Predicate<GpuInfo> tester
     ) implements PriorityModifier {
 
         @Override
-        public boolean test(@NotNull GpuInfo info) {
-            return tester.test(info);
+        public int apply(int current, @NotNull GpuInfo info) {
+            if(!tester.test(info))
+                return current;
+
+            return type().apply(current, modifier().priority());
         }
 
+    }
+
+    class VariableImpl implements PriorityModifier {
+        private final @NotNull PriorityModifierType type;
+        private final @NotNull Function<GpuInfo, Priority> tester;
+
+        public VariableImpl(@NotNull PriorityModifierType type, @NotNull Function<GpuInfo, Priority> tester) {
+            this.type = type;
+            this.tester = tester;
+        }
+
+        @Override
+        public @NotNull PriorityModifierType type() {
+            return type;
+        }
+
+        @Override
+        public int apply(int current, @NotNull GpuInfo info) {
+            return type.apply(current, tester.apply(info).priority());
+        }
     }
 
 }

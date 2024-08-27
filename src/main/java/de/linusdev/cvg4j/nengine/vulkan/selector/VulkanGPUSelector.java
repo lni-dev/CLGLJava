@@ -26,7 +26,7 @@ public interface VulkanGPUSelector {
     @NotNull Map<PriorityModifierType, List<PriorityModifier>> modifiers();
 
     default int getPriority(
-            @NotNull PriorityModifier.GpuInfo info
+            @NotNull GpuInfo info
     ) {
         Map<PriorityModifierType, List<PriorityModifier>> modifiers = modifiers();
 

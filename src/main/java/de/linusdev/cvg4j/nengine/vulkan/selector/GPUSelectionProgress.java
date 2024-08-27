@@ -16,11 +16,13 @@
 
 package de.linusdev.cvg4j.nengine.vulkan.selector;
 
+import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceCapabilitiesKHR;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
+import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,15 +45,19 @@ public class GPUSelectionProgress {
             StructureArray<VkExtensionProperties> extensions,
             @NotNull VkSurfaceCapabilitiesKHR surfacesCaps,
             int surfaceFormatCount,
-            StructureArray<VkSurfaceFormatKHR> surfaceFormats
+            @NotNull StructureArray<VkSurfaceFormatKHR> surfaceFormats,
+            int presentModeCount,
+            @NotNull StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes
     ) {
-        PriorityModifier.GpuInfo info = new PriorityModifier.GpuInfo(
+        GpuInfo info = new GpuInfo(
                 props,
                 extensionCount,
                 extensions,
                 surfacesCaps,
                 surfaceFormatCount,
-                surfaceFormats
+                surfaceFormats,
+                presentModeCount,
+                presentModes
         );
 
         int p = selector.getPriority(info);
