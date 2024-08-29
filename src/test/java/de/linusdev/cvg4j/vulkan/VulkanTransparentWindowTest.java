@@ -17,9 +17,11 @@
 package de.linusdev.cvg4j.vulkan;
 
 import de.linusdev.cvg4j.engine.cl.CLEngine;
+import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
+import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
@@ -32,7 +34,6 @@ import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
-import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.lutils.ansi.sgr.SGR;
 import de.linusdev.lutils.ansi.sgr.SGRParameters;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
@@ -53,11 +54,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
 import static de.linusdev.cvg4j.engine.vk.shader.VulkanSpirVUtils.createShaderModuleInfo;
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class VulkanTest {
+public class VulkanTransparentWindowTest {
 
 
     @Test
@@ -117,7 +118,9 @@ public class VulkanTest {
         vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
         vkInstance.initMethodPointers();
 
-        VulkanRasterizationWindow window = new VulkanRasterizationWindow(null, vkInstance, new DirectMemoryStack64());
+        GLFWWindowHints hints = new GLFWWindowHints();
+        hints.transparentFrameBuffer = true;
+        VulkanRasterizationWindow window = new VulkanRasterizationWindow(hints, vkInstance, new DirectMemoryStack64());
 
         // Create window surface
         window.createVkWindowSurface(null).check();
@@ -435,7 +438,7 @@ public class VulkanTest {
         }
 
         swapchainCreateInfo.preTransform.set(selectedTransform);
-        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR);
         swapchainCreateInfo.presentMode.set(selectedPresentMode);
         swapchainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
         swapchainCreateInfo.oldSwapchain.set(0L); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
@@ -589,7 +592,13 @@ public class VulkanTest {
                 VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT,
                 VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT
         );
-        vkPipelineColorBlendAttachmentState.blendEnable.set(VulkanUtils.booleanToVkBool32(false));
+        vkPipelineColorBlendAttachmentState.srcColorBlendFactor.set(VkBlendFactor.ONE);
+        vkPipelineColorBlendAttachmentState.dstColorBlendFactor.set(VkBlendFactor.ZERO);
+        vkPipelineColorBlendAttachmentState.colorBlendOp.set(VkBlendOp.ADD);
+        vkPipelineColorBlendAttachmentState.srcAlphaBlendFactor.set(VkBlendFactor.ONE);
+        vkPipelineColorBlendAttachmentState.dstAlphaBlendFactor.set(VkBlendFactor.ZERO);
+        vkPipelineColorBlendAttachmentState.alphaBlendOp.set(VkBlendOp.ADD);
+        vkPipelineColorBlendAttachmentState.blendEnable.set(VulkanUtils.booleanToVkBool32(true));
         // more color blending options / explanations: https://vulkan-tutorial.com/en/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions
 
         VkPipelineColorBlendStateCreateInfo vkPipelineColorBlendStateCreateInfo = new VkPipelineColorBlendStateCreateInfo();
@@ -767,7 +776,7 @@ public class VulkanTest {
         vkClearValue.color.float32.getOrCreate(0).set(0f);
         vkClearValue.color.float32.getOrCreate(1).set(0f);
         vkClearValue.color.float32.getOrCreate(2).set(0f);
-        vkClearValue.color.float32.getOrCreate(3).set(1f);
+        vkClearValue.color.float32.getOrCreate(3).set(0.5f);
 
         VkRenderPassBeginInfo vkRenderPassBeginInfo = new VkRenderPassBeginInfo();
         vkRenderPassBeginInfo.allocate();

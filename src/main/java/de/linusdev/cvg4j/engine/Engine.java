@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,17 @@
 
 package de.linusdev.cvg4j.engine;
 
-import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
+import de.linusdev.cvg4j.de.linusdev.cvg4j.GeneratedConstants;
 import de.linusdev.cvg4j.nat.ABISelector;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
-import de.linusdev.cvg4j.nat.cl.objects.Context;
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.input.InputManagerImpl;
-import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.window.queue.ReturnRunnable;
-import de.linusdev.lutils.async.Future;
-import de.linusdev.lutils.async.Nothing;
+import de.linusdev.cvg4j.engine.info.Game;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
-import org.jetbrains.annotations.ApiStatus;
+import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
 
-@SuppressWarnings({"unused", "UnusedReturnValue"})
-public interface Engine<G extends Game> {
+public interface Engine<GAME extends Game> {
 
     class StaticSetup {
 
@@ -43,56 +36,30 @@ public interface Engine<G extends Game> {
 
         private static boolean staticSetupDone = false;
 
-        private static synchronized void checkSetup() {
+        public static synchronized void checkSetup() {
             if(!staticSetupDone)
-                throw new IllegalStateException("Engine.StaticSetup.setup() must be called as first line in main.");
+                throw new IllegalStateException("CLEngine.StaticSetup.setup() must be called as first line in main.");
         }
 
         public static synchronized void setup() {
-            if(StaticSetup.staticSetupDone)
+            if(staticSetupDone)
                 return;
             ABISelector.retrieveAndSetDefaultABI();
             Load.init();
             BufferUtils.setByteBufferFromPointerMethod(NativeUtils::getBufferFromPointer);
-            StaticSetup.staticSetupDone = true;
+            staticSetupDone = true;
         }
     }
 
-    /**
-     * Creates a {@link Engine} instance. This will also create the window.
-     * Call {@link Engine#loadScene(Scene)} to load your {@link Scene}.
-     * @param game your {@link Game}
-     * @return {@link Engine}
-     * @param <T> your {@link Game}
-     */
-    static <T extends Game> @NotNull Engine<T> getInstance(@NotNull T game) {
-        StaticSetup.checkSetup();
-        return new EngineImpl<>(game);
+    static @NotNull Version version() {
+        return GeneratedConstants.ENGINE_VERSION;
     }
 
-    @NotNull Future<Nothing, Scene<G>> loadScene(@NotNull Scene<G> scene);
+    static @NotNull String name() {
+        return "CVG4J";
+    }
 
-    @ApiStatus.Internal
-    @NotNull InputManagerImpl createInputManagerForScene(@NotNull Scene<G> scene);
-
-    @NotNull G getGame();
-
-    @NotNull CLGLWindow getWindow();
-
-    /**
-     * {@link InputManger} to be used across all scenes.
-     * @return {@link InputManger}
-     */
-    @NotNull InputManger getGlobalInputManager();
-
-    @NotNull Context getClContext();
+    @NotNull GAME getGame();
 
     @NotNull AsyncManager getAsyncManager();
-
-    @NotNull UIThread<G> getUIThread();
-
-    <R> @NotNull Future<R, Engine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable);
-
-    void runSupervised(@NotNull TRunnable runnable);
-
 }

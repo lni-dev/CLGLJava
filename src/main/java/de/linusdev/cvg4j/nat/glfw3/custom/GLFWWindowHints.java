@@ -77,6 +77,13 @@ public class GLFWWindowHints {
      */
     public @Nullable GLFWValues.ClientApis clientApi = null;
 
+    /**
+     * specifies whether the window framebuffer will be transparent. If enabled and supported by the system,
+     * the window framebuffer alpha channel will be used to combine the framebuffer with the background. This
+     * does not affect window decorations. Possible values are GLFW_TRUE and GLFW_FALSE.
+     */
+    public @Nullable Boolean transparentFrameBuffer = null;
+
     public @ApiStatus.Internal void adjustWindowHints() {
         if(samples != null) glfwWindowHint(GLFW_SAMPLES, samples);
         if(contextVersionMajor != null) glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, contextVersionMajor);
@@ -84,5 +91,6 @@ public class GLFWWindowHints {
         if(openglForwardCompat != null) glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFWValues.convertBoolean(openglForwardCompat));
         if(openglProfile != null) glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile.value);
         if(clientApi != null) glfwWindowHint(GLFW_CLIENT_API, clientApi.value);
+        if(transparentFrameBuffer != null) glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFWValues.convertBoolean(transparentFrameBuffer));
     }
 }

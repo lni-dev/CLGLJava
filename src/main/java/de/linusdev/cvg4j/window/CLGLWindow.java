@@ -34,7 +34,7 @@ import de.linusdev.cvg4j.window.args.AutoUpdateArgManager;
 import de.linusdev.cvg4j.window.args.KernelView;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.window.queue.UITaskQueue;
+import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
@@ -57,7 +57,7 @@ import static de.linusdev.cvg4j.nat.glad.Glad.glClear;
 @SuppressWarnings("unused")
 public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
-    public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = UITaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
+    public static final int UPDATE_SHARED_FRAMEBUFFER_TASK_ID = TaskQueue.getUniqueTaskId("UPDATE_SHARED_FRAMEBUFFER");
 
     protected final @NotNull OpenGLWindow glfwWindow;
     protected final @NotNull InputManger inputManger;
@@ -69,7 +69,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
     protected @NotNull Handler handler;
 
     //Task queue
-    protected final @NotNull UITaskQueue uiTaskQueue;
+    protected final @NotNull TaskQueue uiTaskQueue;
 
     //OpenCL
     protected final int openClVersion; //1,2 or 3
@@ -101,7 +101,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         this.handler = handler;
 
         //Task queue
-        this.uiTaskQueue = new UITaskQueue(this, maxQueuedTaskMillisPerFrame);
+        this.uiTaskQueue = new TaskQueue(this, maxQueuedTaskMillisPerFrame);
 
         //Input manager
         this.inputManger = new InputManagerImpl(glfwWindow);
@@ -338,7 +338,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         return inputManger;
     }
 
-    public @NotNull UITaskQueue getUiTaskQueue() {
+    public @NotNull TaskQueue getUiTaskQueue() {
         return uiTaskQueue;
     }
 }

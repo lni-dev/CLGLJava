@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.nat.glfw3.objects;
 
-import de.linusdev.cvg4j.engine.Engine;
+import de.linusdev.cvg4j.engine.cl.CLEngine;
 import de.linusdev.cvg4j.nat.glad.Glad;
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
@@ -31,7 +31,7 @@ class GLFWWindowTest {
 
     @Test
     void show() throws GladInitException, GLFWException {
-        Engine.StaticSetup.setup();
+        CLEngine.StaticSetup.setup();
 
         GLFWWindowHints hints = new GLFWWindowHints();
 
