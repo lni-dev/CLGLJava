@@ -20,7 +20,11 @@ import de.linusdev.cvg4j.engine.cl.CLEngine;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
+import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
+import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.cvg4j.nat.vulkan.ReturnedVkResult;
 import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
@@ -32,7 +36,6 @@ import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
-import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.lutils.ansi.sgr.SGR;
 import de.linusdev.lutils.ansi.sgr.SGRParameters;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
@@ -40,25 +43,66 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.array.NativeInt32Array;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
-import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
 import static de.linusdev.cvg4j.engine.vk.shader.VulkanSpirVUtils.createShaderModuleInfo;
+import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwCreateWindowSurface;
+import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
+import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
+import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class VulkanTest {
 
+    public static class VKTestWindow extends GLFWWindow {
+
+        private final @NotNull VkInstance vkInstance;
+
+        private final @NotNull VkSurfaceKHR vkSurface;
+
+        public VKTestWindow(
+                @Nullable GLFWWindowHints hints, @NotNull VkInstance vkInstance
+        ) throws GLFWException {
+            super(RenderAPI.VULKAN, hints);
+            this.vkInstance = vkInstance;
+            this.vkSurface = allocate(new VkSurfaceKHR());
+
+            createVkWindowSurface(null).check();
+        }
+
+        protected ReturnedVkResult createVkWindowSurface(
+                @Nullable VkAllocationCallbacks allocationCallbacks
+        ) {
+            return new ReturnedVkResult(glfwCreateWindowSurface(
+                    vkInstance.get(),
+                    pointer,
+                    refL(allocationCallbacks),
+                    refL(vkSurface)
+            ));
+        }
+
+        public @NotNull VkSurfaceKHR getVkSurface() {
+            return vkSurface;
+        }
+
+        @Override
+        public void close() {
+            vkInstance.vkDestroySurfaceKHR(vkSurface, ref(null));
+            super.close();
+        }
+    }
 
     @Test
     void test() throws GLFWException, IOException {
@@ -117,7 +161,7 @@ public class VulkanTest {
         vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
         vkInstance.initMethodPointers();
 
-        VulkanRasterizationWindow window = new VulkanRasterizationWindow(null, vkInstance, new DirectMemoryStack64());
+        VKTestWindow window = new VKTestWindow(null, vkInstance);
 
         // Create window surface
         VkSurfaceKHR vkSurfaceKHR = window.getVkSurface();

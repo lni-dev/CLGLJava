@@ -17,7 +17,6 @@
 package de.linusdev.cvg4j.vulkan;
 
 import de.linusdev.cvg4j.engine.cl.CLEngine;
-import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
@@ -41,7 +40,6 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.array.NativeInt32Array;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
-import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
@@ -120,7 +118,7 @@ public class VulkanTransparentWindowTest {
 
         GLFWWindowHints hints = new GLFWWindowHints();
         hints.transparentFrameBuffer = true;
-        VulkanRasterizationWindow window = new VulkanRasterizationWindow(hints, vkInstance, new DirectMemoryStack64());
+        VulkanTest.VKTestWindow window = new VulkanTest.VKTestWindow(hints, vkInstance);
 
         // Create window surface
         VkSurfaceKHR vkSurfaceKHR = window.getVkSurface();
