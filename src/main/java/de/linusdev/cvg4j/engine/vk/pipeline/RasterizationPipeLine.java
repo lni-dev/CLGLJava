@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.vk.pipeline;
 
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
+import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
@@ -25,21 +26,26 @@ import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.nat.memory.Stack;
-import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
+import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class RasterizationPipeLine {
+public class RasterizationPipeLine implements AutoCloseable {
 
-    public void create(
+    public static RasterizationPipeLine create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull VkDevice vkDevice,
+            @NotNull SwapChain swapChain,
             @NotNull Extend2D swapChainExtend,
             @NotNull RasterizationPipelineInfo info
-    ) {
+    ) throws IOException {
+        RasterizationPipeLine pipeLine = new RasterizationPipeLine(vkInstance, vkDevice, swapChain, swapChain.getSwapChainImageViews().length());
+
         VulkanShader vertexShader = info.loadVertexShader();
         VulkanShader fragmentShader = info.loadFragmentShader();
 
@@ -144,103 +150,95 @@ public class RasterizationPipeLine {
         pipelineLayoutCreateInfo.pushConstantRangeCount.set(0);
         pipelineLayoutCreateInfo.pPushConstantRanges.set(null);
 
-        VkPipelineLayout pipelineLayout = stack.push(new VkPipelineLayout());
         vkInstance.vkCreatePipelineLayout(
                 vkDevice,
                 ref(pipelineLayoutCreateInfo),
                 ref(null),
-                ref(pipelineLayout)
+                ref(pipeLine.getVkPipelineLayout())
         ).check();
 
-        // TODO
-
         // Render Pass
-        VkAttachmentDescription vkAttachmentDescription = new VkAttachmentDescription();
-        vkAttachmentDescription.allocate();
-        vkAttachmentDescription.format.set(selectedSurfaceFormat.format.get());
-        vkAttachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
-        vkAttachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
-        vkAttachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
-        vkAttachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
-        vkAttachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
-        vkAttachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
-        vkAttachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
+
+        // Description for the color attachment
+        VkAttachmentDescription attachmentDescription = stack.push(new VkAttachmentDescription());
+        attachmentDescription.format.set(swapChain.getFormat());
+        attachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+        attachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
+        attachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
+        attachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
+        attachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
+        attachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
+        attachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
+
 
         // Render Subpass for fragment shader
-        VkAttachmentReference vkAttachmentReference = new VkAttachmentReference();
-        vkAttachmentReference.allocate();
+        VkAttachmentReference vkAttachmentReference = stack.push(new VkAttachmentReference());
         vkAttachmentReference.attachment.set(0);
         vkAttachmentReference.layout.set(VkImageLayout.COLOR_ATTACHMENT_OPTIMAL);
 
-        VkSubpassDescription fragmentSubpassDescription = new VkSubpassDescription();
-        fragmentSubpassDescription.allocate();
+        VkSubpassDescription fragmentSubpassDescription = stack.push(new VkSubpassDescription());
         fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.GRAPHICS);
         fragmentSubpassDescription.colorAttachmentCount.set(1);
         fragmentSubpassDescription.pColorAttachments.set(vkAttachmentReference);
 
-        // create the render pass
-        VkRenderPassCreateInfo vkRenderPassCreateInfo = new VkRenderPassCreateInfo();
-        vkRenderPassCreateInfo.allocate();
-        vkRenderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
-        vkRenderPassCreateInfo.attachmentCount.set(1);
-        vkRenderPassCreateInfo.pAttachments.set(vkAttachmentDescription);
-        vkRenderPassCreateInfo.subpassCount.set(1);
-        vkRenderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
+        // Create the render pass
+        VkRenderPassCreateInfo renderPassCreateInfo = stack.push(new VkRenderPassCreateInfo());
+        renderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
+        renderPassCreateInfo.attachmentCount.set(1);
+        renderPassCreateInfo.pAttachments.set(attachmentDescription);
+        renderPassCreateInfo.subpassCount.set(1);
+        renderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
 
-        VkSubpassDependency vkSubpassDependency = new VkSubpassDependency();
-        vkSubpassDependency.allocate();
-        vkSubpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
-        vkSubpassDependency.dstSubpass.set(0);
-        vkSubpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        vkSubpassDependency.srcAccessMask.set(0);
-        vkSubpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        vkSubpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+        VkSubpassDependency subpassDependency = stack.push(new VkSubpassDependency());
+        subpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
+        subpassDependency.dstSubpass.set(0);
+        subpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        subpassDependency.srcAccessMask.set(0);
+        subpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        subpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
 
-        vkRenderPassCreateInfo.dependencyCount.set(1);
-        vkRenderPassCreateInfo.pDependencies.set(vkSubpassDependency);
+        renderPassCreateInfo.dependencyCount.set(1);
+        renderPassCreateInfo.pDependencies.set(subpassDependency);
 
-        VkRenderPass vkRenderPass = new VkRenderPass();
-        vkRenderPass.allocate();
-        vkInstance.vkCreateRenderPass(
-                device,
-                TypedPointer64.of(vkRenderPassCreateInfo),
-                TypedPointer64.of(null),
-                TypedPointer64.of(vkRenderPass)
-        ).check();
+        vkInstance.vkCreateRenderPass(vkDevice, ref(renderPassCreateInfo), ref(null), ref(pipeLine.getVkRenderPass())).check();
 
         // Finally Create the Graphics Pipeline!
-        VkGraphicsPipelineCreateInfo vkGraphicsPipelineCreateInfo = new VkGraphicsPipelineCreateInfo();
-        vkGraphicsPipelineCreateInfo.allocate();
-        vkGraphicsPipelineCreateInfo.sType.set(VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO);
-        vkGraphicsPipelineCreateInfo.stageCount.set(2);
-        vkGraphicsPipelineCreateInfo.pStages.set(shaderStages.getPointer());
-        vkGraphicsPipelineCreateInfo.pVertexInputState.set(vkPipelineVertexInputStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pInputAssemblyState.set(vkPipelineInputAssemblyStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pViewportState.set(vkPipelineViewportStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pRasterizationState.set(vkPipelineRasterizationStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pMultisampleState.set(vkPipelineMultisampleStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pDepthStencilState.set(null);
-        vkGraphicsPipelineCreateInfo.pColorBlendState.set(vkPipelineColorBlendStateCreateInfo);
-        vkGraphicsPipelineCreateInfo.pDynamicState.set(null);
-        vkGraphicsPipelineCreateInfo.layout.set(vkPipelineLayout.get());
-        vkGraphicsPipelineCreateInfo.renderPass.set(vkRenderPass.get());
-        vkGraphicsPipelineCreateInfo.subpass.set(0);
+        VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = stack.push(new VkGraphicsPipelineCreateInfo());
+        graphicsPipelineCreateInfo.sType.set(VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO);
+        graphicsPipelineCreateInfo.stageCount.set(2);
+        graphicsPipelineCreateInfo.pStages.set(shaderStages.getPointer());
+        graphicsPipelineCreateInfo.pVertexInputState.set(vkPipelineVertexInputStateCreateInfo);
+        graphicsPipelineCreateInfo.pInputAssemblyState.set(vkPipelineInputAssemblyStateCreateInfo);
+        graphicsPipelineCreateInfo.pViewportState.set(pipelineViewportStateCreateInfo);
+        graphicsPipelineCreateInfo.pRasterizationState.set(pipelineRasterizationStateCreateInfo);
+        graphicsPipelineCreateInfo.pMultisampleState.set(pipelineMultisampleStateCreateInfo);
+        graphicsPipelineCreateInfo.pDepthStencilState.set(null);
+        graphicsPipelineCreateInfo.pColorBlendState.set(pipelineColorBlendStateCreateInfo);
+        graphicsPipelineCreateInfo.pDynamicState.set(null);
+        graphicsPipelineCreateInfo.layout.set(pipeLine.getVkPipelineLayout().get());
+        graphicsPipelineCreateInfo.renderPass.set(pipeLine.getVkRenderPass().get());
+        graphicsPipelineCreateInfo.subpass.set(0);
 
-        VkPipeline graphicsPipeline = new VkPipeline();
-        graphicsPipeline.allocate();
-        VkPipelineCache cache = new VkPipelineCache();
-        cache.allocate();
+
+        VkPipelineCache cache = stack.push(new VkPipelineCache());
         cache.set(VulkanUtils.VK_NULL_HANDLE);
+
         vkInstance.vkCreateGraphicsPipelines(
-                device,
+                vkDevice,
                 cache,
                 1,
-                TypedPointer64.of(vkGraphicsPipelineCreateInfo),
-                TypedPointer64.of(null),
-                TypedPointer64.of(graphicsPipeline)
+                ref(graphicsPipelineCreateInfo),
+                ref(null),
+                ref(pipeLine.getVkPipeline())
         ).check();
 
-        stack.pop(); // pipelineLayout
+        stack.pop(); // cache
+        stack.pop(); // graphicsPipelineCreateInfo
+        stack.pop(); // subpassDependency
+        stack.pop(); // renderPassCreateInfo
+        stack.pop(); // fragmentSubpassDescription
+        stack.pop(); // vkAttachmentReference
+        stack.pop(); // attachmentDescription
         stack.pop(); // pipelineLayoutCreateInfo
         stack.pop(); // pipelineColorBlendStateCreateInfo
         stack.pop(); // colorBlending
@@ -256,6 +254,83 @@ public class RasterizationPipeLine {
         stack.pop(); // shaderStages
         vertexShader.close();
         fragmentShader.close();
+
+        // Create Framebuffers
+        int i = 0;
+        for (VkFramebuffer vkFramebuffer : pipeLine.getFramebuffers()) {
+            VkFramebufferCreateInfo vkFramebufferCreateInfo = new VkFramebufferCreateInfo();
+            vkFramebufferCreateInfo.allocate();
+            vkFramebufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
+            vkFramebufferCreateInfo.renderPass.set(pipeLine.getVkRenderPass().get());
+            vkFramebufferCreateInfo.attachmentCount.set(1);
+            vkFramebufferCreateInfo.pAttachments.set(swapChain.getSwapChainImageViews().get(i));
+            vkFramebufferCreateInfo.width.set(swapChainExtend.width());
+            vkFramebufferCreateInfo.height.set(swapChainExtend.height());
+            vkFramebufferCreateInfo.layers.set(1);
+
+            vkInstance.vkCreateFramebuffer(
+                    vkDevice,
+                    ref(vkFramebufferCreateInfo),
+                    ref(null),
+                    ref(vkFramebuffer)
+            ).check();
+
+            i++;
+        }
+
+        return pipeLine;
     }
 
+    private final @NotNull VkInstance vkInstance;
+    private final @NotNull VkDevice vkDevice;
+    private final @NotNull SwapChain swapChain;
+
+    private final @NotNull VkPipelineLayout vkPipelineLayout;
+    private final @NotNull VkRenderPass vkRenderPass;
+    private final @NotNull VkPipeline vkPipeline;
+
+    private final @NotNull StructureArray<VkFramebuffer> framebuffers;
+
+    protected RasterizationPipeLine(
+            @NotNull VkInstance vkInstance,
+            @NotNull VkDevice vkDevice, @NotNull SwapChain swapChain,
+            int frameBufferCount
+    ) {
+        this.vkInstance = vkInstance;
+        this.vkDevice = vkDevice;
+        this.swapChain = swapChain;
+        this.vkPipelineLayout = allocate(new VkPipelineLayout());
+        this.vkRenderPass = allocate(new VkRenderPass());
+        this.vkPipeline = allocate(new VkPipeline());
+        this.framebuffers = StructureArray.newAllocated(frameBufferCount, VkFramebuffer.class, VkFramebuffer::new);
+    }
+
+    public @NotNull VkPipeline getVkPipeline() {
+        return vkPipeline;
+    }
+
+    public @NotNull VkPipelineLayout getVkPipelineLayout() {
+        return vkPipelineLayout;
+    }
+
+    public @NotNull VkRenderPass getVkRenderPass() {
+        return vkRenderPass;
+    }
+
+    public @NotNull StructureArray<VkFramebuffer> getFramebuffers() {
+        return framebuffers;
+    }
+
+    public @NotNull SwapChain getSwapChain() {
+        return swapChain;
+    }
+
+    @Override
+    public void close() {
+        for (VkFramebuffer framebuffer : framebuffers)
+            vkInstance.vkDestroyFramebuffer(vkDevice, framebuffer, ref(null));
+        vkInstance.vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, ref(null));
+        vkInstance.vkDestroyRenderPass(vkDevice, vkRenderPass, ref(null));
+        vkInstance.vkDestroyPipeline(vkDevice, vkPipeline, ref(null));
+    }
 }

@@ -287,7 +287,10 @@ public class VkDeviceAndSwapChainBuilder {
         swapChainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
         swapChainCreateInfo.oldSwapchain.set(0L); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
 
-        SwapChain swapChain = SwapChain.create(stack, vkInstance, storeDevice, swapChainCreateInfo);
+        SwapChain swapChain = SwapChain.create(
+                stack, vkInstance, storeDevice, swapChainCreateInfo, surfaceFormat.format, surfaceFormat.colorSpace,
+                graphicsQueueIndex, presentationQueueIndex
+        );
 
         LOG.logDebug("VkSwapchain created");
 

@@ -17,11 +17,43 @@
 package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.scene.Scene;
+import de.linusdev.cvg4j.engine.vk.device.Extend2D;
+import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeLine;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
+import de.linusdev.lutils.nat.memory.Stack;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-public abstract class VkScene implements Scene {
+public abstract class VkScene<GAME extends VulkanGame> implements Scene {
 
-    abstract @NotNull RasterizationPipelineInfo pipeline();
+    protected final @NotNull VulkanEngine<GAME> engine;
 
+    protected @Nullable RasterizationPipeLine pipeLine;
+
+    protected VkScene(@NotNull VulkanEngine<GAME> engine) {
+        this.engine = engine;
+    }
+
+    abstract void render(
+            @NotNull Stack stack,
+            @NotNull VkInstance vkInstance,
+            @NotNull Extend2D extend,
+            int frameBufferIndex,
+            @NotNull CommandPool commandPool
+    ) ;
+
+    abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);
+
+    @ApiStatus.Internal
+    public void setPipeLine(@Nullable RasterizationPipeLine pipeLine) {
+        this.pipeLine = pipeLine;
+    }
+
+    @Override
+    public void close() {
+        if(pipeLine != null)
+            pipeLine.close(); //TODO: this may require better synchronization
+    }
 }

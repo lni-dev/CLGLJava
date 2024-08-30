@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.shader;
 
+import de.linusdev.cvg4j.engine.vk.VulkanEngine;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
@@ -52,8 +53,7 @@ public class VulkanShader implements AutoCloseable {
 
     public static @NotNull VulkanShader createFromSpirVBinaryStream(
             @NotNull Stack stack,
-            @NotNull VkInstance vkInstance,
-            @NotNull VkDevice vkDevice,
+            @NotNull VulkanEngine<?> engine,
             @NotNull InputStream stream,
             @NotNull String mainMethodName,
             @NotNull VkShaderModule store
@@ -65,12 +65,12 @@ public class VulkanShader implements AutoCloseable {
         createInfo.codeSize.set(shaderBinary.getRequiredSize());
         createInfo.pCode.set(shaderBinary.getPointer());
 
-        vkInstance.vkCreateShaderModule(vkDevice, ref(createInfo), ref(null), ref(store)).check();
+        engine.getVkInstance().vkCreateShaderModule(engine.getVkDevice(), ref(createInfo), ref(null), ref(store)).check();
 
         stack.pop(); // createInfo
         stack.pop(); // shaderBinary's bytebuffer
 
-        return new VulkanShader(vkInstance, vkDevice, mainMethodName, store);
+        return new VulkanShader(engine.getVkInstance(), engine.getVkDevice(), mainMethodName, store);
     }
 
     public @NotNull String getMainMethodName() {

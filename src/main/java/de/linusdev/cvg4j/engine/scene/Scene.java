@@ -18,5 +18,8 @@ package de.linusdev.cvg4j.engine.scene;
 
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 
-public interface Scene extends Tickable {
+public interface Scene extends Tickable, AutoCloseable {
+
+    @Override
+    void close();
 }

@@ -123,7 +123,6 @@ public class VulkanTransparentWindowTest {
         VulkanRasterizationWindow window = new VulkanRasterizationWindow(hints, vkInstance, new DirectMemoryStack64());
 
         // Create window surface
-        window.createVkWindowSurface(null).check();
         VkSurfaceKHR vkSurfaceKHR = window.getVkSurface();
 
         // Pick GPU
@@ -438,7 +437,7 @@ public class VulkanTransparentWindowTest {
         }
 
         swapchainCreateInfo.preTransform.set(selectedTransform);
-        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_POST_MULTIPLIED_BIT_KHR);
+        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
         swapchainCreateInfo.presentMode.set(selectedPresentMode);
         swapchainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
         swapchainCreateInfo.oldSwapchain.set(0L); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
@@ -592,7 +591,7 @@ public class VulkanTransparentWindowTest {
                 VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT,
                 VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT
         );
-        vkPipelineColorBlendAttachmentState.srcColorBlendFactor.set(VkBlendFactor.ONE);
+        vkPipelineColorBlendAttachmentState.srcColorBlendFactor.set(VkBlendFactor.ZERO);
         vkPipelineColorBlendAttachmentState.dstColorBlendFactor.set(VkBlendFactor.ZERO);
         vkPipelineColorBlendAttachmentState.colorBlendOp.set(VkBlendOp.ADD);
         vkPipelineColorBlendAttachmentState.srcAlphaBlendFactor.set(VkBlendFactor.ONE);
@@ -776,7 +775,7 @@ public class VulkanTransparentWindowTest {
         vkClearValue.color.float32.getOrCreate(0).set(0f);
         vkClearValue.color.float32.getOrCreate(1).set(0f);
         vkClearValue.color.float32.getOrCreate(2).set(0f);
-        vkClearValue.color.float32.getOrCreate(3).set(0.5f);
+        vkClearValue.color.float32.getOrCreate(3).set(1.0f);
 
         VkRenderPassBeginInfo vkRenderPassBeginInfo = new VkRenderPassBeginInfo();
         vkRenderPassBeginInfo.allocate();

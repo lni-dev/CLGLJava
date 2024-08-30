@@ -17,13 +17,13 @@
 package de.linusdev.cvg4j.engine.vk.swapchain;
 
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkComponentSwizzle;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkImageViewType;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
+import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSwapchainCreateInfoKHR;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
+import de.linusdev.lutils.nat.enums.EnumValue32;
+import de.linusdev.lutils.nat.enums.JavaEnumValue32;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
@@ -34,32 +34,15 @@ import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class SwapChain implements AutoCloseable {
 
-    private final @NotNull VkInstance vkInstance;
-    private final @NotNull VkDevice device;
-    private final @NotNull VkSwapchainKHR swapChain;
-    private final @NotNull StructureArray<VkImageView> swapChainImageViews;
-
-
-
-    public SwapChain(
-            @NotNull VkInstance vkInstance,
-            @NotNull VkDevice device,
-            @NotNull VkSwapchainKHR swapChain,
-            @NotNull StructureArray<VkImageView> swapChainImageViews
-    ) {
-        this.vkInstance = vkInstance;
-        this.device = device;
-        this.swapChain = swapChain;
-
-
-        this.swapChainImageViews = swapChainImageViews;
-    }
-
     public static @NotNull SwapChain create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull VkDevice device,
-            @NotNull VkSwapchainCreateInfoKHR swapChainCreateInfo
+            @NotNull VkSwapchainCreateInfoKHR swapChainCreateInfo,
+            @NotNull EnumValue32<VkFormat> format,
+            @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
+            int graphicsQueueIndex,
+            int presentationQueueIndex
     ) {
         VkSwapchainKHR swapChain = allocate(new VkSwapchainKHR());
         vkInstance.vkCreateSwapchainKHR(device, ref(swapChainCreateInfo), ref(null), ref(swapChain)).check();
@@ -96,7 +79,65 @@ public class SwapChain implements AutoCloseable {
         stack.pop(); // swapchainImages
         stack.pop(); // integer
 
-        return new SwapChain(vkInstance, device, swapChain, swapchainImageViews);
+        return new SwapChain(vkInstance, device, swapChain, swapchainImageViews, format, colorSpace, graphicsQueueIndex, presentationQueueIndex);
+    }
+
+    private final @NotNull VkInstance vkInstance;
+    private final @NotNull VkDevice device;
+    private final @NotNull VkSwapchainKHR swapChain;
+    private final @NotNull StructureArray<VkImageView> swapChainImageViews;
+
+    private final @NotNull EnumValue32<VkFormat> format;
+    private final @NotNull EnumValue32<VkColorSpaceKHR> colorSpace;
+    private final int graphicsQueueIndex;
+    private final int presentationQueueIndex;
+
+    public SwapChain(
+            @NotNull VkInstance vkInstance,
+            @NotNull VkDevice device,
+            @NotNull VkSwapchainKHR swapChain,
+            @NotNull StructureArray<VkImageView> swapChainImageViews,
+            @NotNull EnumValue32<VkFormat> format,
+            @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
+            int graphicsQueueIndex,
+            int presentationQueueIndex
+    ) {
+        this.vkInstance = vkInstance;
+        this.device = device;
+        this.swapChain = swapChain;
+        this.swapChainImageViews = swapChainImageViews;
+        this.graphicsQueueIndex = graphicsQueueIndex;
+        this.presentationQueueIndex = presentationQueueIndex;
+
+        this.format = new JavaEnumValue32<>();
+        this.colorSpace = new JavaEnumValue32<>();
+
+        this.format.set(format);
+        this.colorSpace.set(colorSpace);
+    }
+
+    public @NotNull EnumValue32<VkColorSpaceKHR> getColorSpace() {
+        return colorSpace;
+    }
+
+    public @NotNull EnumValue32<VkFormat> getFormat() {
+        return format;
+    }
+
+    public @NotNull StructureArray<VkImageView> getSwapChainImageViews() {
+        return swapChainImageViews;
+    }
+
+    public int getGraphicsQueueIndex() {
+        return graphicsQueueIndex;
+    }
+
+    public int getPresentationQueueIndex() {
+        return presentationQueueIndex;
+    }
+
+    public @NotNull VkSwapchainKHR getSwapChain() {
+        return swapChain;
     }
 
     @Override

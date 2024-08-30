@@ -19,10 +19,12 @@ package de.linusdev.cvg4j.engine.vk.pipeline;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public interface RasterizationPipelineInfo {
 
-    @NotNull VulkanShader loadVertexShader();
+    @NotNull VulkanShader loadVertexShader() throws IOException;
 
-    @NotNull VulkanShader loadFragmentShader();
+    @NotNull VulkanShader loadFragmentShader() throws IOException;
 
 }

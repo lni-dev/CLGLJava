@@ -120,7 +120,6 @@ public class VulkanTest {
         VulkanRasterizationWindow window = new VulkanRasterizationWindow(null, vkInstance, new DirectMemoryStack64());
 
         // Create window surface
-        window.createVkWindowSurface(null).check();
         VkSurfaceKHR vkSurfaceKHR = window.getVkSurface();
 
         // Pick GPU
@@ -760,7 +759,6 @@ public class VulkanTest {
         VkCommandBufferBeginInfo vkCommandBufferBeginInfo = new VkCommandBufferBeginInfo();
         vkCommandBufferBeginInfo.allocate();
         vkCommandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
-        VkExtent2D finalSelectedExtent = selectedExtent;
 
         VkClearValue vkClearValue = new VkClearValue();
         vkClearValue.allocate();
@@ -776,8 +774,8 @@ public class VulkanTest {
 
         vkRenderPassBeginInfo.renderArea.offset.x.set(0);
         vkRenderPassBeginInfo.renderArea.offset.y.set(0);
-        vkRenderPassBeginInfo.renderArea.extent.width.set(finalSelectedExtent.width.get());
-        vkRenderPassBeginInfo.renderArea.extent.height.set(finalSelectedExtent.height.get());
+        vkRenderPassBeginInfo.renderArea.extent.width.set(selectedExtent.width.get());
+        vkRenderPassBeginInfo.renderArea.extent.height.set(selectedExtent.height.get());
         vkRenderPassBeginInfo.clearValueCount.set(1);
 
 
@@ -879,7 +877,7 @@ public class VulkanTest {
             vkPresentInfo.pSwapchains.set(swapchain);
             vkPresentInfo.pImageIndices.set(imageIndex);
 
-            vkInstance.vkQueuePresentKHR(graphicsQueue, TypedPointer64.of(vkPresentInfo)).check();
+            vkInstance.vkQueuePresentKHR(presentationQueue, TypedPointer64.of(vkPresentInfo)).check();
         });
 
         // wait till devices has finished
