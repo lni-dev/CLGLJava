@@ -79,8 +79,10 @@ public enum CTypes implements Type {
             JavaClass.ofClass(NullTerminatedUTF16String.class)
             ),
                     "wchar_t*", "-", String.class, -1, null, null
-            )
+            ),
     ;
+
+
 
     public static @NotNull CTypes ofCType(@NotNull String name) {
         for (CTypes type : values()) {

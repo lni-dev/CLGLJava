@@ -65,12 +65,12 @@ public class VulkanShader implements AutoCloseable {
         createInfo.codeSize.set(shaderBinary.getRequiredSize());
         createInfo.pCode.set(shaderBinary.getPointer());
 
-        engine.getVkInstance().vkCreateShaderModule(engine.getVkDevice(), ref(createInfo), ref(null), ref(store)).check();
+        engine.getVkInstance().vkCreateShaderModule(engine.getDevice().getVkDevice(), ref(createInfo), ref(null), ref(store)).check();
 
         stack.pop(); // createInfo
         stack.pop(); // shaderBinary's bytebuffer
 
-        return new VulkanShader(engine.getVkInstance(), engine.getVkDevice(), mainMethodName, store);
+        return new VulkanShader(engine.getVkInstance(), engine.getDevice().getVkDevice(), mainMethodName, store);
     }
 
     public @NotNull String getMainMethodName() {

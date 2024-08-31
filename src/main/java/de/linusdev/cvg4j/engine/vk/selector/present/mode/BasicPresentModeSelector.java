@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.vk.selector.present.mode;
 
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
+import de.linusdev.lutils.nat.enums.EnumValue32;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.result.BiResult;
@@ -36,7 +37,7 @@ class BasicPresentModeSelector implements PresentModeSelector {
     }
 
     @Override
-    public @NotNull BiResult<@Nullable VkPresentModeKHR, @NotNull Priority> select(
+    public @NotNull BiResult<@Nullable EnumValue32<VkPresentModeKHR>, @NotNull Priority> select(
             int presentModeCounts,
             @NotNull StructureArray<NativeEnumValue32<VkPresentModeKHR>> formats
     ) {
@@ -55,7 +56,7 @@ class BasicPresentModeSelector implements PresentModeSelector {
         }
 
         return new BiResult<>(
-                best == null ? null : best.get(VkPresentModeKHR.class),
+                best,
                 Priority.of(bestModePriority)
         );
     }

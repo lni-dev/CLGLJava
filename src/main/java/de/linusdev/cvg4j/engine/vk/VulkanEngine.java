@@ -21,8 +21,9 @@ import de.linusdev.cvg4j.engine.RenderThread;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.device.DeviceAndSwapChainBuilder;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
-import de.linusdev.cvg4j.engine.vk.device.VkDeviceAndSwapChainBuilder;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtensionList;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeLine;
 import de.linusdev.cvg4j.engine.vk.selector.GpuInfo;
@@ -36,10 +37,9 @@ import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkQueue;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
 import de.linusdev.llog.LLog;
@@ -90,17 +90,16 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
     private final @NotNull VulkanExtensionList vulkanExtensions = new VulkanExtensionList();
 
     private final @NotNull VkInstance vkInstance;
-    private final @NotNull VkPhysicalDevice vkPhysicalDevice;
-    private final @NotNull VkDevice vkDevice;
-    private final @NotNull VkQueue graphicsQueue;
-    private final @NotNull VkQueue presentationQueue;
 
     private Extend2D swapChainExtend;
     /**
      * Created in {@link #pickGPU(RenderThread, VulkanRasterizationWindow)}
      */
     private SwapChain swapChain;
-    private CommandPool commandPool;
+    /**
+     * Created in {@link #pickGPU(RenderThread, VulkanRasterizationWindow)}
+     */
+    private Device device;
 
     private final @NotNull SyncVar<VkScene<GAME>> currentScene = new SyncVarImpl<>(null);
 
@@ -111,10 +110,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         this.vulkanInfo = new VulkanEngineInfo();
 
         this.vkInstance = allocate(new VkInstance());
-        this.vkPhysicalDevice = allocate(new VkPhysicalDevice());
-        this.vkDevice = allocate(new VkDevice());
-        this.graphicsQueue = allocate(new VkQueue());
-        this.presentationQueue = allocate(new VkQueue());
         this.swapChainExtend = new Extend2D(allocate(new VkExtent2D()));
 
         this.renderThreadTaskQueue = new TaskQueue(this, 100);
@@ -138,14 +133,11 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
                     createVkInstance(rt);
                     VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
                     pickGPU(rt, win);
-                    commandPool = CommandPool.create(rt.getStack(), vkInstance, vkDevice, swapChain);
                     return win;
                 },
-                (rt, win, fut) -> {
-                    fut.complete(win, Nothing.INSTANCE, null);
-                },
+                (rt, win, fut) -> fut.complete(win, Nothing.INSTANCE, null),
                 (rt, win) -> {
-                    win.init(rt.getStack(), vkDevice, commandPool, swapChain, graphicsQueue, presentationQueue, this);
+                    win.init(rt.getStack(), device, swapChain, 2, this);
                     win.show(this);
                 }
         );
@@ -159,11 +151,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
             }
 
             // cleanup
-            commandPool.close();
             currentScene.consumeIfNotNull(VkScene::close);
             swapChain.close();
             win.close();
-            vkInstance.vkDestroyDevice(vkDevice, ref(null));
+            device.close();
             vkInstance.vkDestroyInstance(ref(null));
         });
 
@@ -185,8 +176,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         return vkInstance;
     }
 
-    public @NotNull VkDevice getVkDevice() {
-        return vkDevice;
+    public Device getDevice() {
+        return device;
     }
 
     @Override
@@ -210,10 +201,13 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
     }
 
     @Override
-    public void render(int currentFrameBufferImageIndex) {
+    public void render(
+            int currentFrameBufferImageIndex,
+            @NotNull VkCommandBuffer commandBuffer
+    ) {
         VkScene<?> scene = currentScene.get();
         if(scene != null) {
-            scene.render(renderThread.getStack(), vkInstance, swapChainExtend, currentFrameBufferImageIndex, commandPool);
+            scene.render(renderThread.getStack(), vkInstance, swapChainExtend, currentFrameBufferImageIndex, commandBuffer, scene.pipeLine.getFramebuffers().get(currentFrameBufferImageIndex));
         }
     }
 
@@ -226,7 +220,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         var fut = renderThreadTaskQueue.queueForExecution(LOAD_SCENE_TASK_ID, () -> {
             DirectMemoryStack64 stack = renderThread.getStack();
             assert stack.createSafePoint();
-            RasterizationPipeLine pipeLine = RasterizationPipeLine.create(stack, vkInstance, vkDevice, swapChain, swapChainExtend, scene.pipeline(stack));
+            RasterizationPipeLine pipeLine = RasterizationPipeLine.create(stack, vkInstance, device, swapChain, swapChainExtend, scene.pipeline(stack));
             scene.setPipeLine(pipeLine);
             assert stack.checkSafePoint();
             return scene;
@@ -385,8 +379,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         if(best == null)
             throw new EngineException("No suitable gpu available.");
 
-        this.vkPhysicalDevice.set(best.get());
-
         // get the gpu information again (if required)...
         if(lastChecked != best) {
             info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), best,
@@ -399,7 +391,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         LOG.logDebug("Selected gpu: " + info.props().deviceName.get());
 
         // Next create the actual vulkan device from the picked gpu
-        VkDeviceAndSwapChainBuilder builder = new VkDeviceAndSwapChainBuilder()
+        DeviceAndSwapChainBuilder builder = new DeviceAndSwapChainBuilder()
+                .setVkPhysicalDevice(best)
                 .setSurfaceFormat(
                         game.surfaceFormatSelector().select(info.surfaceFormatCount(), info.surfaceFormats()).result1()
                 ).setPresentMode(
@@ -426,7 +419,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
             VMath.clamp(size, minImageExtend, maxImageExtend, size);
         }
 
-        builder.setSwapExtend(swapChainExtend.geVkExtend2D());
+        builder.setSwapExtend(swapChainExtend);
 
         // Swap chain image count
         int max = info.surfacesCaps().maxImageCount.get();
@@ -434,13 +427,16 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
         builder.setSwapChainImageCount(game.swapChainImageCount(min, max == 0 ? Integer.MAX_VALUE : max));
 
         // Set surface transform (current is fine)
-        builder.setSurfaceTransform(info.surfacesCaps().currentTransform.get());
+        builder.setSurfaceTransform(info.surfacesCaps().currentTransform);
 
         // Queue families
         builder.setGraphicsQueueIndex(game.queueFamilySelector().selectGraphicsQueue(info.queueFamilyInfoList()).result1().index());
         builder.setPresentationQueueIndex(game.queueFamilySelector().selectPresentationQueue(info.queueFamilyInfoList()).result1().index());
 
-        swapChain = builder.build(stack, game, window, vkInstance, best, vkDevice, graphicsQueue, presentationQueue);
+        assert stack.createSafePoint();
+        device = builder.buildDevice(stack, game, vkInstance);
+        swapChain = builder.buildSwapChain(stack, window, vkInstance, device);
+        assert stack.checkSafePoint();
 
         stack.pop(); // queueFamilySupportsSurface
         stack.pop(); // queueFamilies

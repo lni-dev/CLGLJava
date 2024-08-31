@@ -22,7 +22,11 @@ import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwWindowHint;
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.WindowHints.*;
+import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.convertBoolean;
 
+/**
+ * @see <a href="https://www.glfw.org/docs/latest/window_guide.html#window_hints">glfw window hints</a>
+ */
 @SuppressWarnings("unused")
 public class GLFWWindowHints {
 
@@ -84,13 +88,44 @@ public class GLFWWindowHints {
      */
     public @Nullable Boolean transparentFrameBuffer = null;
 
+    /**
+     * specifies whether the windowed mode window will be initially visible. Possible values are
+     * GLFW_TRUE and GLFW_FALSE. This hint is ignored for full screen windows.
+     */
+    public @Nullable Boolean visible = null;
+
+    /**
+     *  specifies whether the windowed mode window will be resizable by the user. The window will still be resizable
+     *  using the glfwSetWindowSize function. Possible values are GLFW_TRUE and GLFW_FALSE. This hint is ignored for
+     *  full screen and undecorated windows.
+     */
+    public @Nullable Boolean resizable = null;
+
+    /**
+     * specifies whether the windowed mode window will have window decorations such as a border, a close widget, etc.
+     * An undecorated window will not be resizable by the user but will still allow the user to generate close events
+     * on some platforms. Possible values are GLFW_TRUE and GLFW_FALSE. This hint is ignored for full screen windows.
+     */
+    public @Nullable Boolean decorated = null;
+
+    /**
+     * specifies whether the windowed mode window will be maximized when created. Possible values are GLFW_TRUE
+     * and GLFW_FALSE. This hint is ignored for full screen windows.
+     */
+    public @Nullable Boolean maximized = null;
+
     public @ApiStatus.Internal void adjustWindowHints() {
         if(samples != null) glfwWindowHint(GLFW_SAMPLES, samples);
         if(contextVersionMajor != null) glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, contextVersionMajor);
         if(contextVersionMinor != null) glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, contextVersionMinor);
-        if(openglForwardCompat != null) glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFWValues.convertBoolean(openglForwardCompat));
+        if(openglForwardCompat != null) glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, convertBoolean(openglForwardCompat));
         if(openglProfile != null) glfwWindowHint(GLFW_OPENGL_PROFILE, openglProfile.value);
         if(clientApi != null) glfwWindowHint(GLFW_CLIENT_API, clientApi.value);
-        if(transparentFrameBuffer != null) glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFWValues.convertBoolean(transparentFrameBuffer));
+        if(transparentFrameBuffer != null) glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, convertBoolean(transparentFrameBuffer));
+        if(visible != null) glfwWindowHint(GLFW_VISIBLE, convertBoolean(visible));
+        if(resizable != null) glfwWindowHint(GLFW_RESIZABLE, convertBoolean(resizable));
+        if(decorated != null) glfwWindowHint(GLFW_DECORATED, convertBoolean(decorated));
+        if(maximized != null) glfwWindowHint(GLFW_MAXIMIZED, convertBoolean(maximized));
+
     }
 }

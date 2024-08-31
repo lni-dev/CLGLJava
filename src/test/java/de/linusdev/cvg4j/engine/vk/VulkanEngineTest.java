@@ -27,6 +27,7 @@ import de.linusdev.cvg4j.nat.vulkan.enums.VkPipelineBindPoint;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkSubpassContents;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkShaderModule;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkClearValue;
@@ -88,7 +89,8 @@ class VulkanEngineTest {
                 @NotNull VkInstance vkInstance,
                 @NotNull Extend2D extend,
                 int frameBufferIndex,
-                @NotNull CommandPool commandPool
+                @NotNull VkCommandBuffer commandBuffer,
+                @NotNull VkFramebuffer frameBuffer
         ) {
             VkCommandBufferBeginInfo commandBufferBeginInfo = stack.push(new VkCommandBufferBeginInfo());
             commandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
@@ -101,16 +103,14 @@ class VulkanEngineTest {
 
             VkRenderPassBeginInfo renderPassBeginInfo = stack.push(new VkRenderPassBeginInfo());
             renderPassBeginInfo.sType.set(VkStructureType.RENDER_PASS_BEGIN_INFO);
-            renderPassBeginInfo.renderPass.set(pipeLine.getVkRenderPass().get());
+            renderPassBeginInfo.renderPass.set(pipeLine.getVkRenderPass());
             renderPassBeginInfo.renderArea.offset.x.set(0);
             renderPassBeginInfo.renderArea.offset.y.set(0);
             renderPassBeginInfo.renderArea.extent.width.set(extend.width());
             renderPassBeginInfo.renderArea.extent.height.set(extend.height());
             renderPassBeginInfo.clearValueCount.set(1);
             renderPassBeginInfo.pClearValues.set(vkClearValue);
-            renderPassBeginInfo.framebuffer.set(pipeLine.getFramebuffers().get(frameBufferIndex).get());
-
-            VkCommandBuffer commandBuffer = commandPool.getVkCommandBuffer();
+            renderPassBeginInfo.framebuffer.set(frameBuffer);
 
             vkInstance.vkBeginCommandBuffer(commandBuffer, ref(commandBufferBeginInfo)).check();
             vkInstance.vkCmdBeginRenderPass(commandBuffer, ref(renderPassBeginInfo), VkSubpassContents.INLINE);
@@ -164,7 +164,7 @@ class VulkanEngineTest {
 
         VulkanEngine<TestGame> engine = new VulkanEngine<>(new TestGame());
 
-        engine.loadScene(new TestScene(engine));
+        engine.loadScene(new TestScene(engine)).getResult();
 
         engine.getEngineDeathFuture().getResult();
     }

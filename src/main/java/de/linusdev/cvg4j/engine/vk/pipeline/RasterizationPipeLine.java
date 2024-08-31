@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
+import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
@@ -39,12 +40,12 @@ public class RasterizationPipeLine implements AutoCloseable {
     public static RasterizationPipeLine create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
-            @NotNull VkDevice vkDevice,
+            @NotNull Device device,
             @NotNull SwapChain swapChain,
             @NotNull Extend2D swapChainExtend,
             @NotNull RasterizationPipelineInfo info
     ) throws IOException {
-        RasterizationPipeLine pipeLine = new RasterizationPipeLine(vkInstance, vkDevice, swapChain, swapChain.getSwapChainImageViews().length());
+        RasterizationPipeLine pipeLine = new RasterizationPipeLine(vkInstance, device, swapChain);
 
         VulkanShader vertexShader = info.loadVertexShader();
         VulkanShader fragmentShader = info.loadFragmentShader();
@@ -151,7 +152,7 @@ public class RasterizationPipeLine implements AutoCloseable {
         pipelineLayoutCreateInfo.pPushConstantRanges.set(null);
 
         vkInstance.vkCreatePipelineLayout(
-                vkDevice,
+                device.getVkDevice(),
                 ref(pipelineLayoutCreateInfo),
                 ref(null),
                 ref(pipeLine.getVkPipelineLayout())
@@ -200,7 +201,7 @@ public class RasterizationPipeLine implements AutoCloseable {
         renderPassCreateInfo.dependencyCount.set(1);
         renderPassCreateInfo.pDependencies.set(subpassDependency);
 
-        vkInstance.vkCreateRenderPass(vkDevice, ref(renderPassCreateInfo), ref(null), ref(pipeLine.getVkRenderPass())).check();
+        vkInstance.vkCreateRenderPass(device.getVkDevice(), ref(renderPassCreateInfo), ref(null), ref(pipeLine.getVkRenderPass())).check();
 
         // Finally Create the Graphics Pipeline!
         VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = stack.push(new VkGraphicsPipelineCreateInfo());
@@ -224,7 +225,7 @@ public class RasterizationPipeLine implements AutoCloseable {
         cache.set(VulkanUtils.VK_NULL_HANDLE);
 
         vkInstance.vkCreateGraphicsPipelines(
-                vkDevice,
+                device.getVkDevice(),
                 cache,
                 1,
                 ref(graphicsPipelineCreateInfo),
@@ -256,21 +257,21 @@ public class RasterizationPipeLine implements AutoCloseable {
         fragmentShader.close();
 
         // Create Framebuffers
+        VkFramebufferCreateInfo frameBufferCreateInfo = stack.push(new VkFramebufferCreateInfo());
         int i = 0;
         for (VkFramebuffer vkFramebuffer : pipeLine.getFramebuffers()) {
-            VkFramebufferCreateInfo vkFramebufferCreateInfo = new VkFramebufferCreateInfo();
-            vkFramebufferCreateInfo.allocate();
-            vkFramebufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
-            vkFramebufferCreateInfo.renderPass.set(pipeLine.getVkRenderPass().get());
-            vkFramebufferCreateInfo.attachmentCount.set(1);
-            vkFramebufferCreateInfo.pAttachments.set(swapChain.getSwapChainImageViews().get(i));
-            vkFramebufferCreateInfo.width.set(swapChainExtend.width());
-            vkFramebufferCreateInfo.height.set(swapChainExtend.height());
-            vkFramebufferCreateInfo.layers.set(1);
+
+            frameBufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
+            frameBufferCreateInfo.renderPass.set(pipeLine.getVkRenderPass());
+            frameBufferCreateInfo.attachmentCount.set(1);
+            frameBufferCreateInfo.pAttachments.set(swapChain.getSwapChainImageViews().get(i));
+            frameBufferCreateInfo.width.set(swapChainExtend.width());
+            frameBufferCreateInfo.height.set(swapChainExtend.height());
+            frameBufferCreateInfo.layers.set(1);
 
             vkInstance.vkCreateFramebuffer(
-                    vkDevice,
-                    ref(vkFramebufferCreateInfo),
+                    device.getVkDevice(),
+                    ref(frameBufferCreateInfo),
                     ref(null),
                     ref(vkFramebuffer)
             ).check();
@@ -278,31 +279,35 @@ public class RasterizationPipeLine implements AutoCloseable {
             i++;
         }
 
+        stack.pop(); // frameBufferCreateInfo
+
         return pipeLine;
     }
 
     private final @NotNull VkInstance vkInstance;
-    private final @NotNull VkDevice vkDevice;
+    private final @NotNull Device device;
     private final @NotNull SwapChain swapChain;
 
+    /*
+     * Managed by this class
+     */
     private final @NotNull VkPipelineLayout vkPipelineLayout;
     private final @NotNull VkRenderPass vkRenderPass;
     private final @NotNull VkPipeline vkPipeline;
-
     private final @NotNull StructureArray<VkFramebuffer> framebuffers;
 
     protected RasterizationPipeLine(
             @NotNull VkInstance vkInstance,
-            @NotNull VkDevice vkDevice, @NotNull SwapChain swapChain,
-            int frameBufferCount
+            @NotNull Device device,
+            @NotNull SwapChain swapChain
     ) {
         this.vkInstance = vkInstance;
-        this.vkDevice = vkDevice;
+        this.device = device;
         this.swapChain = swapChain;
         this.vkPipelineLayout = allocate(new VkPipelineLayout());
         this.vkRenderPass = allocate(new VkRenderPass());
         this.vkPipeline = allocate(new VkPipeline());
-        this.framebuffers = StructureArray.newAllocated(frameBufferCount, VkFramebuffer.class, VkFramebuffer::new);
+        this.framebuffers = StructureArray.newAllocated(swapChain.getSwapChainImageCount(), VkFramebuffer.class, VkFramebuffer::new);
     }
 
     public @NotNull VkPipeline getVkPipeline() {
@@ -328,9 +333,9 @@ public class RasterizationPipeLine implements AutoCloseable {
     @Override
     public void close() {
         for (VkFramebuffer framebuffer : framebuffers)
-            vkInstance.vkDestroyFramebuffer(vkDevice, framebuffer, ref(null));
-        vkInstance.vkDestroyPipelineLayout(vkDevice, vkPipelineLayout, ref(null));
-        vkInstance.vkDestroyRenderPass(vkDevice, vkRenderPass, ref(null));
-        vkInstance.vkDestroyPipeline(vkDevice, vkPipeline, ref(null));
+            vkInstance.vkDestroyFramebuffer(device.getVkDevice(), framebuffer, ref(null));
+        vkInstance.vkDestroyPipelineLayout(device.getVkDevice(), vkPipelineLayout, ref(null));
+        vkInstance.vkDestroyRenderPass(device.getVkDevice(), vkRenderPass, ref(null));
+        vkInstance.vkDestroyPipeline(device.getVkDevice(), vkPipeline, ref(null));
     }
 }

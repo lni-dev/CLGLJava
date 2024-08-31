@@ -20,6 +20,8 @@ import de.linusdev.cvg4j.engine.scene.Scene;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeLine;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.lutils.nat.memory.Stack;
 import org.jetbrains.annotations.ApiStatus;
@@ -30,7 +32,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
 
     protected final @NotNull VulkanEngine<GAME> engine;
 
-    protected @Nullable RasterizationPipeLine pipeLine;
+    protected RasterizationPipeLine pipeLine;
 
     protected VkScene(@NotNull VulkanEngine<GAME> engine) {
         this.engine = engine;
@@ -41,7 +43,8 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
             @NotNull VkInstance vkInstance,
             @NotNull Extend2D extend,
             int frameBufferIndex,
-            @NotNull CommandPool commandPool
+            @NotNull VkCommandBuffer commandBuffer,
+            @NotNull VkFramebuffer frameBuffer
     ) ;
 
     abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);

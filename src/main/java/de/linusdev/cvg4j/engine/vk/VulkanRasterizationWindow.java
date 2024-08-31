@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk;
 
+import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
@@ -35,6 +36,7 @@ import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -50,10 +52,6 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
     private final @NotNull VkSurfaceKHR vkSurface;
 
-    private final @NotNull VkSemaphore imageAvailableSemaphore;
-    private final @NotNull VkSemaphore renderFinishedSemaphore;
-    private final @NotNull VkFence frameSubmittedFence;
-
     private final @NotNull BBUInt1 currentImageIndex;
     private final @NotNull VkCommandBufferResetFlags commandBufferResetFlags;
     private final @NotNull VkPipelineStageFlags pipelineStageFlags;
@@ -62,14 +60,28 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
     private final @NotNull VkFence fenceNullHandle;
 
-    private VkDevice vkDevice;
-    private VkCommandBuffer vkCommandBuffer;
-    private VkSwapchainKHR vkSwapChain;
+    private Device device;
+    private SwapChain swapChain;
+
     private VkQueue graphicsQueue;
     private VkQueue presentationQueue;
 
+    /*
+     * Managed by this class
+     */
+    private CommandPool commandPool;
+    private StructureArray<VkSemaphore> imageAvailableSemaphores;
+    private StructureArray<VkSemaphore> renderFinishedSemaphores;
+    private StructureArray<VkFence> frameSubmittedFences;
+
+    /*
+     * Other stuff
+     */
     private RenderCommandsFunction renderCommandsFunction;
     private UpdateListener updateListener;
+
+    private int currentFrame = 0;
+    private int maxFramesInFlight;
 
 
     public VulkanRasterizationWindow(
@@ -84,10 +96,6 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         createVkWindowSurface(null).check();
 
-        this.imageAvailableSemaphore = allocate(new VkSemaphore());
-        this.renderFinishedSemaphore = allocate(new VkSemaphore());
-        this.frameSubmittedFence = allocate(new VkFence());
-
         this.currentImageIndex = allocate(BBUInt1.newAllocatable(null));
         this.commandBufferResetFlags = allocate(new VkCommandBufferResetFlags());
         this.pipelineStageFlags = allocate(new VkPipelineStageFlags());
@@ -100,19 +108,24 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
     public void init(
             @NotNull Stack stack,
-            @NotNull VkDevice vkDevice,
-            @NotNull CommandPool cmdPool,
+            @NotNull Device device,
             @NotNull SwapChain swapChain,
-            @NotNull VkQueue graphicsQueue,
-            @NotNull VkQueue presentationQueue,
+            int maxFramesInFlight,
             @NotNull RenderCommandsFunction renderCommandsFunction
     ) {
-        this.vkDevice = vkDevice;
-        this.vkCommandBuffer = cmdPool.getVkCommandBuffer();
-        this.vkSwapChain = swapChain.getSwapChain();
-        this.graphicsQueue = graphicsQueue;
-        this.presentationQueue = presentationQueue;
+        this.device = device;
+        this.swapChain = swapChain;
+
+        this.maxFramesInFlight = maxFramesInFlight;
         this.renderCommandsFunction = renderCommandsFunction;
+
+        this.graphicsQueue = device.getGraphicsQueue();
+        this.presentationQueue = device.getPresentationQueue();
+        this.commandPool = CommandPool.create(stack, vkInstance, device, maxFramesInFlight);
+
+        this.imageAvailableSemaphores = StructureArray.newAllocated(maxFramesInFlight, VkSemaphore.class, VkSemaphore::new);
+        this.renderFinishedSemaphores = StructureArray.newAllocated(maxFramesInFlight, VkSemaphore.class, VkSemaphore::new);
+        this.frameSubmittedFences = StructureArray.newAllocated(maxFramesInFlight, VkFence.class, VkFence::new);
 
         // Synchronization
         VkSemaphoreCreateInfo vkSemaphoreCreateInfo = stack.push(new VkSemaphoreCreateInfo());
@@ -122,9 +135,11 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
         vkFenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
         vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
 
-        vkInstance.vkCreateSemaphore(vkDevice, ref(vkSemaphoreCreateInfo), ref(null), ref(imageAvailableSemaphore)).check();
-        vkInstance.vkCreateSemaphore(vkDevice, ref(vkSemaphoreCreateInfo), ref(null), ref(renderFinishedSemaphore)).check();
-        vkInstance.vkCreateFence(vkDevice, ref(vkFenceCreateInfo), ref(null), ref(frameSubmittedFence)).check();
+        for (int i = 0; i < maxFramesInFlight; i++) {
+            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(imageAvailableSemaphores.getOrCreate(i))).check();
+            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(renderFinishedSemaphores.getOrCreate(i))).check();
+            vkInstance.vkCreateFence(device.getVkDevice(), ref(vkFenceCreateInfo), ref(null), ref(frameSubmittedFences.getOrCreate(i))).check();
+        }
 
         stack.pop(); // vkFenceCreateInfo
         stack.pop(); // vkSemaphoreCreateInfo
@@ -136,18 +151,13 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         submitInfo.sType.set(VkStructureType.SUBMIT_INFO);
         submitInfo.waitSemaphoreCount.set(1);
-        submitInfo.pWaitSemaphores.set(imageAvailableSemaphore);
         submitInfo.pWaitDstStageMask.set(pipelineStageFlags);
         submitInfo.commandBufferCount.set(1);
-        submitInfo.pCommandBuffers.set(cmdPool.getVkCommandBuffer());
         submitInfo.signalSemaphoreCount.set(1);
-        submitInfo.pSignalSemaphores.set(renderFinishedSemaphore);
 
         presentInfo.sType.set(VkStructureType.PRESENT_INFO_KHR);
         presentInfo.waitSemaphoreCount.set(1);
-        presentInfo.pWaitSemaphores.set(renderFinishedSemaphore);
         presentInfo.swapchainCount.set(1);
-        presentInfo.pSwapchains.set(vkSwapChain);
     }
 
     @Override
@@ -164,22 +174,33 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     protected void perFrameOperations() {
 
         if(renderCommandsFunction.available()) {
+            // Get the swap chain
+            VkSwapchainKHR vkSwapChain = swapChain.getVkSwapChain();
+
             // wait for previous frame to be submitted
-            vkInstance.vkWaitForFences(vkDevice, 1, ref(frameSubmittedFence), true, Long.MAX_VALUE).check();
-            vkInstance.vkResetFences(vkDevice, 1, ref(frameSubmittedFence)).check();
+            vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame)), true, Long.MAX_VALUE).check();
+            vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
 
             // acquire Image from the swap chain
-            vkInstance.vkAcquireNextImageKHR(vkDevice, vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphore, fenceNullHandle, ref(currentImageIndex));
-            vkInstance.vkResetCommandBuffer(vkCommandBuffer, commandBufferResetFlags);
-            renderCommandsFunction.render(currentImageIndex.get());
+            vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
+            vkInstance.vkResetCommandBuffer(commandPool.getVkCommandBuffer(currentFrame), commandBufferResetFlags);
+            renderCommandsFunction.render(currentImageIndex.get(), commandPool.getVkCommandBuffer(currentFrame));
 
             // submit
-            vkInstance.vkQueueSubmit(graphicsQueue, 1, ref(submitInfo), frameSubmittedFence).check();
+            submitInfo.pCommandBuffers.set(commandPool.getVkCommandBuffer(currentFrame));
+            submitInfo.pWaitSemaphores.set(imageAvailableSemaphores.get(currentFrame));
+            submitInfo.pSignalSemaphores.set(renderFinishedSemaphores.get(currentFrame));
+
+            vkInstance.vkQueueSubmit(graphicsQueue, 1, ref(submitInfo), frameSubmittedFences.get(currentFrame)).check();
 
             // present
+            presentInfo.pSwapchains.set(vkSwapChain);
+            presentInfo.pWaitSemaphores.set(renderFinishedSemaphores.get(currentFrame));
             presentInfo.pImageIndices.set(currentImageIndex);
 
             vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo)).check();
+
+            currentFrame = (currentFrame + 1) % maxFramesInFlight;
         }
 
         updateListener.update0(frameInfo);
@@ -189,7 +210,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     @Override
     protected void windowCloseOperations() {
         // wait till device has finished
-        vkInstance.vkDeviceWaitIdle(vkDevice);
+        vkInstance.vkDeviceWaitIdle(device.getVkDevice());
         super.windowCloseOperations();
     }
 
@@ -211,16 +232,23 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     @Override
     public void close() {
         super.close();
-        vkInstance.vkDestroySemaphore(vkDevice, imageAvailableSemaphore, ref(null));
-        vkInstance.vkDestroySemaphore(vkDevice, renderFinishedSemaphore, ref(null));
-        vkInstance.vkDestroyFence(vkDevice, frameSubmittedFence, ref(null));
+        for (int i = 0; i < maxFramesInFlight; i++) {
+            vkInstance.vkDestroySemaphore(device.getVkDevice(), imageAvailableSemaphores.get(i), ref(null));
+            vkInstance.vkDestroySemaphore(device.getVkDevice(), renderFinishedSemaphores.get(i), ref(null));
+            vkInstance.vkDestroyFence(device.getVkDevice(), frameSubmittedFences.get(i), ref(null));
+        }
+
+        commandPool.close();
         vkInstance.vkDestroySurfaceKHR(vkSurface, ref(null));
     }
 
     public interface RenderCommandsFunction {
         boolean available();
 
-        void render(int currentFrameBufferImageIndex);
+        void render(
+                int currentFrameBufferImageIndex,
+                @NotNull VkCommandBuffer commandBuffer
+        );
     }
 
 }

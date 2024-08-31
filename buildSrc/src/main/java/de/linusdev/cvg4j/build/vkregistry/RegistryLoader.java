@@ -246,7 +246,7 @@ public class RegistryLoader {
         );
         types.put(
                 "VK_DEFINE_NON_DISPATCHABLE_HANDLE",
-                new BasicType("VkNonDispatchableHandle", CTypes.UINT64, VULKAN_PACKAGE)
+                new AlreadyExistingBasicType("VkNonDispatchableHandle", CTypes.UINT64, "de.linusdev.cvg4j.nat.vulkan.handle")
         );
 
         // VkVideo Version

@@ -22,32 +22,22 @@ import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
-
-public class HandleType implements Type {
-
-    private static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".handles";
+public class AlreadyExistingBasicType implements Type {
 
     private final @NotNull String name;
-    private final @NotNull Type alias;
-    private final @Nullable String parent;
-    private final @NotNull String objTypeEnum;
+    private final @NotNull CTypes alias;
+    private final @NotNull String packageString;
 
-
-    public HandleType(
+    public AlreadyExistingBasicType(
             @NotNull String name,
-            @NotNull Type alias,
-            @Nullable String parent,
-            @NotNull String objTypeEnum
+            @NotNull CTypes alias,
+            @NotNull String truePackageString
     ) {
         this.name = name;
         this.alias = alias;
-        this.parent = parent;
-        this.objTypeEnum = objTypeEnum;
+        this.packageString = truePackageString;
     }
-
 
     @Override
     public @NotNull String getName() {
@@ -61,33 +51,20 @@ public class HandleType implements Type {
 
     @Override
     public @NotNull CTypes getAsBaseType() {
-        return CTypes.POINTER;
+        return alias;
     }
 
     @Override
-    public void generate(
-            @NotNull RegistryLoader registry,
-            @NotNull SourceGenerator generator
-    ) {
-        JavaClassGenerator clazz = generator.addJavaFile(SUB_PACKAGE);
-
-        clazz.setName(name);
-        clazz.setType(JavaClassType.CLASS);
-        clazz.setVisibility(JavaVisibility.PUBLIC);
-
-        JavaClass aliasJavaClass = alias.getJavaClass(registry, generator);
-        if(aliasJavaClass.getName().equals("VkNonDispatchableHandle"))
-            aliasJavaClass = aliasJavaClass.withGenerics(this.getJavaClass(registry, generator));
-        clazz.setExtendedClass(aliasJavaClass);
+    public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
+        // Do nothing
     }
 
     @Override
     public @NotNull JavaClass getJavaClass(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-
         return new JavaClass() {
             @Override
             public @NotNull JavaPackage getPackage() {
-                return generator.getJavaBasePackage().extend(SUB_PACKAGE);
+                return new JavaPackage(packageString);
             }
 
             @Override

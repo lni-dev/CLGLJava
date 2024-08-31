@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk;
 
-import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
+import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCommandPoolCreateFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkCommandBufferLevel;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
@@ -27,8 +27,10 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferAllocateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandPoolCreateInfo;
 import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
+import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
@@ -37,25 +39,29 @@ public class CommandPool implements AutoCloseable {
     public static @NotNull CommandPool create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
-            @NotNull VkDevice vkDevice,
-            @NotNull SwapChain swapChain
+            @NotNull Device device,
+            int commandBufferCount
     ) {
-        CommandPool commandPool = new CommandPool(vkInstance, vkDevice);
+        CommandPool commandPool = new CommandPool(vkInstance, device.getVkDevice(), commandBufferCount);
 
         VkCommandPoolCreateInfo commandPoolCreateInfo = stack.push(new VkCommandPoolCreateInfo());
         commandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
         commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
-        commandPoolCreateInfo.queueFamilyIndex.set(swapChain.getGraphicsQueueIndex());
+        commandPoolCreateInfo.queueFamilyIndex.set(device.getGraphicsQueueIndex());
 
-        vkInstance.vkCreateCommandPool(vkDevice, ref(commandPoolCreateInfo), ref(null), ref(commandPool.getVkCommandPool())).check();
+        vkInstance.vkCreateCommandPool(device.getVkDevice(), ref(commandPoolCreateInfo), ref(null), ref(commandPool.getVkCommandPool())).check();
 
         VkCommandBufferAllocateInfo commandBufferAllocateInfo = stack.push(new VkCommandBufferAllocateInfo());
         commandBufferAllocateInfo.sType.set(VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO);
         commandBufferAllocateInfo.commandPool.set(commandPool.getVkCommandPool().get());
         commandBufferAllocateInfo.level.set(VkCommandBufferLevel.PRIMARY);
-        commandBufferAllocateInfo.commandBufferCount.set(1);
+        commandBufferAllocateInfo.commandBufferCount.set(commandBufferCount);
 
-        vkInstance.vkAllocateCommandBuffers(vkDevice,ref(commandBufferAllocateInfo), ref(commandPool.getVkCommandBuffer())).check();
+        vkInstance.vkAllocateCommandBuffers(device.getVkDevice(), ref(commandBufferAllocateInfo), ofArray(commandPool.getVkCommandBuffers())).check();
+
+        for (int i = 0; i < commandBufferCount; i++) {
+            commandPool.getVkCommandBuffers().getOrCreate(i); // make sure they are all created, so we can just use get() later.
+        }
 
         stack.pop(); // commandBufferAllocateInfo
         stack.pop(); // commandPoolCreateInfo
@@ -67,22 +73,30 @@ public class CommandPool implements AutoCloseable {
     private final @NotNull VkDevice vkDevice;
 
     private final @NotNull VkCommandPool vkCommandPool;
-    private final @NotNull VkCommandBuffer vkCommandBuffer;
+    private final @NotNull StructureArray<VkCommandBuffer> vkCommandBuffers;
 
-    protected CommandPool(@NotNull VkInstance vkInstance, @NotNull VkDevice vkDevice) {
+    protected CommandPool(
+            @NotNull VkInstance vkInstance,
+            @NotNull VkDevice vkDevice,
+            int commandBufferCount
+    ) {
         this.vkInstance = vkInstance;
         this.vkDevice = vkDevice;
 
         this.vkCommandPool = allocate(new VkCommandPool());
-        this.vkCommandBuffer = allocate(new VkCommandBuffer());
+        this.vkCommandBuffers = StructureArray.newAllocated(commandBufferCount, VkCommandBuffer.class, VkCommandBuffer::new);
     }
 
     public @NotNull VkCommandPool getVkCommandPool() {
         return vkCommandPool;
     }
 
-    public @NotNull VkCommandBuffer getVkCommandBuffer() {
-        return vkCommandBuffer;
+    public @NotNull VkCommandBuffer getVkCommandBuffer(int index) {
+        return vkCommandBuffers.getOrCreate(index);
+    }
+
+    public @NotNull StructureArray<VkCommandBuffer> getVkCommandBuffers() {
+        return vkCommandBuffers;
     }
 
     @Override
