@@ -19,12 +19,17 @@ package de.linusdev.cvg4j.engine.vk.swapchain;
 import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
+import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCompositeAlphaFlagBitsKHR;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSurfaceTransformFlagBitsKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
-import de.linusdev.cvg4j.nat.vulkan.handles.*;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkSwapchainKHR;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSwapchainCreateInfoKHR;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
@@ -36,20 +41,19 @@ import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class SwapChain implements AutoCloseable {
+public class SwapChain extends HasRecreationListeners<SwapChainRecreationListener> implements AutoCloseable {
 
     public static @NotNull SwapChain create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull VulkanRasterizationWindow window,
             @NotNull Device device,
-            int graphicsQueueIndex,
-            int presentationQueueIndex,
             int swapChainImageCount,
             @NotNull EnumValue32<VkFormat> format,
             @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
@@ -57,13 +61,94 @@ public class SwapChain implements AutoCloseable {
             EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform,
             EnumValue32<VkPresentModeKHR> presentMode
     ) {
-        SwapChain swapChain = new SwapChain(vkInstance, device, swapChainImageCount, format, colorSpace);
+        SwapChain swapChain = new SwapChain(
+                vkInstance, device, window,
+                swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode
+        );
+
+        swapChain.recreate(false, stack, null);
+
+        return swapChain;
+    }
+
+    private final @NotNull VkInstance vkInstance;
+    private final @NotNull Device device;
+    private final @NotNull VulkanRasterizationWindow window;
+
+    /*
+     * Managed by this class
+     */
+    private final @NotNull VkSwapchainKHR vkSwapChain;
+    private final @NotNull StructureArray<VkImageView> swapChainImageViews;
+
+    private final int swapChainImageCount;
+    private final @NotNull EnumValue32<VkFormat> format;
+    private final @NotNull EnumValue32<VkColorSpaceKHR> colorSpace;
+    private final @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform;
+    private final @NotNull EnumValue32<VkPresentModeKHR> presentMode;
+    private final @NotNull Extend2D extend;
+
+    public SwapChain(
+            @NotNull VkInstance vkInstance,
+            @NotNull Device device,
+            @NotNull VulkanRasterizationWindow window,
+            int swapChainImageCount,
+            @NotNull EnumValue32<VkFormat> format,
+            @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
+            @NotNull Extend2D extend, @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform, @NotNull EnumValue32<VkPresentModeKHR> presentMode
+    ) {
+        this.vkInstance = vkInstance;
+        this.device = device;
+        this.window = window;
+
+        this.vkSwapChain = allocate(new VkSwapchainKHR());
+        this.swapChainImageViews = StructureArray.newAllocated(swapChainImageCount, VkImageView.class, VkImageView::new);
+
+        /*
+         * Information about this swap chain
+         */
+        this.swapChainImageCount = swapChainImageCount;
+
+        this.format = new JavaEnumValue32<>();
+        this.colorSpace = new JavaEnumValue32<>();
+        this.transform = new JavaEnumValue32<>();
+        this.presentMode = new JavaEnumValue32<>();
+        this.extend = new Extend2D(allocate(new VkExtent2D()));
+
+        this.format.set(format);
+        this.colorSpace.set(colorSpace);
+        this.transform.set(transform);
+        this.presentMode.set(presentMode);
+        this.extend.xy(extend.x(), extend.y());
+    }
+
+    public void recreate(
+            @NotNull Stack stack,
+            @Nullable Extend2D newExtend
+    ) {
+        recreate(true, stack, newExtend);
+    }
+
+    protected void recreate(
+            boolean destroy,
+            @NotNull Stack stack,
+            @Nullable Extend2D newExtend
+    ) {
+
+        if(destroy) destroyForRecreation();
+
+        if(newExtend != null) {
+            this.extend.xy(newExtend.x(), newExtend.y());
+        }
+
+        VkSwapchainKHR oldSwapChain = stack.push(new VkSwapchainKHR());
+        oldSwapChain.set(vkSwapChain);
 
         // Create SwapChain
         NativeInt32Array queueFamilyIndices = stack.push(NativeInt32Array.newAllocatable(SVWrapper.length(2)));
-        queueFamilyIndices.setInt(0, graphicsQueueIndex);
-        queueFamilyIndices.setInt(1, presentationQueueIndex);
-        boolean sameQueueIndices = graphicsQueueIndex == presentationQueueIndex;
+        queueFamilyIndices.setInt(0, device.getGraphicsQueueIndex());
+        queueFamilyIndices.setInt(1, device.getPresentationQueueIndex());
+        boolean sameQueueIndices = device.getGraphicsQueueIndex() == device.getPresentationQueueIndex();
 
         VkSwapchainCreateInfoKHR swapChainCreateInfo = stack.push(new VkSwapchainCreateInfoKHR());
         swapChainCreateInfo.sType.set(VkStructureType.SWAPCHAIN_CREATE_INFO_KHR);
@@ -71,8 +156,8 @@ public class SwapChain implements AutoCloseable {
         swapChainCreateInfo.minImageCount.set(swapChainImageCount);
         swapChainCreateInfo.imageFormat.set(format);
         swapChainCreateInfo.imageColorSpace.set(colorSpace);
-        swapChainCreateInfo.imageExtent.height.set(swapChainExtend.height());
-        swapChainCreateInfo.imageExtent.width.set(swapChainExtend.width());
+        swapChainCreateInfo.imageExtent.height.set(extend.height());
+        swapChainCreateInfo.imageExtent.width.set(extend.width());
         swapChainCreateInfo.imageArrayLayers.set(1);
         // Write directly to this image
         // TODO: make it possible to enable post processing
@@ -88,27 +173,27 @@ public class SwapChain implements AutoCloseable {
             swapChainCreateInfo.pQueueFamilyIndices.set(queueFamilyIndices.getPointer());
         }
 
-        swapChainCreateInfo.preTransform.set(surfaceTransform);
+        swapChainCreateInfo.preTransform.set(transform);
         swapChainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
         swapChainCreateInfo.presentMode.set(presentMode);
         swapChainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
-        swapChainCreateInfo.oldSwapchain.set(0L); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
+        swapChainCreateInfo.oldSwapchain.set(oldSwapChain); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
 
-        vkInstance.vkCreateSwapchainKHR(device.getVkDevice(), ref(swapChainCreateInfo), ref(null), ref(swapChain.vkSwapChain)).check();
+        vkInstance.vkCreateSwapchainKHR(device.getVkDevice(), ref(swapChainCreateInfo), ref(null), ref(vkSwapChain)).check();
 
         // Create Swap chain image views
         BBUInt1 integer = stack.pushUnsignedInt();
 
         // Get Swap chain images
-        vkInstance.vkGetSwapchainImagesKHR(device.getVkDevice(), swapChain.vkSwapChain, ref(integer), ref(null));
+        vkInstance.vkGetSwapchainImagesKHR(device.getVkDevice(), vkSwapChain, ref(integer), ref(null));
         StructureArray<VkImage> swapchainImages = stack.pushArray(integer.get(), VkImage.class, VkImage::new);
-        vkInstance.vkGetSwapchainImagesKHR(device.getVkDevice(), swapChain.vkSwapChain, ref(integer), ofArray(swapchainImages));
+        vkInstance.vkGetSwapchainImagesKHR(device.getVkDevice(), vkSwapChain, ref(integer), ofArray(swapchainImages));
 
         if(swapChainImageCount != swapchainImages.length())
             throw new Error("Set and actual swap chain image count does not match.");
 
         VkImageViewCreateInfo imageViewCreateInfo = stack.push(new VkImageViewCreateInfo());
-        for (int i = 0; i < swapChain.swapChainImageViews.length(); i++) {
+        for (int i = 0; i < swapChainImageViews.length(); i++) {
 
             imageViewCreateInfo.sType.set(VkStructureType.IMAGE_VIEW_CREATE_INFO);
             imageViewCreateInfo.image.set(swapchainImages.getOrCreate(i).get());
@@ -124,7 +209,7 @@ public class SwapChain implements AutoCloseable {
             imageViewCreateInfo.subresourceRange.baseArrayLayer.set(0);
             imageViewCreateInfo.subresourceRange.layerCount.set(1);
 
-            vkInstance.vkCreateImageView(device.getVkDevice(), ref(imageViewCreateInfo), ref(null), ref(swapChain.swapChainImageViews.getOrCreate(i))).check();
+            vkInstance.vkCreateImageView(device.getVkDevice(), ref(imageViewCreateInfo), ref(null), ref(swapChainImageViews.getOrCreate(i))).check();
         }
 
         stack.pop(); // vkImageViewCreateInfo
@@ -133,45 +218,15 @@ public class SwapChain implements AutoCloseable {
         stack.pop(); // swapChainCreateInfo
         stack.pop(); // queueFamilyIndices
 
-        return swapChain;
-    }
+        if(!oldSwapChain.isNullHandle()) {
+            vkInstance.vkDestroySwapchainKHR(device.getVkDevice(), oldSwapChain, ref(null));
+        }
 
-    private final @NotNull VkInstance vkInstance;
-    private final @NotNull Device device;
+        stack.pop(); // oldSwapChain
 
-    /*
-     * Managed by this class
-     */
-    private final @NotNull VkSwapchainKHR vkSwapChain;
-    private final @NotNull StructureArray<VkImageView> swapChainImageViews;
-
-    /*
-     * Information about this swap chain
-     */
-    private final int swapChainImageCount;
-    private final @NotNull EnumValue32<VkFormat> format;
-    private final @NotNull EnumValue32<VkColorSpaceKHR> colorSpace;
-
-    public SwapChain(
-            @NotNull VkInstance vkInstance,
-            @NotNull Device device,
-            int swapChainImageCount,
-            @NotNull EnumValue32<VkFormat> format,
-            @NotNull EnumValue32<VkColorSpaceKHR> colorSpace
-    ) {
-        this.vkInstance = vkInstance;
-        this.device = device;
-
-        this.vkSwapChain = allocate(new VkSwapchainKHR());
-        this.swapChainImageViews = StructureArray.newAllocated(swapChainImageCount, VkImageView.class, VkImageView::new);
-
-        this.swapChainImageCount = swapChainImageCount;
-
-        this.format = new JavaEnumValue32<>();
-        this.colorSpace = new JavaEnumValue32<>();
-
-        this.format.set(format);
-        this.colorSpace.set(colorSpace);
+        recreationListeners.forEach(listener -> listener.swapChainRecreated(stack));
+        if(newExtend != null)
+            recreationListeners.forEach(listener -> listener.swapChainExtendChanged(stack, extend));
     }
 
     public @NotNull EnumValue32<VkColorSpaceKHR> getColorSpace() {
@@ -180,6 +235,14 @@ public class SwapChain implements AutoCloseable {
 
     public @NotNull EnumValue32<VkFormat> getFormat() {
         return format;
+    }
+
+    public @NotNull EnumValue32<VkPresentModeKHR> getPresentMode() {
+        return presentMode;
+    }
+
+    public @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> getTransform() {
+        return transform;
     }
 
     public @NotNull StructureArray<VkImageView> getSwapChainImageViews() {
@@ -194,11 +257,19 @@ public class SwapChain implements AutoCloseable {
         return swapChainImageCount;
     }
 
-    @Override
-    public void close() {
+    public @NotNull Extend2D getExtend() {
+        return extend;
+    }
+
+    public void destroyForRecreation() {
         for (VkImageView view : swapChainImageViews) {
             vkInstance.vkDestroyImageView(device.getVkDevice(), view, ref(null));
         }
+    }
+
+    @Override
+    public void close() {
+        destroyForRecreation();
         vkInstance.vkDestroySwapchainKHR(device.getVkDevice(), vkSwapChain, ref(null));
     }
 }

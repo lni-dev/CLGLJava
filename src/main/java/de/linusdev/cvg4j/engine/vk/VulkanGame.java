@@ -130,7 +130,7 @@ public interface VulkanGame extends Game {
                 .extensions().not().sufficesAll(requiredDeviceExtensions()).thenUnsupported()
 
                 // It's good to have at least two images available (for swapping them)
-                .custom(info -> info.surfacesCaps().maxImageCount.get() == 0 || info.surfacesCaps().maxImageCount.get() >= 2).thenAdd(Priorities.HIGH)
+                .custom(info -> info.surfaceInfo().surfacesCaps().maxImageCount.get() == 0 || info.surfaceInfo().surfacesCaps().maxImageCount.get() >= 2).thenAdd(Priorities.HIGH)
 
                 // use given surface format and present mode selectors
                 .surfaceFormat(surfaceFormatSelector()).thenUnsupportedIfNegativeAndAdd()

@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.selector;
 
+import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import org.jetbrains.annotations.NotNull;
 

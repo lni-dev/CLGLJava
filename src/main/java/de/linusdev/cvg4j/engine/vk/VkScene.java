@@ -18,24 +18,56 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.scene.Scene;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
-import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeLine;
+import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkRect2D;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkViewport;
 import de.linusdev.lutils.nat.memory.Stack;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
+
 public abstract class VkScene<GAME extends VulkanGame> implements Scene {
 
     protected final @NotNull VulkanEngine<GAME> engine;
 
-    protected RasterizationPipeLine pipeLine;
+    protected RasterizationPipeline pipeLine;
+
+    /*
+     * Managed by this class
+     */
+    protected final @NotNull VkViewport viewport;
+    protected final @NotNull VkRect2D scissors;
 
     protected VkScene(@NotNull VulkanEngine<GAME> engine) {
         this.engine = engine;
+
+        this.viewport = allocate(new VkViewport());
+        this.scissors = allocate(new VkRect2D());
+    }
+
+    public final void onLoad0(@NotNull SwapChain swapChain) {
+        calcViewportAndScissors(swapChain);
+    }
+
+    protected void calcViewportAndScissors(@NotNull SwapChain swapChain) {
+        viewport.x.set(0f);
+        viewport.y.set(0f);
+        viewport.width.set(swapChain.getExtend().width());
+        viewport.height.set(swapChain.getExtend().height());
+        viewport.minDepth.set(0f);
+        viewport.maxDepth.set(1f);
+
+        scissors.offset.x.set(0);
+        scissors.offset.y.set(0);
+        scissors.extent.width.set(swapChain.getExtend().width());
+        scissors.extent.height.set(swapChain.getExtend().height());
     }
 
     abstract void render(
@@ -50,7 +82,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
     abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);
 
     @ApiStatus.Internal
-    public void setPipeLine(@Nullable RasterizationPipeLine pipeLine) {
+    public void setPipeLine(@Nullable RasterizationPipeline pipeLine) {
         this.pipeLine = pipeLine;
     }
 

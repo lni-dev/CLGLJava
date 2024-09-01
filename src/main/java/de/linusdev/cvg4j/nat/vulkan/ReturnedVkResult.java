@@ -45,4 +45,13 @@ public class ReturnedVkResult {
         if(result != VkResult.VK_SUCCESS.getValue())
             throw new VulkanException(null, getAsVkResult());
     }
+
+    public void checkButAllow(@NotNull VkResult allow) throws VulkanException {
+        if(result != VkResult.VK_SUCCESS.getValue() && result != allow.getValue())
+            throw new VulkanException(null, getAsVkResult());
+    }
+
+    public boolean is(@NotNull VkResult result) {
+        return this.result == result.getValue();
+    }
 }

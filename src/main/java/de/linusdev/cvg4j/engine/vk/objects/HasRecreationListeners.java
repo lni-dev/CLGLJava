@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.vulkan.handle;
+package de.linusdev.cvg4j.engine.vk.objects;
 
-import de.linusdev.cvg4j.nat.vulkan.constants.VKConstants;
-import de.linusdev.lutils.math.vector.buffer.longn.BBULong1;
-import org.jetbrains.annotations.Nullable;
+import de.linusdev.lutils.llist.LLinkedList;
+import org.jetbrains.annotations.NotNull;
 
-public class VkNonDispatchableHandle<SELF extends VkNonDispatchableHandle<SELF>> extends BBULong1 {
+public class HasRecreationListeners<L> {
 
+    protected final @NotNull LLinkedList<@NotNull L> recreationListeners;
 
-    public VkNonDispatchableHandle() {
-        super(false, null);
-
+    public HasRecreationListeners() {
+        this.recreationListeners = new LLinkedList<>();
     }
 
-    public void set(@Nullable SELF other) {
-        if(other == null)
-            set(VKConstants.VK_NULL_HANDLE);
-        else set(other.get());
+    public void addRecreationListener(@NotNull L listener) {
+        this.recreationListeners.add(listener);
     }
 
-    public boolean isNullHandle() {
-        return get() == VKConstants.VK_NULL_HANDLE;
+    public void removeRecreationListener(@NotNull L listener) {
+        this.recreationListeners.remove(listener);
     }
-
 }

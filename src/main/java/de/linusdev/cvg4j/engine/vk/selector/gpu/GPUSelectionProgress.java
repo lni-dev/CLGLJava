@@ -17,7 +17,7 @@
 package de.linusdev.cvg4j.engine.vk.selector.gpu;
 
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
-import de.linusdev.cvg4j.engine.vk.selector.GpuInfo;
+import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -115,6 +115,8 @@ class VulkanEngineTest {
             vkInstance.vkBeginCommandBuffer(commandBuffer, ref(commandBufferBeginInfo)).check();
             vkInstance.vkCmdBeginRenderPass(commandBuffer, ref(renderPassBeginInfo), VkSubpassContents.INLINE);
             vkInstance.vkCmdBindPipeline(commandBuffer, VkPipelineBindPoint.GRAPHICS, pipeLine.getVkPipeline());
+            vkInstance.vkCmdSetViewport(commandBuffer, 0, 1, ref(viewport));
+            vkInstance.vkCmdSetScissor(commandBuffer, 0, 1, ref(scissors));
             vkInstance.vkCmdDraw(commandBuffer, 3, 1, 0, 0);
             vkInstance.vkCmdEndRenderPass(commandBuffer);
             vkInstance.vkEndCommandBuffer(commandBuffer).check();

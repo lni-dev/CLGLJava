@@ -17,6 +17,8 @@
 package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.frame.buffer.FrameBuffers;
+import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
@@ -29,6 +31,7 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkPipelineStageFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkFenceCreateFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkPipelineStageFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkResult;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
@@ -69,6 +72,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     /*
      * Managed by this class
      */
+    private FrameBuffers frameBuffers;
     private CommandPool commandPool;
     private StructureArray<VkSemaphore> imageAvailableSemaphores;
     private StructureArray<VkSemaphore> renderFinishedSemaphores;
@@ -104,6 +108,10 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         this.fenceNullHandle = allocate(new VkFence());
 
+    }
+
+    public void createFrameBuffers(@NotNull RasterizationPipeline pipeline) {
+        this.frameBuffers = FrameBuffers.create(stack, vkInstance, device, swapChain, pipeline);
     }
 
     public void init(
@@ -179,11 +187,25 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
             // wait for previous frame to be submitted
             vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame)), true, Long.MAX_VALUE).check();
-            vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
+
 
             // acquire Image from the swap chain
-            vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
+            ReturnedVkResult result = vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
+
+            // Check if we need to recreate the swap chain
+            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) {
+                renderCommandsFunction.recreateSwapChain(stack);
+                return; // cant use image anymore
+            } else {
+                result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
+            }
+
+            vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
+
+            // reset command buffer
             vkInstance.vkResetCommandBuffer(commandPool.getVkCommandBuffer(currentFrame), commandBufferResetFlags);
+
+            // fill command buffer
             renderCommandsFunction.render(currentImageIndex.get(), commandPool.getVkCommandBuffer(currentFrame));
 
             // submit
@@ -198,7 +220,14 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
             presentInfo.pWaitSemaphores.set(renderFinishedSemaphores.get(currentFrame));
             presentInfo.pImageIndices.set(currentImageIndex);
 
-            vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo)).check();
+            result = vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo));
+
+            // Check if we need to recreate the swap chain
+            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR) || result.is(VkResult.VK_SUBOPTIMAL_KHR)) {
+                renderCommandsFunction.recreateSwapChain(stack);
+            } else {
+                result.check();
+            }
 
             currentFrame = (currentFrame + 1) % maxFramesInFlight;
         }
@@ -229,6 +258,10 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
         return vkSurface;
     }
 
+    public FrameBuffers getFrameBuffers() {
+        return frameBuffers;
+    }
+
     @Override
     public void close() {
         super.close();
@@ -239,6 +272,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
         }
 
         commandPool.close();
+        frameBuffers.close();
         vkInstance.vkDestroySurfaceKHR(vkSurface, ref(null));
     }
 
@@ -249,6 +283,8 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
                 int currentFrameBufferImageIndex,
                 @NotNull VkCommandBuffer commandBuffer
         );
+
+        void recreateSwapChain(@NotNull Stack stack);
     }
 
 }

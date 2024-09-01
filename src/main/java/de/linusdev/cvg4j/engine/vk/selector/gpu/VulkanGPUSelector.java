@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.selector.gpu;
 
-import de.linusdev.cvg4j.engine.vk.selector.GpuInfo;
+import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifier;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifierType;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;

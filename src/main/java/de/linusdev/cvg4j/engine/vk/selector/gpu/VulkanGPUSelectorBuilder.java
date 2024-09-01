@@ -19,7 +19,7 @@ package de.linusdev.cvg4j.engine.vk.selector.gpu;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
-import de.linusdev.cvg4j.engine.vk.selector.GpuInfo;
+import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifier;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifierType;
 import de.linusdev.cvg4j.engine.vk.selector.present.mode.PresentModeSelector;
@@ -103,7 +103,7 @@ public class VulkanGPUSelectorBuilder {
     }
 
     public VariablePriorityApplicator presentMode(@NotNull PresentModeSelector selector) {
-        return new VariablePriorityApplicator(this, info -> selector.select(info.presentModeCount(), info.presentModes()).result2());
+        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo().presentModeCount(), info.surfaceInfo().presentModes()).result2());
     }
 
     public PriorityApplicator custom(@NotNull Predicate<GpuInfo> tester) {
@@ -111,7 +111,7 @@ public class VulkanGPUSelectorBuilder {
     }
 
     public VariablePriorityApplicator surfaceFormat(@NotNull SurfaceFormatSelector selector) {
-        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceFormatCount(), info.surfaceFormats()).result2());
+        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo().surfaceFormatCount(), info.surfaceInfo().surfaceFormats()).result2());
     }
 
     public static abstract class ModBuilderBase {

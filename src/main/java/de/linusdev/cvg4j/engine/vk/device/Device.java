@@ -190,6 +190,10 @@ public class Device implements AutoCloseable {
         return presentationQueue;
     }
 
+    public @NotNull VkPhysicalDevice getVkPhysicalDevice() {
+        return vkPhysicalDevice;
+    }
+
     @Override
     public void close() {
         vkInstance.vkDestroyDevice(vkDevice, ref(null));
