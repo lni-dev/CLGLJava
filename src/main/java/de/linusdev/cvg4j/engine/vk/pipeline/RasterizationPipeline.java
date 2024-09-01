@@ -17,10 +17,13 @@
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
-import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkColorComponentFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCullModeFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkShaderStageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
@@ -42,9 +45,10 @@ public class RasterizationPipeline implements AutoCloseable {
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             @NotNull SwapChain swapChain,
+            @NotNull RenderPass renderPass,
             @NotNull RasterizationPipelineInfo info
     ) throws IOException {
-        RasterizationPipeline pipeline = new RasterizationPipeline(vkInstance, device, swapChain);
+        RasterizationPipeline pipeline = new RasterizationPipeline(vkInstance, device, swapChain, renderPass);
 
         VulkanShader vertexShader = info.loadVertexShader();
         VulkanShader fragmentShader = info.loadFragmentShader();
@@ -150,52 +154,6 @@ public class RasterizationPipeline implements AutoCloseable {
                 ref(pipeline.getVkPipelineLayout())
         ).check();
 
-        // Render Pass
-        // TODO: I think render pass should have its own object. https://ogldev.org/www/tutorial50/vulkan.jpg
-
-        // Description for the color attachment
-        VkAttachmentDescription attachmentDescription = stack.push(new VkAttachmentDescription());
-        attachmentDescription.format.set(swapChain.getFormat());
-        attachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
-        attachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
-        attachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
-        attachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
-        attachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
-        attachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
-        attachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
-
-
-        // Render Subpass for fragment shader
-        VkAttachmentReference vkAttachmentReference = stack.push(new VkAttachmentReference());
-        vkAttachmentReference.attachment.set(0);
-        vkAttachmentReference.layout.set(VkImageLayout.COLOR_ATTACHMENT_OPTIMAL);
-
-        VkSubpassDescription fragmentSubpassDescription = stack.push(new VkSubpassDescription());
-        fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.GRAPHICS);
-        fragmentSubpassDescription.colorAttachmentCount.set(1);
-        fragmentSubpassDescription.pColorAttachments.set(vkAttachmentReference);
-
-        // Create the render pass
-        VkRenderPassCreateInfo renderPassCreateInfo = stack.push(new VkRenderPassCreateInfo());
-        renderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
-        renderPassCreateInfo.attachmentCount.set(1);
-        renderPassCreateInfo.pAttachments.set(attachmentDescription);
-        renderPassCreateInfo.subpassCount.set(1);
-        renderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
-
-        VkSubpassDependency subpassDependency = stack.push(new VkSubpassDependency());
-        subpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
-        subpassDependency.dstSubpass.set(0);
-        subpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        subpassDependency.srcAccessMask.set(0);
-        subpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        subpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
-
-        renderPassCreateInfo.dependencyCount.set(1);
-        renderPassCreateInfo.pDependencies.set(subpassDependency);
-
-        vkInstance.vkCreateRenderPass(device.getVkDevice(), ref(renderPassCreateInfo), ref(null), ref(pipeline.vkRenderPass)).check();
-
         // Finally Create the Graphics Pipeline!
         VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = stack.push(new VkGraphicsPipelineCreateInfo());
         graphicsPipelineCreateInfo.sType.set(VkStructureType.GRAPHICS_PIPELINE_CREATE_INFO);
@@ -210,7 +168,7 @@ public class RasterizationPipeline implements AutoCloseable {
         graphicsPipelineCreateInfo.pColorBlendState.set(pipelineColorBlendStateCreateInfo);
         graphicsPipelineCreateInfo.pDynamicState.set(dynamicStateCreateInfo);
         graphicsPipelineCreateInfo.layout.set(pipeline.getVkPipelineLayout().get());
-        graphicsPipelineCreateInfo.renderPass.set(pipeline.vkRenderPass.get());
+        graphicsPipelineCreateInfo.renderPass.set(renderPass.getVkRenderPass());
         graphicsPipelineCreateInfo.subpass.set(0);
 
 
@@ -228,11 +186,6 @@ public class RasterizationPipeline implements AutoCloseable {
 
         stack.pop(); // cache
         stack.pop(); // graphicsPipelineCreateInfo
-        stack.pop(); // subpassDependency
-        stack.pop(); // renderPassCreateInfo
-        stack.pop(); // fragmentSubpassDescription
-        stack.pop(); // vkAttachmentReference
-        stack.pop(); // attachmentDescription
         stack.pop(); // pipelineLayoutCreateInfo
         stack.pop(); // pipelineColorBlendStateCreateInfo
         stack.pop(); // colorBlending
@@ -255,24 +208,25 @@ public class RasterizationPipeline implements AutoCloseable {
     private final @NotNull VkInstance vkInstance;
     private final @NotNull Device device;
     private final @NotNull SwapChain swapChain;
+    private final @NotNull RenderPass renderPass;
 
     /*
      * Managed by this class
      */
     protected final @NotNull VkPipelineLayout vkPipelineLayout;
-    protected final @NotNull VkRenderPass vkRenderPass;
     protected final @NotNull VkPipeline vkPipeline;
 
     protected RasterizationPipeline(
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
-            @NotNull SwapChain swapChain
+            @NotNull SwapChain swapChain,
+            @NotNull RenderPass renderPass
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
         this.swapChain = swapChain;
+        this.renderPass = renderPass;
         this.vkPipelineLayout = allocate(new VkPipelineLayout());
-        this.vkRenderPass = allocate(new VkRenderPass());
         this.vkPipeline = allocate(new VkPipeline());
     }
 
@@ -284,18 +238,17 @@ public class RasterizationPipeline implements AutoCloseable {
         return vkPipelineLayout;
     }
 
-    public @NotNull VkRenderPass getVkRenderPass() {
-        return vkRenderPass;
-    }
-
     public @NotNull SwapChain getSwapChain() {
         return swapChain;
+    }
+
+    public @NotNull RenderPass getRenderPass() {
+        return renderPass;
     }
 
     @Override
     public void close() {
         vkInstance.vkDestroyPipelineLayout(device.getVkDevice(), vkPipelineLayout, ref(null));
-        vkInstance.vkDestroyRenderPass(device.getVkDevice(), vkRenderPass, ref(null));
         vkInstance.vkDestroyPipeline(device.getVkDevice(), vkPipeline, ref(null));
     }
 }

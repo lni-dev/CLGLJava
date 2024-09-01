@@ -102,5 +102,22 @@ public interface AbstractGLFWWindowListeners {
     @CallFromAnyThread
     @NonBlocking
     void removeJoystickEventListener(@NotNull JoystickListener listener);
-    
+
+    @CallFromAnyThread
+    @NonBlocking
+    void addWindowRefreshListener(@NotNull WindowRefreshListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeWindowRefreshListener(@NotNull WindowRefreshListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void addWindowIconificationListener(@NotNull WindowIconificationListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeWindowIconificationListener(@NotNull WindowIconificationListener listener);
+
+
 }

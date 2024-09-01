@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.nat.glfw3.objects;
 
 import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.cvg4j.nat.glad.custom.DebugMessageListener;
+import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfoImpl;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
@@ -77,19 +78,15 @@ public class GLFWWindow implements
         glfwSetCharCallback(this.pointer);
         glfwSetScrollCallback(this.pointer);
         glfwSetDropCallback(this.pointer);
+        glfwSetWindowRefreshCallback(this.pointer);
+        glfwSetWindowIconifyCallback(this.pointer);
     }
 
     public @NotNull AbstractGLFWWindowListeners listeners() {
         return listeners;
     }
 
-    public void setSize(int width, int height) {
-        glfwSetWindowSize(pointer, width, height);
-    }
 
-    public void setTitle(@NotNull String title) {
-        glfwSetWindowTitle(pointer, title);
-    }
 
     public @NotNull BBInt2 getFrameBufferSize(@Nullable BBInt2 size) {
         if(size == null)
@@ -126,6 +123,42 @@ public class GLFWWindow implements
     protected void windowCloseOperations() {
 
     }
+
+    /*
+     * Setter
+     */
+
+    public void setSize(int width, int height) {
+        glfwSetWindowSize(pointer, width, height);
+    }
+
+    public void setTitle(@NotNull String title) {
+        glfwSetWindowTitle(pointer, title);
+    }
+
+    /**
+     *
+     * @param minWidth min or {@link GLFWValues#GLFW_DONT_CARE}
+     * @param minHeight min or {@link GLFWValues#GLFW_DONT_CARE}
+     * @param maxWidth max or {@link GLFWValues#GLFW_DONT_CARE}
+     * @param maxHeight max or {@link GLFWValues#GLFW_DONT_CARE}
+     */
+    public void setWindowSizeLimits(int minWidth, int minHeight, int maxWidth, int maxHeight) {
+        glfwSetWindowSizeLimits(pointer, 1, 1, maxWidth, maxHeight);
+    }
+
+    /**
+     * Set Aspect ratio in the form of {@code numerator:denominator}.
+     * @param numerator numerator or {@link GLFWValues#GLFW_DONT_CARE}
+     * @param denominator denominator or {@link GLFWValues#GLFW_DONT_CARE}
+     */
+    public void setWindowAspectRatio(int numerator, int denominator) {
+        glfwSetWindowAspectRatio(pointer, numerator, denominator);
+    }
+
+    /*
+     * Close
+     */
 
     @Override
     public void close() {

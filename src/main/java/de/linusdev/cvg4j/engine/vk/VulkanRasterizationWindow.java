@@ -18,7 +18,7 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.frame.buffer.FrameBuffers;
-import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
@@ -40,10 +40,14 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
+import de.linusdev.lutils.thread.var.SyncVar;
+import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwCreateWindowSurface;
+import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwWaitEvents;
+import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_DONT_CARE;
 import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
@@ -87,6 +91,9 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     private int currentFrame = 0;
     private int maxFramesInFlight;
 
+    private final @NotNull SyncVar<@NotNull Boolean> recreateSwapChain = new SyncVarImpl<>(false);
+    private final @NotNull SyncVar<@NotNull Boolean> minimized = new SyncVarImpl<>(false);
+
 
     public VulkanRasterizationWindow(
             @Nullable GLFWWindowHints hints,
@@ -108,10 +115,15 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         this.fenceNullHandle = allocate(new VkFence());
 
+        this.listeners().addFramebufferSizeListener((width, height) -> recreateSwapChain.set(true));
+        this.listeners().addWindowIconificationListener(minimized::set);
+        this.listeners().addWindowRefreshListener(this::render);
+
+        setWindowSizeLimits(1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
     }
 
-    public void createFrameBuffers(@NotNull RasterizationPipeline pipeline) {
-        this.frameBuffers = FrameBuffers.create(stack, vkInstance, device, swapChain, pipeline);
+    public void createFrameBuffers(@NotNull RenderPass renderPass) {
+        this.frameBuffers = FrameBuffers.create(stack, vkInstance, device, swapChain, renderPass);
     }
 
     public void init(
@@ -178,10 +190,26 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     public void update(@NotNull FrameInfo frameInfo) {
     }
 
-    @Override
-    protected void perFrameOperations() {
-
+    protected void render() {
         if(renderCommandsFunction.available()) {
+
+            // Check if window is minimized or the swapChain needs to be recreated ...
+            if(minimized.computeSynchronised(ignored -> {
+                recreateSwapChain.doSynchronised(ignored2 -> {
+                    if(recreateSwapChain.get() && !minimized.get()) {
+                        recreateSwapChain.set(false);
+                        vkInstance.vkDeviceWaitIdle(device.getVkDevice());
+                        renderCommandsFunction.recreateSwapChain(stack);
+                    }
+                });
+
+                return minimized.get();
+            })) {
+                glfwWaitEvents();
+                return;
+            }
+
+
             // Get the swap chain
             VkSwapchainKHR vkSwapChain = swapChain.getVkSwapChain();
 
@@ -194,8 +222,8 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
             // Check if we need to recreate the swap chain
             if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) {
-                renderCommandsFunction.recreateSwapChain(stack);
-                return; // cant use image anymore
+                recreateSwapChain.set(true);
+                return;
             } else {
                 result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
             }
@@ -224,14 +252,19 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
             // Check if we need to recreate the swap chain
             if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR) || result.is(VkResult.VK_SUBOPTIMAL_KHR)) {
-                renderCommandsFunction.recreateSwapChain(stack);
+                recreateSwapChain.set(true);
+                return;
             } else {
                 result.check();
             }
 
             currentFrame = (currentFrame + 1) % maxFramesInFlight;
         }
+    }
 
+    @Override
+    protected void perFrameOperations() {
+        render();
         updateListener.update0(frameInfo);
         super.perFrameOperations();
     }

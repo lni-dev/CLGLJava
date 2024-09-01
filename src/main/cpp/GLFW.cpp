@@ -262,6 +262,8 @@ static jmethodID mouseButtonCallbackMethodId = nullptr;
 static jmethodID scrollCallbackMethodId = nullptr;
 static jmethodID joystickCallbackMethodId = nullptr;
 static jmethodID dropCallbackMethodId = nullptr;
+static jmethodID refreshCallbackMethodId = nullptr;
+static jmethodID windowIconificationCallbackMethodId = nullptr;
 
 /*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
@@ -508,6 +510,50 @@ JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetDropCallback
 }
 
 /*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwSetWindowRefreshCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetWindowRefreshCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+) {
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    refreshCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "window_refresh_callback", "(J)V");
+
+    glfwSetWindowRefreshCallback(win, [](GLFWwindow* pointer) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, refreshCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer)
+        );
+    });
+}
+
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwSetWindowIconifyCallback
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetWindowIconifyCallback(
+        JNIEnv* env, jclass clazz,
+        jlong p_window
+) {
+    auto* win = reinterpret_cast<GLFWwindow*>(p_window);
+    windowIconificationCallbackMethodId = env->GetStaticMethodID(javaGLFWWindowClass, "window_iconified", "(JZ)V");
+
+    glfwSetWindowIconifyCallback(win, [](GLFWwindow* pointer, int iconified) {
+        JNIEnv* env;
+        JNI_UTILS->getEnv(&env);
+
+        env->CallStaticVoidMethod(javaGLFWWindowClass, windowIconificationCallbackMethodId,
+                                  reinterpret_cast<jlong>(pointer), iconified ? JNI_TRUE : JNI_FALSE
+        );
+    });
+}
+
+/*
  * Class:     de_linusdev_clgl_nat_glfw3_GLFW
  * Method:    _glfwGetKeyName
  * Signature: (II)Ljava/lang/String;
@@ -583,5 +629,38 @@ JNIEXPORT jint JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwCreateWindowSur
             reinterpret_cast<const VkAllocationCallbacks*>(pAllocator),
             reinterpret_cast<VkSurfaceKHR*>(pSurface)
     );
+}
+
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwWaitEvents
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwWaitEvents(JNIEnv *, jclass) {
+    glfwWaitEvents();
+}
+
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwSetWindowSizeLimits
+ * Signature: (JIIII)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetWindowSizeLimits(
+        JNIEnv *, jclass,
+        jlong pWindow, jint minWidth, jint minHeight, jint maxWidth, jint maxHeight
+) {
+    glfwSetWindowSizeLimits(reinterpret_cast<GLFWwindow*>(pWindow), minWidth, minHeight, maxWidth, maxHeight);
+}
+
+/*
+ * Class:     de_linusdev_cvg4j_nat_glfw3_GLFW
+ * Method:    glfwSetWindowAspectRatio
+ * Signature: (JII)V
+ */
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetWindowAspectRatio(
+        JNIEnv *, jclass,
+        jlong pWindow, jint numerator, jint denominator
+) {
+    glfwSetWindowAspectRatio(reinterpret_cast<GLFWwindow*>(pWindow), numerator, denominator);
 }
 

@@ -32,6 +32,8 @@ public class FrameInfoImpl implements FrameInfo {
 
     private volatile double deltaTime = 1d / 60d;
 
+    private double forceDeltaTime = 0d;
+
     public FrameInfoImpl(int averageOverFrames) {
         this.averageOverFrames = averageOverFrames;
     }
@@ -43,6 +45,15 @@ public class FrameInfoImpl implements FrameInfo {
     public void submitFrame(long millis) {
 
         deltaTime = (deltaTime + ((double) millis) / 1000d) / 2d;
+
+        if(forceDeltaTime != 0d && forceDeltaTime > deltaTime) {
+            long start = System.currentTimeMillis();
+            try {
+                Thread.sleep((long) ((forceDeltaTime - deltaTime) * 1000d));
+            } catch (InterruptedException ignored) {}
+            millis += System.currentTimeMillis() - start;
+            deltaTime = (deltaTime + ((double) millis) / 1000d) / 2d;
+        }
 
         frameMillisSum += millis;
 
@@ -58,7 +69,7 @@ public class FrameInfoImpl implements FrameInfo {
     }
 
     @Override
-    public double getFPS() {
+    public double getAverageFPS() {
         return 1000d / averageMillisBetweenFrames;
     }
 
@@ -70,6 +81,10 @@ public class FrameInfoImpl implements FrameInfo {
     @Override
     public double getAverageMillisBetweenFrames() {
         return averageMillisBetweenFrames;
+    }
+
+    public void setForceDeltaTime(double forceDeltaTime) {
+        this.forceDeltaTime = forceDeltaTime;
     }
 
     public interface UpdateListener {

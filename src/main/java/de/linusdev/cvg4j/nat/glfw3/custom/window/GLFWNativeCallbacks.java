@@ -113,4 +113,16 @@ public class GLFWNativeCallbacks {
         window.onFilesDropped(pathArray);
     }
 
+    private static void window_refresh_callback(long p_window) {
+        long id = glfwGetWindowUserPointer(p_window);
+        var window = windows.get(id);
+        window.onWindowRefresh();
+    }
+
+    private static void window_iconified(long p_window, boolean iconified) {
+        long id = glfwGetWindowUserPointer(p_window);
+        var window = windows.get(id);
+        window.onWindowIconification(iconified);
+    }
+
 }

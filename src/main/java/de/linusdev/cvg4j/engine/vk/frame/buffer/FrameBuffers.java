@@ -17,7 +17,7 @@
 package de.linusdev.cvg4j.engine.vk.frame.buffer;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
@@ -38,9 +38,9 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             @NotNull SwapChain swapChain,
-            @NotNull RasterizationPipeline pipeLine
+            @NotNull RenderPass renderPass
     ) {
-        FrameBuffers frameBuffers = new FrameBuffers(vkInstance, device, swapChain, pipeLine.getVkRenderPass());
+        FrameBuffers frameBuffers = new FrameBuffers(vkInstance, device, swapChain, renderPass.getVkRenderPass());
         frameBuffers.recreate(false, stack);
         return frameBuffers;
     }

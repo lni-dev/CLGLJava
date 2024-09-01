@@ -84,6 +84,11 @@ class VulkanEngineTest {
         }
 
         @Override
+        public void onLoad(@NotNull VulkanRasterizationWindow window) {
+            window.setWindowAspectRatio(16, 9);
+        }
+
+        @Override
         void render(
                 @NotNull Stack stack,
                 @NotNull VkInstance vkInstance,
@@ -103,7 +108,7 @@ class VulkanEngineTest {
 
             VkRenderPassBeginInfo renderPassBeginInfo = stack.push(new VkRenderPassBeginInfo());
             renderPassBeginInfo.sType.set(VkStructureType.RENDER_PASS_BEGIN_INFO);
-            renderPassBeginInfo.renderPass.set(pipeLine.getVkRenderPass());
+            renderPassBeginInfo.renderPass.set(pipeLine.getRenderPass().getVkRenderPass());
             renderPassBeginInfo.renderArea.offset.x.set(0);
             renderPassBeginInfo.renderArea.offset.y.set(0);
             renderPassBeginInfo.renderArea.extent.width.set(extend.width());

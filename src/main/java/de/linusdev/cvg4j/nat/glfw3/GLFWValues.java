@@ -22,6 +22,8 @@ public interface GLFWValues {
     int GLFW_TRUE = 1;
     int GLFW_FALSE = 0;
 
+    int GLFW_DONT_CARE = -1;
+
     /**
      *
      * @param bool boolean

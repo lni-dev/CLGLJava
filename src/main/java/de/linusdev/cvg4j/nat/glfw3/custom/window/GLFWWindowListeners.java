@@ -39,7 +39,10 @@ public class GLFWWindowListeners implements
         TextInputListener,
         KeyListener,
         MouseButtonListener,
-        JoystickListener {
+        JoystickListener,
+        WindowRefreshListener,
+        WindowIconificationListener
+{
 
     private final @NotNull GLFWWindow window;
     private final int id;
@@ -59,6 +62,8 @@ public class GLFWWindowListeners implements
     protected final @NotNull List<TextInputListener> textInputListeners;
     protected final @NotNull List<KeyListener> keyListeners;
     protected final @NotNull List<MouseButtonListener> mouseButtonListeners;
+    protected final @NotNull List<WindowRefreshListener> windowRefreshListeners;
+    protected final @NotNull List<WindowIconificationListener> windowIconificationListeners;
 
     public GLFWWindowListeners(@NotNull GLFWWindow window) {
         this.window = window;
@@ -75,6 +80,8 @@ public class GLFWWindowListeners implements
         this.textInputListeners = listenerListSupplier.supply();
         this.keyListeners = listenerListSupplier.supply();
         this.mouseButtonListeners = listenerListSupplier.supply();
+        this.windowRefreshListeners = listenerListSupplier.supply();
+        this.windowIconificationListeners = listenerListSupplier.supply();
     }
 
     @Override
@@ -134,6 +141,16 @@ public class GLFWWindowListeners implements
     @Override
     public void onTextInput(char[] chars, boolean supplementaryChar) {
         textInputListeners.forEach(textInputListener -> textInputListener.onTextInput(chars, supplementaryChar));
+    }
+
+    @Override
+    public void onWindowRefresh() {
+        windowRefreshListeners.forEach(WindowRefreshListener::onWindowRefresh);
+    }
+
+    @Override
+    public void onWindowIconification(boolean iconified) {
+        windowIconificationListeners.forEach(windowIconificationListener -> windowIconificationListener.onWindowIconification(iconified));
     }
 
     @CallFromAnyThread
@@ -254,5 +271,27 @@ public class GLFWWindowListeners implements
     @NonBlocking
     public void removeJoystickEventListener(@NotNull JoystickListener listener) {
         joystickListeners.remove(listener);
+    }
+
+    @CallFromAnyThread
+    @NonBlocking
+    public void addWindowRefreshListener(@NotNull WindowRefreshListener listener) {
+        windowRefreshListeners.add(listener);
+    }
+
+    @CallFromAnyThread
+    @NonBlocking
+    public void removeWindowRefreshListener(@NotNull WindowRefreshListener listener) {
+        windowRefreshListeners.remove(listener);
+    }
+
+    @Override
+    public void addWindowIconificationListener(@NotNull WindowIconificationListener listener) {
+        windowIconificationListeners.add(listener);
+    }
+
+    @Override
+    public void removeWindowIconificationListener(@NotNull WindowIconificationListener listener) {
+        windowIconificationListeners.remove(listener);
     }
 }

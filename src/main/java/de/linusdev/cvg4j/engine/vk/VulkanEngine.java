@@ -28,6 +28,7 @@ import de.linusdev.cvg4j.engine.vk.extension.VulkanExtensionList;
 import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.infos.SurfaceInfo;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.selector.VulkanEngineInfo;
 import de.linusdev.cvg4j.engine.vk.selector.gpu.GPUSelectionProgress;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
@@ -102,6 +103,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
      */
     private Device device;
 
+    private RenderPass renderPass;
+
     private final @NotNull SyncVar<VkScene<GAME>> currentScene = new SyncVarImpl<>(null);
 
     public VulkanEngine(
@@ -134,6 +137,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
                     VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
                     win.setSize(1200, 500);
                     pickGPU(rt, win);
+                    renderPass = RenderPass.create(rt.getStack(), vkInstance, device, swapChain);
                     return win;
                 },
                 (rt, win, fut) -> fut.complete(win, Nothing.INSTANCE, null),
@@ -153,6 +157,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
 
             // cleanup
             currentScene.consumeIfNotNull(VkScene::close);
+            renderPass.close();
             swapChain.close();
             win.close();
             device.close();
@@ -229,11 +234,11 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
 
     public TQFuture<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
         var fut = renderThreadTaskQueue.queueForExecution(LOAD_SCENE_TASK_ID, () -> {
-            scene.onLoad0(swapChain);
+            scene.onLoad0(window, swapChain);
             DirectMemoryStack64 stack = renderThread.getStack();
             assert stack.createSafePoint();
-            RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, scene.pipeline(stack));
-            window.createFrameBuffers(pipeLine);
+            RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, scene.pipeline(stack));
+            window.createFrameBuffers(renderPass);
             scene.setPipeLine(pipeLine);
             assert stack.checkSafePoint();
             return scene;

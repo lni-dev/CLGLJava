@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.glfw3.custom;
+package de.linusdev.cvg4j.nat.abi;
 
-@SuppressWarnings("unused")
-public interface FrameInfo {
 
-    /**
-     * average FPS
-     */
-    double getAverageFPS();
+import de.linusdev.lutils.nat.abi.DefaultABIs;
 
-    /**
-     * Time between the last and this frame in seconds
-     */
-    double getDeltaTime();
+public interface ABISelector {
 
-    double getAverageMillisBetweenFrames();
+    static void retrieveAndSetDefaultABI() {
+        //TODO: implement
+        DefaultABIs.setDefaultAbi(DefaultABIs.MSVC_X64);
+    }
+
 }

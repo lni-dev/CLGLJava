@@ -21,6 +21,7 @@ import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
+import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
@@ -33,9 +34,10 @@ import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public abstract class VkScene<GAME extends VulkanGame> implements Scene {
+public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapChainRecreationListener {
 
     protected final @NotNull VulkanEngine<GAME> engine;
+    protected SwapChain swapChain;
 
     protected RasterizationPipeline pipeLine;
 
@@ -52,9 +54,18 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
         this.scissors = allocate(new VkRect2D());
     }
 
-    public final void onLoad0(@NotNull SwapChain swapChain) {
+    public final void onLoad0(
+            @NotNull VulkanRasterizationWindow window,
+            @NotNull SwapChain swapChain
+    ) {
+        this.swapChain = swapChain;
         calcViewportAndScissors(swapChain);
+        swapChain.addRecreationListener(this);
+
+        onLoad(window);
     }
+
+    public abstract void onLoad(@NotNull VulkanRasterizationWindow window);
 
     protected void calcViewportAndScissors(@NotNull SwapChain swapChain) {
         viewport.x.set(0f);
@@ -68,6 +79,11 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
         scissors.offset.y.set(0);
         scissors.extent.width.set(swapChain.getExtend().width());
         scissors.extent.height.set(swapChain.getExtend().height());
+    }
+
+    @Override
+    public void swapChainExtendChanged(@NotNull Stack stack, @NotNull Extend2D newExtend) {
+        calcViewportAndScissors(swapChain);
     }
 
     abstract void render(
@@ -88,6 +104,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene {
 
     @Override
     public void close() {
+        swapChain.removeRecreationListener(this);
         if(pipeLine != null)
             pipeLine.close(); //TODO: this may require better synchronization
     }

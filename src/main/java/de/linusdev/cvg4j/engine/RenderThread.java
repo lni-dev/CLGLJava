@@ -47,6 +47,7 @@ public class RenderThread<GAME extends Game, CR, WINDOW> extends Thread {
             @NotNull TriConsumer<RenderThread<GAME, CR, WINDOW>, WINDOW, CompletableFuture<CR, Nothing, CompletableTask<CR, Nothing>>> completeCreationFuture,
             @NotNull TBiConsumer<RenderThread<GAME, CR, WINDOW>, WINDOW, Throwable> loop
     ) {
+        super("render-thread");
         this.engine = engine;
         this.windowSupplier = windowSupplier;
         this.loop = loop;

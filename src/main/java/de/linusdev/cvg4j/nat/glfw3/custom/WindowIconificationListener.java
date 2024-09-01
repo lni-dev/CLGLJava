@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat;
+package de.linusdev.cvg4j.nat.glfw3.custom;
 
+public interface WindowIconificationListener {
 
-import de.linusdev.lutils.nat.abi.DefaultABIs;
-
-public interface ABISelector {
-
-    static void retrieveAndSetDefaultABI() {
-        //TODO: implement
-        DefaultABIs.setDefaultAbi(DefaultABIs.MSVC_X64);
-    }
-
+    public void onWindowIconification(boolean iconified);
 }

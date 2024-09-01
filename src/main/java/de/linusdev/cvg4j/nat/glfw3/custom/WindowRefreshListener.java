@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,8 @@
 
 package de.linusdev.cvg4j.nat.glfw3.custom;
 
-@SuppressWarnings("unused")
-public interface FrameInfo {
+public interface WindowRefreshListener {
 
-    /**
-     * average FPS
-     */
-    double getAverageFPS();
+    void onWindowRefresh();
 
-    /**
-     * Time between the last and this frame in seconds
-     */
-    double getDeltaTime();
-
-    double getAverageMillisBetweenFrames();
 }

@@ -48,7 +48,7 @@ public class SwapChainBuilder {
     private @Nullable EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform = null;
 
     public SwapChainBuilder() {
-        LOG.logDebug("Start building VkDevice.");
+        LOG.logDebug("Start building SwapChain.");
     }
 
     public SwapChainBuilder setSurfaceFormat(
@@ -145,6 +145,6 @@ public class SwapChainBuilder {
         if(presentMode == null)
             throw new Error("presentMode is null (call set...).");
 
-        swapChain.recreate(stack, swapExtend);
+        swapChain.recreate(stack, surfaceFormat.format, surfaceFormat.colorSpace, swapExtend, surfaceTransform, presentMode);
     }
 }

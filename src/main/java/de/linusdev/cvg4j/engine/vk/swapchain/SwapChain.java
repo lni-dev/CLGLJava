@@ -33,6 +33,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSwapchainCreateInfoKHR;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
+import de.linusdev.lutils.math.vector.Vector;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.array.NativeInt32Array;
 import de.linusdev.lutils.nat.enums.EnumValue32;
@@ -66,7 +67,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
                 swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode
         );
 
-        swapChain.recreate(false, stack, null);
+        swapChain.recreate(false, stack, null, null, null, null, null);
 
         return swapChain;
     }
@@ -95,7 +96,9 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             int swapChainImageCount,
             @NotNull EnumValue32<VkFormat> format,
             @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
-            @NotNull Extend2D extend, @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform, @NotNull EnumValue32<VkPresentModeKHR> presentMode
+            @NotNull Extend2D extend,
+            @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform,
+            @NotNull EnumValue32<VkPresentModeKHR> presentMode
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
@@ -124,21 +127,56 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
 
     public void recreate(
             @NotNull Stack stack,
-            @Nullable Extend2D newExtend
+            @Nullable EnumValue32<VkFormat> newFormat,
+            @Nullable EnumValue32<VkColorSpaceKHR> newColorSpace,
+            @Nullable Extend2D newExtend,
+            @Nullable EnumValue32<VkSurfaceTransformFlagBitsKHR> newTransform,
+            @Nullable EnumValue32<VkPresentModeKHR> newPresentMode
     ) {
-        recreate(true, stack, newExtend);
+        recreate(true, stack, newFormat, newColorSpace, newExtend, newTransform, newPresentMode);
     }
 
     protected void recreate(
             boolean destroy,
             @NotNull Stack stack,
-            @Nullable Extend2D newExtend
+            @Nullable EnumValue32<VkFormat> newFormat,
+            @Nullable EnumValue32<VkColorSpaceKHR> newColorSpace,
+            @Nullable Extend2D newExtend,
+            @Nullable EnumValue32<VkSurfaceTransformFlagBitsKHR> newTransform,
+            @Nullable EnumValue32<VkPresentModeKHR> newPresentMode
     ) {
 
         if(destroy) destroyForRecreation();
 
-        if(newExtend != null) {
-            this.extend.xy(newExtend.x(), newExtend.y());
+        boolean isFormatTrulyNew = false;
+        boolean isColorSpaceTrulyNew = false;
+        boolean isExtendTrulyNew = false;
+        boolean isTransformTrulyNew = false;
+        boolean isPresentModeTrulyNew = false;
+
+        if(newFormat != null && !format.equals(newFormat)) {
+            format.set(newFormat);
+            isFormatTrulyNew = true;
+        }
+
+        if(newColorSpace != null && !colorSpace.equals(newColorSpace)) {
+            colorSpace.set(newColorSpace);
+            isColorSpaceTrulyNew = true;
+        }
+
+        if(newExtend != null && !Vector.equals(extend, newExtend)) {
+            extend.xy(newExtend.x(), newExtend.y());
+            isExtendTrulyNew = true;
+        }
+
+        if(newTransform != null && !transform.equals(newTransform)) {
+            transform.set(newTransform);
+            isTransformTrulyNew = true;
+        }
+
+        if(newPresentMode != null && !presentMode.equals(newPresentMode)) {
+            presentMode.set(newPresentMode);
+            isPresentModeTrulyNew = true;
         }
 
         VkSwapchainKHR oldSwapChain = stack.push(new VkSwapchainKHR());
@@ -225,8 +263,10 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         stack.pop(); // oldSwapChain
 
         recreationListeners.forEach(listener -> listener.swapChainRecreated(stack));
-        if(newExtend != null)
+        if(isExtendTrulyNew)
             recreationListeners.forEach(listener -> listener.swapChainExtendChanged(stack, extend));
+        if(isColorSpaceTrulyNew)
+            recreationListeners.forEach(listener -> listener.swapChainColorSpaceChanged(stack, colorSpace));
     }
 
     public @NotNull EnumValue32<VkColorSpaceKHR> getColorSpace() {

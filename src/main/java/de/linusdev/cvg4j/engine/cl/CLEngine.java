@@ -17,7 +17,7 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
-import de.linusdev.cvg4j.nat.ABISelector;
+import de.linusdev.cvg4j.nat.abi.ABISelector;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.cl.objects.Context;

@@ -273,6 +273,14 @@ public class GLFW {
             long pointer
     );
 
+    public static native void glfwSetWindowRefreshCallback(
+            long pointer
+    );
+
+    public static native void glfwSetWindowIconifyCallback(
+            long pointer
+    );
+
     /**
      * @see <a href="https://www.glfw.org/docs/3.3/group__input.html#gaeaed62e69c3bd62b7ff8f7b19913ce4f">glfw doc</a>
      */
@@ -319,5 +327,11 @@ public class GLFW {
     }
 
     public static native int glfwCreateWindowSurface(long vkInstance, long pGlfwWindow, long pAllocator, long pVkSurfaceKHR);
+
+    public static native void glfwWaitEvents();
+
+    public static native void glfwSetWindowSizeLimits(long pointer, int minWidth, int minHeight, int maxWidth, int maxHeight);
+
+    public static native void glfwSetWindowAspectRatio(long pointer, int numerator, int denominator);
 
 }
