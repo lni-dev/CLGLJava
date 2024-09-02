@@ -21,6 +21,8 @@ import de.linusdev.cvg4j.engine.RenderThread;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.device.SwapChainBuilder;
@@ -77,13 +79,21 @@ import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.unionWith;
 
-public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, AsyncManager, UpdateListener, VulkanRasterizationWindow.RenderCommandsFunction {
+public class VulkanEngine<GAME extends VulkanGame> implements
+        Engine<GAME>,
+        AsyncManager,
+        UpdateListener,
+        VulkanRasterizationWindow.RenderCommandsFunction,
+        Tickable
+{
 
     private final static @NotNull LogInstance LOG = LLog.getLogInstance();
 
     private static final int LOAD_SCENE_TASK_ID = TaskQueue.getUniqueTaskId("LOAD_SCENE");
 
     private final @NotNull GAME game;
+
+    private final @NotNull Ticker ticker;
 
     private final @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> renderThread;
     private final @NotNull TaskQueue renderThreadTaskQueue;
@@ -129,13 +139,16 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
 
         this.game = game;
 
+        this.ticker = new Ticker(this, game.getMillisPerTick());
+        ticker.start();
+
         LOG.logDebug("Creating render-thread");
         this.renderThread = new RenderThread<>(
                 this,
                 rt -> {
                     createVkInstance(rt);
                     VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
-                    win.setSize(1200, 500);
+                    win.setSize(500, 500);
                     pickGPU(rt, win);
                     renderPass = RenderPass.create(rt.getStack(), vkInstance, device, swapChain);
                     return win;
@@ -230,6 +243,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
     @Override
     public void update(@NotNull FrameInfo frameInfo) {
         renderThreadTaskQueue.runQueuedTasks();
+        VkScene<?> scene = currentScene.get();
+        if(scene != null) {
+            scene.update(frameInfo);
+        }
     }
 
     public TQFuture<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
@@ -534,4 +551,11 @@ public class VulkanEngine<GAME extends VulkanGame> implements Engine<GAME>, Asyn
     }
 
 
+    @Override
+    public void tick() {
+        VkScene<?> scene = currentScene.get();
+        if(scene != null) {
+            scene.tick();
+        }
+    }
 }

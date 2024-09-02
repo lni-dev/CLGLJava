@@ -22,8 +22,6 @@ import org.jetbrains.annotations.NotNull;
 
 public interface CLGame extends Game {
 
-    long getMillisPerTick();
-
     /**
      *
      * @param error the error caused while loading the kernels

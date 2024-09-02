@@ -16,7 +16,9 @@
 
 package de.linusdev.cvg4j.engine.vk.device;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
@@ -25,6 +27,8 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkQueue;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceQueueCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceFeatures;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceMemoryProperties;
+import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
@@ -168,6 +172,34 @@ public class Device implements AutoCloseable {
 
         this.graphicsQueueIndex = graphicsQueueIndex;
         this.presentationQueueIndex = presentationQueueIndex;
+    }
+
+    /**
+     * Find a suitable memory type.
+     * @param stack {@link Stack}
+     * @param allowedTypes Each bit of this int represents an index of memoryTypes. If Bit N is set, index N is allowed
+     *                     to be returned by this function.
+     * @param requiredPropertyFlags required {@link VkMemoryPropertyFlagBits} for the memory
+     * @return index of memory type, that is in {@code allowedTypes} and has all property flags given by {@code requiredPropertyFlags}.
+     */
+    public int findMemoryType(
+            @NotNull Stack stack,
+            int allowedTypes,
+            @NotNull IntBitfield<VkMemoryPropertyFlagBits> requiredPropertyFlags
+    ) throws EngineException {
+        VkPhysicalDeviceMemoryProperties memProps = stack.push(new VkPhysicalDeviceMemoryProperties());
+        vkInstance.vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, ref(memProps));
+
+        for (int i = 0; i < memProps.memoryTypeCount.get(); i++) {
+            if((allowedTypes & (1 << i)) > 0 && memProps.memoryTypes.getOrCreate(i).propertyFlags.isSet(requiredPropertyFlags)) {
+                stack.pop(); // memProps
+                return i;
+            }
+        }
+
+        stack.pop(); // memProps
+
+        throw new EngineException("No suitable memory type found");
     }
 
     public @NotNull VkDevice getVkDevice() {

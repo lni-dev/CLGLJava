@@ -41,6 +41,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     protected RasterizationPipeline pipeLine;
 
+
     /*
      * Managed by this class
      */

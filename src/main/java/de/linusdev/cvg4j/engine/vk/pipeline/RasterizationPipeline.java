@@ -16,6 +16,8 @@
 
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
@@ -25,7 +27,10 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCullModeFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkShaderStageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
-import de.linusdev.cvg4j.nat.vulkan.handles.*;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkPipeline;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkPipelineCache;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkPipelineLayout;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
@@ -35,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
+import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
@@ -47,7 +53,7 @@ public class RasterizationPipeline implements AutoCloseable {
             @NotNull SwapChain swapChain,
             @NotNull RenderPass renderPass,
             @NotNull RasterizationPipelineInfo info
-    ) throws IOException {
+    ) throws IOException, EngineException {
         RasterizationPipeline pipeline = new RasterizationPipeline(vkInstance, device, swapChain, renderPass);
 
         VulkanShader vertexShader = info.loadVertexShader();
@@ -72,10 +78,17 @@ public class RasterizationPipeline implements AutoCloseable {
         pipelineShaderStageCreateInfo.pName.set(stack.pushString(fragmentShader.getMainMethodName()));
 
         // Vertex input stage
+        VertexBuffer<?> vertexBuffer = info.getVertexBuffer();
+        VkVertexInputBindingDescription bufDesc = stack.push(new VkVertexInputBindingDescription());
+        vertexBuffer.createdDescriptor(bufDesc);
+        StructureArray<VkVertexInputAttributeDescription> attributeDescriptions = vertexBuffer.createAttributeDescriptors(stack::pushArray);
+
         VkPipelineVertexInputStateCreateInfo vkPipelineVertexInputStateCreateInfo = stack.push(new VkPipelineVertexInputStateCreateInfo());
         vkPipelineVertexInputStateCreateInfo.sType.set(VkStructureType.PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO);
-        vkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount.set(0);
-        vkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount.set(0);
+        vkPipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount.set(1);
+        vkPipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount.set(attributeDescriptions.length());
+        vkPipelineVertexInputStateCreateInfo.pVertexBindingDescriptions.set(bufDesc);
+        vkPipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions.set(refL(attributeDescriptions));
 
         // How to assemble vertex data to triangles stage
         VkPipelineInputAssemblyStateCreateInfo vkPipelineInputAssemblyStateCreateInfo = stack.push(new VkPipelineInputAssemblyStateCreateInfo());
@@ -196,6 +209,8 @@ public class RasterizationPipeline implements AutoCloseable {
         stack.pop(); // pipelineViewportStateCreateInfo
         stack.pop(); // vkPipelineInputAssemblyStateCreateInfo
         stack.pop(); // vkPipelineVertexInputStateCreateInfo
+        stack.pop(); // bufDesc
+        stack.pop(); // attributeDescriptions
         stack.pop(); // vertexShader.getMainMethodName()
         stack.pop(); // fragmentShader.getMainMethodName()
         stack.pop(); // shaderStages

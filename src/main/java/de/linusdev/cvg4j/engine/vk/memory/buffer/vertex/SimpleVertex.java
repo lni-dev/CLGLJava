@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.info;
+package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
 
-
-import de.linusdev.lutils.version.Version;
+import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat3;
+import de.linusdev.lutils.nat.struct.abstracts.ComplexStructure;
+import de.linusdev.lutils.nat.struct.annos.StructValue;
 import org.jetbrains.annotations.NotNull;
 
-public interface Game {
+public class SimpleVertex extends ComplexStructure {
 
-    @NotNull String name();
+    @StructValue(0)
+    public final @NotNull BBFloat3 position = BBFloat3.newUnallocated();
 
-    @NotNull Version version();
+    @StructValue(1)
+    public final @NotNull BBFloat3 color = BBFloat3.newUnallocated();
 
-    long getMillisPerTick();
-
+    public SimpleVertex() {
+        super(false);
+        init(null, true, position, color);
+    }
 }

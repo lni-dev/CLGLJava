@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.buffer.vertex;
+package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
 
 import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
 import de.linusdev.lutils.math.vector.buffer.BBVectorInfo;

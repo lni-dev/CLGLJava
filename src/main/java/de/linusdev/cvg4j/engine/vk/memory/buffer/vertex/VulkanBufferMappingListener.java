@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.info;
+package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
 
-
-import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
 
-public interface Game {
+import java.nio.ByteBuffer;
 
-    @NotNull String name();
-
-    @NotNull Version version();
-
-    long getMillisPerTick();
-
+public interface VulkanBufferMappingListener {
+    void vulkanBufferMapped(@NotNull ByteBuffer mapped);
 }
