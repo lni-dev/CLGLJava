@@ -19,10 +19,12 @@ package de.linusdev.cvg4j.engine.vk.memory.allocator;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.nat.vulkan.VkDeviceSize;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkMemoryMapFlags;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkMemoryAllocateInfo;
+import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.pointer.BBPointer64;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
@@ -43,6 +45,7 @@ public class MemoryTypeManager implements AutoCloseable {
     private final @NotNull Device device;
 
     private final int memoryTypeIndex;
+    private final @NotNull IntBitfield<VkMemoryPropertyFlagBits> memoryTypeFlags;
 
     private final List<VulkanBuffer> buffers = new ArrayList<>();
     private boolean requiresAllocation = true;
@@ -50,6 +53,7 @@ public class MemoryTypeManager implements AutoCloseable {
     private final @NotNull VkDeviceMemory vkDeviceMemory;
 
     public MemoryTypeManager(
+            @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             int memoryTypeIndex
@@ -58,6 +62,7 @@ public class MemoryTypeManager implements AutoCloseable {
         this.device = device;
         this.memoryTypeIndex = memoryTypeIndex;
         this.vkDeviceMemory = Structure.allocate(new VkDeviceMemory());
+        this.memoryTypeFlags = device.getMemoryPropFlagsOf(stack, memoryTypeIndex);
     }
 
     public void addBuffer(@NotNull VulkanBuffer buffer) {
@@ -90,40 +95,48 @@ public class MemoryTypeManager implements AutoCloseable {
         vkInstance.vkAllocateMemory(device.getVkDevice(), ref(allocInfo), ref(null), ref(vkDeviceMemory)).check();
         stack.pop(); // allocInfo
 
-        // Map memory
-        VkMemoryMapFlags flags = stack.push(new VkMemoryMapFlags());
-        BBPointer64 pointer = stack.pushPointer();
-        VkDeviceSize offset = stack.push(new VkDeviceSize());
-        VkDeviceSize vkSize = stack.push(new VkDeviceSize());
-
-        offset.set(0);
-        vkSize.set(size);
-
-        vkInstance.vkMapMemory(device.getVkDevice(), vkDeviceMemory, offset, vkSize, flags, ref(pointer)).check();
-        LOG.logDebug("Memory mapped. offset=" + offset.get() + ", size=" + vkSize.get());
-
-        long pointerToMappedMemory = pointer.get();
-
-        stack.pop(); // vkSize
-        stack.pop(); // offset
-        stack.pop(); // pointer
-        stack.pop(); // flags
-
-
-        // initialise the buffers
-        ByteBuffer mapped = BufferUtils.getByteBufferFromPointer(pointerToMappedMemory, (int) size).order(ByteOrder.nativeOrder());
-
         for (VulkanBuffer buf : buffers) {
             LOG.logDebug("Binding memory to buffer '" + buf.getDebugName() + "'. offset=" + buf.offset.get() );
             vkInstance.vkBindBufferMemory(device.getVkDevice(), buf.vkBuffer, vkDeviceMemory, buf.offset);
-            buf.mapped(mapped.slice((int) buf.getOffset().get(), buf.getSize()).order(ByteOrder.nativeOrder()));
         }
 
+        if(canBeMapped()) {
+            // Map memory
+            VkMemoryMapFlags flags = stack.push(new VkMemoryMapFlags());
+            BBPointer64 pointer = stack.pushPointer();
+            VkDeviceSize offset = stack.push(new VkDeviceSize());
+            VkDeviceSize vkSize = stack.push(new VkDeviceSize());
+
+            offset.set(0);
+            vkSize.set(size);
+
+            vkInstance.vkMapMemory(device.getVkDevice(), vkDeviceMemory, offset, vkSize, flags, ref(pointer)).check();
+            LOG.logDebug("Memory mapped. offset=" + offset.get() + ", size=" + vkSize.get());
+
+            long pointerToMappedMemory = pointer.get();
+
+            stack.pop(); // vkSize
+            stack.pop(); // offset
+            stack.pop(); // pointer
+            stack.pop(); // flags
+
+
+            // initialise the buffers
+            ByteBuffer mapped = BufferUtils.getByteBufferFromPointer(pointerToMappedMemory, (int) size).order(ByteOrder.nativeOrder());
+
+            for (VulkanBuffer buf : buffers) {
+                buf.mapped(mapped.slice((int) buf.getOffset().get(), buf.getSize()).order(ByteOrder.nativeOrder()));
+            }
+        }
 
     }
 
     public boolean doesRequireAllocation() {
         return requiresAllocation;
+    }
+
+    public boolean canBeMapped() {
+        return memoryTypeFlags.isSet(VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     }
 
     @Override

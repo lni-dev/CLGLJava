@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
+package de.linusdev.cvg4j.engine.vk.memory.buffer.index;
 
 import de.linusdev.cvg4j.engine.vk.memory.buffer.ArrayBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferArrayInput;
@@ -25,48 +25,23 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkAccessFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkPipelineStageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkVertexInputRate;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkBufferCopy;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkBufferMemoryBarrier;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkVertexInputAttributeDescription;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkVertexInputBindingDescription;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
-import de.linusdev.lutils.nat.struct.array.StructureArray;
-import de.linusdev.lutils.nat.struct.array.StructureArraySupplier;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 
-public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
-
-    private final int binding;
-    private final @NotNull VkVertexInputRate vertexInputRate;
-    private final @NotNull List<VertexElement> attributeDescriptors;
-
-    public VertexBuffer(
-            @NotNull VkInstance vkInstance,
-            @NotNull BufferArrayInput<V> input,
-            @NotNull BufferOutput output,
-            int binding,
-            @NotNull VkVertexInputRate vertexInputRate,
-            @NotNull List<VertexElement> attributeDescriptors
-    ) {
+public class IndexBuffer<I extends Structure> extends ArrayBuffer<I> {
+    public IndexBuffer(@NotNull VkInstance vkInstance, @NotNull BufferArrayInput<I> input, @NotNull BufferOutput output) {
         super(vkInstance, input, output);
-        this.binding = binding;
-        this.vertexInputRate = vertexInputRate;
-        this.attributeDescriptors = attributeDescriptors;
     }
 
     @Override
     public void bufferCopyCommand(@NotNull Stack stack, @NotNull VkCommandBuffer vkCommandBuffer) {
-
-        if(!input.getVulkanBuffer().isMapped()) return;
-
         VkPipelineStageFlags flags = stack.push(new VkPipelineStageFlags());
         flags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
         VkPipelineStageFlags flags2 = stack.push(new VkPipelineStageFlags());
@@ -74,7 +49,7 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
         VkDependencyFlags flags3 = stack.push(new VkDependencyFlags());
         VkBufferMemoryBarrier vkBufferMemoryBarrier = stack.push(new VkBufferMemoryBarrier());
         vkBufferMemoryBarrier.sType.set(VkStructureType.BUFFER_MEMORY_BARRIER);
-        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_INDEX_READ_BIT);
         vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
         vkBufferMemoryBarrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
@@ -99,7 +74,7 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
         flags2.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
         vkBufferMemoryBarrier.sType.set(VkStructureType.BUFFER_MEMORY_BARRIER);
         vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
-        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_INDEX_READ_BIT);
         vkBufferMemoryBarrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.buffer.set(getVkBuffer());
@@ -110,30 +85,5 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
         stack.pop();stack.pop();stack.pop();stack.pop(); // flags, flags2, flags3, vkBufferMemoryBarrier
 
         stack.pop();
-    }
-
-    public void createdDescriptor(@NotNull VkVertexInputBindingDescription description) {
-        description.binding.set(binding);
-        description.stride.set(output.getStride());
-        description.inputRate.set(vertexInputRate);
-    }
-
-    public StructureArray<VkVertexInputAttributeDescription> createAttributeDescriptors(
-            @NotNull StructureArraySupplier<VkVertexInputAttributeDescription> arraySupplier
-    ) {
-        StructureArray<VkVertexInputAttributeDescription> attributeDescriptions = arraySupplier.supply(
-                attributeDescriptors.size(), VkVertexInputAttributeDescription.class, VkVertexInputAttributeDescription::new
-        );
-
-        int i = 0;
-        for (VkVertexInputAttributeDescription attributeDescription : attributeDescriptions) {
-            VertexElement element = attributeDescriptors.get(i++);
-            attributeDescription.binding.set(binding);
-            attributeDescription.location.set(element.location());
-            attributeDescription.format.set(element.format());
-            attributeDescription.offset.set(element.offset());
-        }
-
-        return attributeDescriptions;
     }
 }

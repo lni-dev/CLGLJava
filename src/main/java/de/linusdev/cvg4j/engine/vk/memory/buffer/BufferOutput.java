@@ -14,12 +14,31 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
+package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
+import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
+public class BufferOutput {
 
-public interface VulkanBufferMappingListener {
-    void vulkanBufferMapped(@NotNull ByteBuffer mapped);
+    private final @NotNull VulkanBuffer vulkanBuffer;
+
+
+    private final int stride;
+
+    public BufferOutput(
+            @NotNull VulkanBuffer vulkanBuffer,
+            int stride
+    ) {
+        this.vulkanBuffer = vulkanBuffer;
+        this.stride = stride;
+    }
+
+    public int getStride() {
+        return stride;
+    }
+
+    public @NotNull VulkanBuffer getVulkanBuffer() {
+        return vulkanBuffer;
+    }
 }

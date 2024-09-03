@@ -29,6 +29,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceQueueCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceFeatures;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceMemoryProperties;
 import de.linusdev.lutils.bitfield.IntBitfield;
+import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
@@ -200,6 +201,21 @@ public class Device implements AutoCloseable {
         stack.pop(); // memProps
 
         throw new EngineException("No suitable memory type found");
+    }
+
+    public @NotNull IntBitfield<VkMemoryPropertyFlagBits> getMemoryPropFlagsOf(
+            @NotNull Stack stack, int memoryTypeIndex
+    ) {
+        VkPhysicalDeviceMemoryProperties memProps = stack.push(new VkPhysicalDeviceMemoryProperties());
+        vkInstance.vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, ref(memProps));
+
+        IntBitfieldImpl<VkMemoryPropertyFlagBits> ret = new IntBitfieldImpl<>(
+                memProps.memoryTypes.getOrCreate(memoryTypeIndex).propertyFlags.getValue()
+        );
+
+        stack.pop(); // memProps
+
+        return ret;
     }
 
     public @NotNull VkDevice getVkDevice() {

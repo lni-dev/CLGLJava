@@ -18,7 +18,7 @@ package de.linusdev.cvg4j.engine.vk.memory.allocator;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VulkanBufferMappingListener;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.VulkanBufferMappingListener;
 import de.linusdev.cvg4j.nat.vulkan.VkDeviceSize;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
@@ -61,7 +61,7 @@ public class VulkanBuffer implements AutoCloseable {
         VkMemoryRequirements memoryRequirements = stack.push(new VkMemoryRequirements());
         vkInstance.vkGetBufferMemoryRequirements(device.getVkDevice(), vulkanBuffer.vkBuffer, ref(memoryRequirements));
         int memoryTypeIndex = device.findMemoryType(stack, memoryRequirements.memoryTypeBits.get(), memFlags);
-        vulkanBuffer.memoryRequirements(memoryRequirements, memoryTypeIndex);
+        vulkanBuffer.memoryRequirements(memoryRequirements, memoryTypeIndex, memFlags);
 
         stack.pop(); // memoryRequirements
     }
@@ -73,6 +73,10 @@ public class VulkanBuffer implements AutoCloseable {
      * Information stored in this class
      */
     private final @NotNull String debugName;
+    /**
+     * Whether this device is host visible. Only host visible buffers can be mapped.
+     */
+    private boolean isHostVisible;
     /**
      * The size (amount of bytes) that was set when creating the buffer
      */
@@ -125,10 +129,15 @@ public class VulkanBuffer implements AutoCloseable {
         if(mappingListener != null) mappingListener.vulkanBufferMapped(mappedByteBuffer);
     }
 
-    void memoryRequirements(@NotNull VkMemoryRequirements memoryRequirements, int memoryTypeIndex) {
+    void memoryRequirements(
+            @NotNull VkMemoryRequirements memoryRequirements,
+            int memoryTypeIndex,
+            @NotNull IntBitfield<VkMemoryPropertyFlagBits> memFlags
+    ) {
         actualSize.set(memoryRequirements.size.get());
         requiredAlignment = memoryRequirements.alignment.get();
         this.memoryTypeIndex = memoryTypeIndex;
+        this.isHostVisible = memFlags.isSet(VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     }
 
     public int getSize() {
@@ -161,6 +170,10 @@ public class VulkanBuffer implements AutoCloseable {
 
     public @NotNull String getDebugName() {
         return debugName;
+    }
+
+    public boolean isHostVisible() {
+        return isHostVisible;
     }
 
     public void setMappingListener(@Nullable VulkanBufferMappingListener mappingListener) {

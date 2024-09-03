@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
+package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
 import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
@@ -26,14 +26,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class VertexArrayInput<V extends Structure> implements VulkanBufferMappingListener {
+public class BufferArrayInput<V extends Structure> implements VulkanBufferMappingListener {
 
     private VulkanBuffer vulkanBuffer;
     private final @NotNull StructureArray<V> backedArray;
 
-    private int currentVertexCount = 0;
+    private int currentCount = 0;
 
-    public VertexArrayInput(
+    public BufferArrayInput(
             int vertexCount,
             @NotNull Class<?> elementClass,
             @NotNull StructureArray.ElementCreator<V> elementCreator
@@ -53,16 +53,20 @@ public class VertexArrayInput<V extends Structure> implements VulkanBufferMappin
         return backedArray;
     }
 
-    public void setCurrentVertexCount(int count) {
-        this.currentVertexCount = count;
+    public void setCurrentCount(int count) {
+        this.currentCount = count;
     }
 
-    public int getCurrentVertexCount() {
-        return currentVertexCount;
+    public int getCurrentCount() {
+        return currentCount;
     }
 
     public @NotNull ArrayInfo getBackedArrayInfo() {
         return backedArray.getInfo();
+    }
+
+    public VulkanBuffer getVulkanBuffer() {
+        return vulkanBuffer;
     }
 
     @Override

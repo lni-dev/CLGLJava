@@ -18,10 +18,11 @@ package de.linusdev.cvg4j.engine.vk.memory.allocator;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexArrayInput;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferArrayInput;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferOutput;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexOutput;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkVertexInputRate;
@@ -62,7 +63,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
             @NotNull VkVertexInputRate vertexInputRate
     ) throws EngineException {
 
-        VertexArrayInput<V> vertexInput = new VertexArrayInput<>(vertexCount, elementClass, elementCreator);
+        BufferArrayInput<V> vertexInput = new BufferArrayInput<>(vertexCount, elementClass, elementCreator);
 
         ArrayInfo info = vertexInput.getBackedArrayInfo();
 
@@ -76,11 +77,102 @@ public class VulkanMemoryAllocator implements AutoCloseable {
                         VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
                 ));
 
-        add(vulkanBuffer);
+        add(stack, vulkanBuffer);
 
-        VertexOutput vertexOutput = new VertexOutput(vulkanBuffer, binding, info.getStride(), vertexInputRate, attributeDescriptors);
+        BufferOutput vertexOutput = new BufferOutput(vulkanBuffer, info.getStride());
 
-        return new VertexBuffer<>(vertexInput, vertexOutput);
+        return new VertexBuffer<>(vkInstance, vertexInput, vertexOutput, binding, vertexInputRate, attributeDescriptors);
+    }
+
+    public <V extends Structure> VertexBuffer<V> createStagedVertexBuffer(
+            @NotNull Stack stack,
+            @NotNull String debugName,
+            @NotNull Class<?> elementClass,
+            @NotNull StructureArray.ElementCreator<V> elementCreator,
+            @NotNull List<VertexElement> attributeDescriptors,
+            int vertexCount,
+            int binding,
+            @NotNull VkVertexInputRate vertexInputRate
+    ) throws EngineException {
+
+        BufferArrayInput<V> vertexInput = new BufferArrayInput<>(vertexCount, elementClass, elementCreator);
+
+        ArrayInfo info = vertexInput.getBackedArrayInfo();
+
+        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        vertexInput.setVulkanBuffer(stagingBuffer);
+
+        VulkanBuffer.create(stack, vkInstance, device, stagingBuffer,
+                new IntBitfieldImpl<>(VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_SRC_BIT),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                ));
+
+        add(stack, stagingBuffer);
+
+        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        vertexInput.setVulkanBuffer(stagingBuffer);
+
+        VulkanBuffer.create(stack, vkInstance, device, vertexBuffer,
+                new IntBitfieldImpl<>(
+                        VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                        VkBufferUsageFlagBits.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+                ),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT // device local
+                ));
+
+        add(stack, vertexBuffer);
+
+
+        BufferOutput vertexOutput = new BufferOutput(vertexBuffer, info.getStride());
+
+        return new VertexBuffer<>(vkInstance, vertexInput, vertexOutput, binding, vertexInputRate, attributeDescriptors);
+    }
+
+    public <V extends Structure> IndexBuffer<V> createStagedInstanceBuffer(
+            @NotNull Stack stack,
+            @NotNull String debugName,
+            @NotNull Class<?> elementClass,
+            @NotNull StructureArray.ElementCreator<V> elementCreator,
+            int instanceCount
+    ) throws EngineException {
+
+        BufferArrayInput<V> vertexInput = new BufferArrayInput<>(instanceCount, elementClass, elementCreator);
+
+        ArrayInfo info = vertexInput.getBackedArrayInfo();
+
+        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        vertexInput.setVulkanBuffer(stagingBuffer);
+
+        VulkanBuffer.create(stack, vkInstance, device, stagingBuffer,
+                new IntBitfieldImpl<>(VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_SRC_BIT),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                ));
+
+        add(stack, stagingBuffer);
+
+        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        vertexInput.setVulkanBuffer(stagingBuffer);
+
+        VulkanBuffer.create(stack, vkInstance, device, vertexBuffer,
+                new IntBitfieldImpl<>(
+                        VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                        VkBufferUsageFlagBits.VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+                ),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT // device local
+                ));
+
+        add(stack, vertexBuffer);
+
+
+        BufferOutput vertexOutput = new BufferOutput(vertexBuffer, info.getStride());
+
+        return new IndexBuffer<>(vkInstance, vertexInput, vertexOutput);
     }
 
     public void allocate(@NotNull Stack stack) {
@@ -89,9 +181,9 @@ public class VulkanMemoryAllocator implements AutoCloseable {
         }
     }
 
-    private void add(@NotNull VulkanBuffer buffer) {
+    private void add(@NotNull Stack stack, @NotNull VulkanBuffer buffer) {
         if(typeManagers[buffer.memoryTypeIndex] == null)
-            typeManagers[buffer.memoryTypeIndex] = new MemoryTypeManager(vkInstance, device, buffer.memoryTypeIndex);
+            typeManagers[buffer.memoryTypeIndex] = new MemoryTypeManager(stack, vkInstance, device, buffer.memoryTypeIndex);
 
         typeManagers[buffer.memoryTypeIndex].addBuffer(buffer);
     }

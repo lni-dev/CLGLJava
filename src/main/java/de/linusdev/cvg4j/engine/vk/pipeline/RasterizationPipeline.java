@@ -17,8 +17,8 @@
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
@@ -78,7 +78,8 @@ public class RasterizationPipeline implements AutoCloseable {
         pipelineShaderStageCreateInfo.pName.set(stack.pushString(fragmentShader.getMainMethodName()));
 
         // Vertex input stage
-        VertexBuffer<?> vertexBuffer = info.getVertexBuffer();
+        var buffers = info.getVertexAndIndexBuffer();
+        VertexBuffer<?> vertexBuffer = buffers.result1();
         VkVertexInputBindingDescription bufDesc = stack.push(new VkVertexInputBindingDescription());
         vertexBuffer.createdDescriptor(bufDesc);
         StructureArray<VkVertexInputAttributeDescription> attributeDescriptions = vertexBuffer.createAttributeDescriptors(stack::pushArray);
