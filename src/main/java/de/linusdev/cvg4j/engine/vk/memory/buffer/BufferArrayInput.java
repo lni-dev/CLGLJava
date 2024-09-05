@@ -16,20 +16,18 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.nat.struct.info.ArrayInfo;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class BufferArrayInput<V extends Structure> implements VulkanBufferMappingListener {
+public class BufferArrayInput<V extends Structure> extends BufferInput implements VulkanBufferMappingListener {
 
-    private VulkanBuffer vulkanBuffer;
     private final @NotNull StructureArray<V> backedArray;
+    private final int stride;
 
     private int currentCount = 0;
 
@@ -41,12 +39,11 @@ public class BufferArrayInput<V extends Structure> implements VulkanBufferMappin
         this.backedArray = StructureArray.newAllocatable(
                 false, SVWrapper.of(vertexCount, elementClass), null, elementCreator
         );
+        this.stride = getBackedArrayInfo().getStride();
     }
 
-    @ApiStatus.Internal
-    public void setVulkanBuffer(@NotNull VulkanBuffer vulkanBuffer) {
-        this.vulkanBuffer = vulkanBuffer;
-        vulkanBuffer.setMappingListener(this);
+    public int getStride() {
+        return stride;
     }
 
     public @NotNull StructureArray<V> getBackedArray() {
@@ -63,10 +60,6 @@ public class BufferArrayInput<V extends Structure> implements VulkanBufferMappin
 
     public @NotNull ArrayInfo getBackedArrayInfo() {
         return backedArray.getInfo();
-    }
-
-    public VulkanBuffer getVulkanBuffer() {
-        return vulkanBuffer;
     }
 
     @Override

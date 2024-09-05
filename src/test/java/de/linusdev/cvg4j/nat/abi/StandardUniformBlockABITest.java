@@ -63,6 +63,35 @@ class StandardUniformBlockABITest {
         ModelViewProjection mvp = ModelViewProjection.newUnAllocatedForOpenGLUniform();
         allocate(mvp);
 
+        assertEquals("ModelViewProjection (alignment=16, size=192, offsetStart=0, offsetEnd=192) {\n" +
+                "        model: float4x4 (alignment=16, size=64, offsetStart=0, offsetEnd=64) {\n" +
+                "            float4x4:\n" +
+                "            [\n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "            ]\n" +
+                "        }\n" +
+                "        view: float4x4 (alignment=16, size=64, offsetStart=64, offsetEnd=128) {\n" +
+                "            float4x4:\n" +
+                "            [\n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "            ]\n" +
+                "        }\n" +
+                "        projection: float4x4 (alignment=16, size=64, offsetStart=128, offsetEnd=192) {\n" +
+                "            float4x4:\n" +
+                "            [\n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "                   0.00        0.00        0.00        0.00 \n" +
+                "            ]\n" +
+                "        }\n" +
+                "}", mvp.toString());
         System.out.println(mvp);
         System.out.println(mvp.getInfo());
 

@@ -17,19 +17,21 @@
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
 import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-public class BufferOutput {
+public abstract class BufferInput implements VulkanBufferMappingListener {
 
-    private final @NotNull VulkanBuffer vulkanBuffer;
+    protected VulkanBuffer vulkanBuffer;
 
-    public BufferOutput(
-            @NotNull VulkanBuffer vulkanBuffer
-    ) {
+    @ApiStatus.Internal
+    public void setVulkanBuffer(@NotNull VulkanBuffer vulkanBuffer) {
         this.vulkanBuffer = vulkanBuffer;
+        vulkanBuffer.setMappingListener(this);
     }
 
-    public @NotNull VulkanBuffer getVulkanBuffer() {
+    public VulkanBuffer getVulkanBuffer() {
         return vulkanBuffer;
     }
+
 }

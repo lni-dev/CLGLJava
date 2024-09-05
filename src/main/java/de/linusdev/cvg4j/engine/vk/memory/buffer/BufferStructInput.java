@@ -16,20 +16,26 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
+import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 
-public class BufferOutput {
+import java.nio.ByteBuffer;
 
-    private final @NotNull VulkanBuffer vulkanBuffer;
+public class BufferStructInput<S extends Structure> extends BufferInput implements VulkanBufferMappingListener {
 
-    public BufferOutput(
-            @NotNull VulkanBuffer vulkanBuffer
-    ) {
-        this.vulkanBuffer = vulkanBuffer;
+    private final @NotNull S backedStruct;
+
+    public BufferStructInput(@NotNull S backedStruct) {
+        this.backedStruct = backedStruct;
     }
 
-    public @NotNull VulkanBuffer getVulkanBuffer() {
-        return vulkanBuffer;
+    @Override
+    public void vulkanBufferMapped(@NotNull ByteBuffer mapped) {
+        this.backedStruct.claimBuffer(mapped);
+    }
+
+    @NotNull
+    public S getBackedStruct() {
+        return backedStruct;
     }
 }

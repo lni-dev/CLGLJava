@@ -17,7 +17,8 @@
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.ArrayBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.lutils.result.BiResult;
@@ -31,7 +32,8 @@ public interface RasterizationPipelineInfo {
 
     @NotNull VulkanShader loadFragmentShader() throws IOException;
 
-    @NotNull
-    BiResult<VertexBuffer<?>, ArrayBuffer<?>> getVertexAndIndexBuffer() throws EngineException;
+    @NotNull BiResult<VertexBuffer<?>, IndexBuffer<?>> getVertexAndIndexBuffer() throws EngineException;
+
+    @NotNull UniformBuffer<?> getUniformBuffer();
 
 }

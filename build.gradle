@@ -136,6 +136,31 @@ def cnlTask = tasks.register('copy-native-libraries') {
 }.get()
 tasks.named("build").get().dependsOn(cnlTask)
 
+tasks.register("testWithRenderDoc", Exec.class) {
+    def javaHome = System.properties['java.home']
+
+    commandLine = [
+            "C:\\Program Files\\RenderDoc\\renderdoccmd.exe",
+            "capture",
+            "--opt-hook-children",
+            "--wait-for-exit",
+            "--working-dir",
+            ".",
+            "$javaHome/bin/java.exe",
+            "-Xmx64m",
+            "-Xms64m",
+            "-Dorg.gradle.appname=gradlew",
+            "-Dorg.gradle.java.home=$javaHome",
+            "-classpath",
+            "gradle/wrapper/gradle-wrapper.jar",
+            "org.gradle.wrapper.GradleWrapperMain",
+            ":test",
+            "--tests",
+            "\"de.linusdev.cvg4j.engine.vk.VulkanEngineTest.test\""
+    ]
+
+}
+
 dependencies {
     api 'de.linusdev:lutils:2.0.0'
     implementation 'de.linusdev:llog:1.0.2'

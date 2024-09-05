@@ -223,11 +223,12 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     @Override
     public void render(
             int currentFrameBufferImageIndex,
+            int currentFrame,
             @NotNull VkCommandBuffer commandBuffer
     ) {
         VkScene<?> scene = currentScene.get();
         if(scene != null) {
-            scene.render(renderThread.getStack(), vkInstance, swapChain.getExtend(), currentFrameBufferImageIndex, commandBuffer, window.getFrameBuffers().getFrameBuffer(currentFrameBufferImageIndex));
+            scene.render(renderThread.getStack(), vkInstance, swapChain.getExtend(), currentFrameBufferImageIndex, currentFrame, commandBuffer, window.getFrameBuffers().getFrameBuffer(currentFrameBufferImageIndex));
         }
     }
 

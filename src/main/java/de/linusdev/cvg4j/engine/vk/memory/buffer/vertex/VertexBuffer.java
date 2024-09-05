@@ -114,7 +114,7 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
 
     public void createdDescriptor(@NotNull VkVertexInputBindingDescription description) {
         description.binding.set(binding);
-        description.stride.set(output.getStride());
+        description.stride.set(input.getStride());
         description.inputRate.set(vertexInputRate);
     }
 

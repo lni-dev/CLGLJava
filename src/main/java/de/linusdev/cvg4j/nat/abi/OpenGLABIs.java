@@ -29,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 public enum OpenGLABIs implements ABI, Types {
 
     /**
+     * @see <a href="https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap15.html#interfaces-resources-layout">Vulkan spec</a>
      * @see <a href="https://registry.khronos.org/OpenGL/specs/gl/glspec46.core.pdf">OpenGL Specification</a> Section 7.6.2.2
      */
     STANDARD_UNIFORM_BLOCK_LAYOUT {

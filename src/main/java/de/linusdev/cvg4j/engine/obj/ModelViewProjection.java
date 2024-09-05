@@ -40,5 +40,7 @@ public class ModelViewProjection extends ComplexStructure {
     public ModelViewProjection(@Nullable StructValue structValue) {
         super(false);
         init(structValue, true, model, view, projection);
+
+
     }
 }

@@ -53,7 +53,7 @@ public class RasterizationPipeline implements AutoCloseable {
             @NotNull SwapChain swapChain,
             @NotNull RenderPass renderPass,
             @NotNull RasterizationPipelineInfo info
-    ) throws IOException, EngineException {
+            ) throws IOException, EngineException {
         RasterizationPipeline pipeline = new RasterizationPipeline(vkInstance, device, swapChain, renderPass);
 
         VulkanShader vertexShader = info.loadVertexShader();
@@ -121,7 +121,7 @@ public class RasterizationPipeline implements AutoCloseable {
         pipelineRasterizationStateCreateInfo.polygonMode.set(VkPolygonMode.FILL);
         pipelineRasterizationStateCreateInfo.lineWidth.set(1.0f);
         pipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT);
-        pipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.CLOCKWISE);
+        pipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.COUNTER_CLOCKWISE);
         pipelineRasterizationStateCreateInfo.depthBiasEnable.set(VulkanUtils.booleanToVkBool32(false));
 
         // Multisampling currently disabled
@@ -154,10 +154,12 @@ public class RasterizationPipeline implements AutoCloseable {
         pipelineColorBlendStateCreateInfo.pAttachments.set(colorBlending);
 
         // Create Pipeline Layout
+        var uniformBuffer = info.getUniformBuffer();
+        uniformBuffer.createDescriptorSetLayout(stack);
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = stack.push(new VkPipelineLayoutCreateInfo());
         pipelineLayoutCreateInfo.sType.set(VkStructureType.PIPELINE_LAYOUT_CREATE_INFO);
-        pipelineLayoutCreateInfo.setLayoutCount.set(0);
-        pipelineLayoutCreateInfo.pSetLayouts.set(null);
+        pipelineLayoutCreateInfo.setLayoutCount.set(1);
+        pipelineLayoutCreateInfo.pSetLayouts.set(uniformBuffer.getVkDescriptorSetLayout());
         pipelineLayoutCreateInfo.pushConstantRangeCount.set(0);
         pipelineLayoutCreateInfo.pPushConstantRanges.set(null);
 

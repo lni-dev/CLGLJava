@@ -92,6 +92,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
             @NotNull VkInstance vkInstance,
             @NotNull Extend2D extend,
             int frameBufferIndex,
+            int currentFrame,
             @NotNull VkCommandBuffer commandBuffer,
             @NotNull VkFramebuffer frameBuffer
     ) ;

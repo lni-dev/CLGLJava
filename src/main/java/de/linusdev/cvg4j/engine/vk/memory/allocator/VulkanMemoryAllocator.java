@@ -20,7 +20,9 @@ import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferArrayInput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferOutput;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferStructInput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
@@ -79,7 +81,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
 
         add(stack, vulkanBuffer);
 
-        BufferOutput vertexOutput = new BufferOutput(vulkanBuffer, info.getStride());
+        BufferOutput vertexOutput = new BufferOutput(vulkanBuffer);
 
         return new VertexBuffer<>(vkInstance, vertexInput, vertexOutput, binding, vertexInputRate, attributeDescriptors);
     }
@@ -99,7 +101,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
 
         ArrayInfo info = vertexInput.getBackedArrayInfo();
 
-        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName + "-in", info.getRequiredSize());
         vertexInput.setVulkanBuffer(stagingBuffer);
 
         VulkanBuffer.create(stack, vkInstance, device, stagingBuffer,
@@ -111,7 +113,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
 
         add(stack, stagingBuffer);
 
-        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName + "-out", info.getRequiredSize());
         vertexInput.setVulkanBuffer(stagingBuffer);
 
         VulkanBuffer.create(stack, vkInstance, device, vertexBuffer,
@@ -126,7 +128,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
         add(stack, vertexBuffer);
 
 
-        BufferOutput vertexOutput = new BufferOutput(vertexBuffer, info.getStride());
+        BufferOutput vertexOutput = new BufferOutput(vertexBuffer);
 
         return new VertexBuffer<>(vkInstance, vertexInput, vertexOutput, binding, vertexInputRate, attributeDescriptors);
     }
@@ -143,7 +145,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
 
         ArrayInfo info = vertexInput.getBackedArrayInfo();
 
-        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName + "-in", info.getRequiredSize());
         vertexInput.setVulkanBuffer(stagingBuffer);
 
         VulkanBuffer.create(stack, vkInstance, device, stagingBuffer,
@@ -155,7 +157,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
 
         add(stack, stagingBuffer);
 
-        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName, info.getRequiredSize());
+        VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName + "-out", info.getRequiredSize());
         vertexInput.setVulkanBuffer(stagingBuffer);
 
         VulkanBuffer.create(stack, vkInstance, device, vertexBuffer,
@@ -170,9 +172,44 @@ public class VulkanMemoryAllocator implements AutoCloseable {
         add(stack, vertexBuffer);
 
 
-        BufferOutput vertexOutput = new BufferOutput(vertexBuffer, info.getStride());
+        BufferOutput vertexOutput = new BufferOutput(vertexBuffer);
 
         return new IndexBuffer<>(vkInstance, vertexInput, vertexOutput);
+    }
+
+    public <S extends Structure> UniformBuffer<S> createUniformBuffer(
+            @NotNull Stack stack,
+            @NotNull String debugName,
+            @NotNull StructureArray.ElementCreator<S> structCreator,
+            int dupeCount,
+            int binding
+    ) throws EngineException {
+
+        BufferStructInput<S>[] inputs = new BufferStructInput[dupeCount];
+        BufferOutput[] outputs = new BufferOutput[dupeCount];
+
+
+        for (int i = 0; i < dupeCount; i++) {
+            S struct = structCreator.create();
+
+            inputs[i] = new BufferStructInput<>(struct);
+
+            VulkanBuffer vulkanBuffer = new VulkanBuffer(vkInstance, device, debugName + "[" + i + "]", struct.getRequiredSize());
+            inputs[i].setVulkanBuffer(vulkanBuffer);
+
+            VulkanBuffer.create(stack, vkInstance, device, vulkanBuffer,
+                    new IntBitfieldImpl<>(VkBufferUsageFlagBits.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT),
+                    new IntBitfieldImpl<>(
+                            VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
+                            VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                    ));
+
+            add(stack, vulkanBuffer);
+
+            outputs[i] = new BufferOutput(vulkanBuffer);
+        }
+
+        return new UniformBuffer<>(vkInstance, device, binding, inputs, outputs);
     }
 
     public void allocate(@NotNull Stack stack) {

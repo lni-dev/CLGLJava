@@ -234,7 +234,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
             vkInstance.vkResetCommandBuffer(commandPool.getVkCommandBuffer(currentFrame), commandBufferResetFlags);
 
             // fill command buffer
-            renderCommandsFunction.render(currentImageIndex.get(), commandPool.getVkCommandBuffer(currentFrame));
+            renderCommandsFunction.render(currentImageIndex.get(), currentFrame, commandPool.getVkCommandBuffer(currentFrame));
 
             // submit
             submitInfo.pCommandBuffers.set(commandPool.getVkCommandBuffer(currentFrame));
@@ -314,6 +314,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         void render(
                 int currentFrameBufferImageIndex,
+                int currentFrame,
                 @NotNull VkCommandBuffer commandBuffer
         );
 

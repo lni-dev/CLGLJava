@@ -33,3 +33,5 @@ enable closing of a struct e.g. setting its bytebuf to null
 As described in the bottom of https://vulkan-tutorial.com/Vertex_buffers/Staging_buffer.
 It is bad to allocate memory for every buffer individually. Instead, allocate one buffer for all
 buffers with the same memory type and use the offset when binding the memory to the buffers.
+Even use a single VkBuffer!
+https://developer.nvidia.com/vulkan-memory-management

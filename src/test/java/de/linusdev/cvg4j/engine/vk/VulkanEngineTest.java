@@ -18,11 +18,12 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
+import de.linusdev.cvg4j.engine.obj.ModelViewProjection;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanMemoryAllocator;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.ArrayBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.SimpleVertex;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
@@ -39,7 +40,12 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkClearValue;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferBeginInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkRenderPassBeginInfo;
 import de.linusdev.lutils.math.VMath;
+import de.linusdev.lutils.math.matrix.abstracts.floatn.Float4x4;
+import de.linusdev.lutils.math.matrix.array.floatn.ABFloat4x4;
+import de.linusdev.lutils.math.special.CameraMatrix;
+import de.linusdev.lutils.math.vector.abstracts.floatn.Float4;
 import de.linusdev.lutils.math.vector.array.floatn.ABFloat3;
+import de.linusdev.lutils.math.vector.array.floatn.ABFloat4;
 import de.linusdev.lutils.math.vector.buffer.shortn.BBUShort1;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
@@ -93,10 +99,14 @@ class VulkanEngineTest {
 
     static class TestScene extends VkScene<TestGame> {
 
+        protected final long startTime = System.currentTimeMillis();
+
         protected VulkanMemoryAllocator vulkanMemoryAllocator;
         protected VertexBuffer<SimpleVertex> vertexBuffer;
         protected IndexBuffer<BBUShort1> indexBuffer;
         protected StructureArray<SimpleVertex> vertexBufferAsArray;
+
+        protected UniformBuffer<ModelViewProjection> uniformBuffer;
 
         public TestScene(@NotNull VulkanEngine<TestGame> engine) {
             super(engine);
@@ -107,15 +117,57 @@ class VulkanEngineTest {
             window.setWindowAspectRatio(1, 1);
         }
 
+        public void updateUniformBuffer(int index) {
+            ModelViewProjection mvp = uniformBuffer.getInput(index).getBackedStruct();
+
+            double secondsPast = (System.currentTimeMillis() - startTime) / 1000d;
+            mvp.model.put(3,3, 1f);
+            VMath.diagonalMatrix(1f, true, mvp.model);
+            VMath.rotationMatrix((float) (secondsPast * 1.57f), VMath.normalize(new ABFloat3(0f,0,1), new ABFloat3()),mvp.model);
+
+            CameraMatrix cam = new CameraMatrix(new ABFloat4x4(), mvp.view);
+            cam.position().xyz(2, 2, 2);
+            cam.lookAt(new ABFloat3(0, 0, 0));
+            cam.calculateViewMatrix();
+
+
+            VMath.projectionMatrix(
+                    (float) swapChain.getExtend().width() / swapChain.getExtend().height(),
+                    4f, 4f,
+                    .01f, 10f,
+                    true, 1.3f, mvp.projection
+            );
+
+            // calcVerticesOnCPU(mvp.model, mvp.view, mvp.projection);
+        }
+        
+        private void calcVerticesOnCPU(Float4x4 model, Float4x4 view, Float4x4 proj) {
+            Float4 result = new ABFloat4();
+
+            int i = 0;
+            for (SimpleVertex vertex : vertexBufferAsArray) {
+                ABFloat4 pos = new ABFloat4(1, 1, 1, 1);
+                pos.xyz(vertex.position);
+                VMath.multiply(model, pos, result);
+                VMath.multiply(view, result, result);
+                VMath.multiply(proj, result, result);
+
+                System.out.println("verex[" + i++ +"]: " + result);
+            }
+        }
+
         @Override
         void render(
                 @NotNull Stack stack,
                 @NotNull VkInstance vkInstance,
                 @NotNull Extend2D extend,
                 int frameBufferIndex,
+                int currentFrame,
                 @NotNull VkCommandBuffer commandBuffer,
                 @NotNull VkFramebuffer frameBuffer
         ) {
+            updateUniformBuffer(currentFrame);
+
             VkCommandBufferBeginInfo commandBufferBeginInfo = stack.push(new VkCommandBufferBeginInfo());
             commandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
 
@@ -147,6 +199,7 @@ class VulkanEngineTest {
             vkInstance.vkCmdBindIndexBuffer(commandBuffer, indexBuffer.getVkBuffer(), indexBuffer.getOffset(), VkIndexType.UINT16);
             vkInstance.vkCmdSetViewport(commandBuffer, 0, 1, ref(viewport));
             vkInstance.vkCmdSetScissor(commandBuffer, 0, 1, ref(scissors));
+            uniformBuffer.bindCommand(stack, commandBuffer, pipeLine, currentFrame);
             vkInstance.vkCmdDrawIndexed(commandBuffer, indexBuffer.getCurrentCount(), 1, 0, 0, 0);
             vkInstance.vkCmdEndRenderPass(commandBuffer);
             vkInstance.vkEndCommandBuffer(commandBuffer).check();
@@ -165,7 +218,7 @@ class VulkanEngineTest {
                     return VulkanShader.createFromSpirVBinaryStream(
                             stack,
                             engine,
-                            Objects.requireNonNull(this.getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest2.vert.spv")),
+                            Objects.requireNonNull(this.getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest3.vert.spv")),
                             "main",
                             Structure.allocate(new VkShaderModule())
                     );
@@ -176,69 +229,134 @@ class VulkanEngineTest {
                     return VulkanShader.createFromSpirVBinaryStream(
                             stack,
                             engine,
-                            Objects.requireNonNull(this.getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest2.frag.spv")),
+                            Objects.requireNonNull(this.getClass().getResourceAsStream("/de/linusdev/cvg4j/vulkan/shaders/vulkanTest3.frag.spv")),
                             "main",
                             Structure.allocate(new VkShaderModule())
                     );
                 }
 
                 @Override
-                public @NotNull BiResult<VertexBuffer<?>, ArrayBuffer<?>> getVertexAndIndexBuffer() throws EngineException {
+                public @NotNull BiResult<VertexBuffer<?>, IndexBuffer<?>> getVertexAndIndexBuffer() throws EngineException {
 
                     vulkanMemoryAllocator = new VulkanMemoryAllocator(engine.getVkInstance(), engine.getDevice());
                     vertexBuffer = vulkanMemoryAllocator.createStagedVertexBuffer(
                             stack, "vertex-buffer-1", SimpleVertex.class, SimpleVertex::new,
                             VertexElement.ofComplexInfo(new SimpleVertex().getInfo()),
-                            4, 0, VkVertexInputRate.VERTEX
+                            8, 0, VkVertexInputRate.VERTEX
                     );
 
                     indexBuffer = vulkanMemoryAllocator.createStagedInstanceBuffer(
                             stack, "index-buffer-1", BBUShort1.class, () -> BBUShort1.newAllocatable(null),
-                            6
+                            36
                     );
+
+
+                    uniformBuffer = vulkanMemoryAllocator.createUniformBuffer(stack, "uniform-buf", ModelViewProjection::newUnAllocatedForOpenGLUniform, 2, 0);
 
                     vulkanMemoryAllocator.allocate(stack);
 
                     vertexBufferAsArray = vertexBuffer.getInput().getBackedArray();
 
-                    vertexBufferAsArray.getOrCreate(0).position.xyz(-0.5f, -0.5f,0f);
+                    vertexBufferAsArray.getOrCreate(0).position.xyz(-.5f, -.5f,-.5f);
+                    vertexBufferAsArray.getOrCreate(1).position.xyz(0.5f, -.5f,-.5f);
+                    vertexBufferAsArray.getOrCreate(2).position.xyz(-.5f, -.5f,0.5f);
+                    vertexBufferAsArray.getOrCreate(3).position.xyz(0.5f, -.5f,0.5f);
+
+                    vertexBufferAsArray.getOrCreate(4).position.xyz(-.5f, 0.5f,-.5f);
+                    vertexBufferAsArray.getOrCreate(5).position.xyz(0.5f, 0.5f,-.5f);
+                    vertexBufferAsArray.getOrCreate(6).position.xyz(-.5f, 0.5f,0.5f);
+                    vertexBufferAsArray.getOrCreate(7).position.xyz(0.5f, 0.5f,0.5f);
+
                     vertexBufferAsArray.getOrCreate(0).color.xyz(0.5f, 0.5f,0.5f);
-
-                    vertexBufferAsArray.getOrCreate(1).position.xyz(0.5f, -0.5f,0f);
                     vertexBufferAsArray.getOrCreate(1).color.xyz(0f, 1f,0f);
-
-                    vertexBufferAsArray.getOrCreate(2).position.xyz(0.5f, 0.5f,0f);
                     vertexBufferAsArray.getOrCreate(2).color.xyz(0f, 0f,1f);
-
-                    vertexBufferAsArray.getOrCreate(3).position.xyz(-0.5f, 0.5f,0f);
                     vertexBufferAsArray.getOrCreate(3).color.xyz(1f, 0f,0.6f);
 
-                    vertexBuffer.getInput().setCurrentCount(4);
+                    vertexBufferAsArray.getOrCreate(4).color.xyz(0.5f, 0.5f,0.5f);
+                    vertexBufferAsArray.getOrCreate(5).color.xyz(0f, 1f,0f);
+                    vertexBufferAsArray.getOrCreate(6).color.xyz(0f, 0f,1f);
+                    vertexBufferAsArray.getOrCreate(7).color.xyz(1f, 0f,0.6f);
+
+                    vertexBuffer.getInput().setCurrentCount(8);
 
                     var indexBufferArray = indexBuffer.getInput().getBackedArray();
 
+                    // Bottom
                     indexBufferArray.getOrCreate(0).set((short) 0);
                     indexBufferArray.getOrCreate(1).set((short) 1);
                     indexBufferArray.getOrCreate(2).set((short) 2);
-                    indexBufferArray.getOrCreate(3).set((short) 2);
-                    indexBufferArray.getOrCreate(4).set((short) 3);
-                    indexBufferArray.getOrCreate(5).set((short) 0);
-                    indexBuffer.getInput().setCurrentCount(6);
+
+                    indexBufferArray.getOrCreate(3).set((short) 0);
+                    indexBufferArray.getOrCreate(4).set((short) 1);
+                    indexBufferArray.getOrCreate(5).set((short) 3);
+
+                    // Top
+                    indexBufferArray.getOrCreate(6).set((short) 4);
+                    indexBufferArray.getOrCreate(7).set((short) 5);
+                    indexBufferArray.getOrCreate(8).set((short) 6);
+
+                    indexBufferArray.getOrCreate(9).set((short) 4);
+                    indexBufferArray.getOrCreate(10).set((short) 5);
+                    indexBufferArray.getOrCreate(11).set((short) 7);
+
+                    // X
+                    indexBufferArray.getOrCreate(12).set((short) 1);
+                    indexBufferArray.getOrCreate(13).set((short) 3);
+                    indexBufferArray.getOrCreate(14).set((short) 5);
+
+                    indexBufferArray.getOrCreate(15).set((short) 1);
+                    indexBufferArray.getOrCreate(16).set((short) 3);
+                    indexBufferArray.getOrCreate(17).set((short) 7);
+
+                    // -X
+                    indexBufferArray.getOrCreate(18).set((short) 0);
+                    indexBufferArray.getOrCreate(19).set((short) 2);
+                    indexBufferArray.getOrCreate(20).set((short) 4);
+
+                    indexBufferArray.getOrCreate(21).set((short) 0);
+                    indexBufferArray.getOrCreate(22).set((short) 2);
+                    indexBufferArray.getOrCreate(23).set((short) 6);
+
+                    // Z
+                    indexBufferArray.getOrCreate(24).set((short) 2);
+                    indexBufferArray.getOrCreate(25).set((short) 3);
+                    indexBufferArray.getOrCreate(26).set((short) 6);
+
+                    indexBufferArray.getOrCreate(27).set((short) 2);
+                    indexBufferArray.getOrCreate(28).set((short) 3);
+                    indexBufferArray.getOrCreate(29).set((short) 7);
+
+                    // -Z: Done
+                    indexBufferArray.getOrCreate(30).set((short) 1);
+                    indexBufferArray.getOrCreate(31).set((short) 0);
+                    indexBufferArray.getOrCreate(32).set((short) 4);
+
+                    indexBufferArray.getOrCreate(33).set((short) 1);
+                    indexBufferArray.getOrCreate(34).set((short) 4);
+                    indexBufferArray.getOrCreate(35).set((short) 5);
+
+                    indexBuffer.getInput().setCurrentCount(36);
 
                     return new BiResult<>(vertexBuffer, indexBuffer);
+                }
+
+                @Override
+                public @NotNull UniformBuffer<?> getUniformBuffer() {
+                    return uniformBuffer;
                 }
             };
         }
 
         @Override
         public void tick() {
-            float factor = 0.01f;
+            if(true) return;
+            float factor = 0.61f;
             for (SimpleVertex simpleVertex : vertexBufferAsArray) {
-                VMath.add(
-                        simpleVertex.color,
-                        new ABFloat3((float) ((Math.random() - 0.5f) * factor), (float) ((Math.random() - 0.5f) * factor), (float) ((Math.random() - 0.5f) * factor)),
-                        simpleVertex.color
-                );
+//                VMath.add(
+//                        simpleVertex.color,
+//                        new ABFloat3((float) ((Math.random() - 0.5f) * factor), (float) ((Math.random() - 0.5f) * factor), (float) ((Math.random() - 0.5f) * factor)),
+//                        simpleVertex.color
+//                );
 
                 VMath.add(
                         simpleVertex.position,
@@ -255,6 +373,7 @@ class VulkanEngineTest {
 
         @Override
         public void close() {
+            uniformBuffer.close();
             vulkanMemoryAllocator.close();
             super.close();
         }

@@ -28,6 +28,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceQueueCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceFeatures;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceMemoryProperties;
+import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
@@ -106,6 +107,9 @@ public class Device implements AutoCloseable {
 
         // Device features
         VkPhysicalDeviceFeatures features = stack.push(new VkPhysicalDeviceFeatures());
+
+        //TODO: add this as game requirements!
+        features.geometryShader.set(VulkanUtils.booleanToVkBool32(true));
 
         // Device Create Info
         VkDeviceCreateInfo deviceCreateInfo = stack.push(new VkDeviceCreateInfo());
