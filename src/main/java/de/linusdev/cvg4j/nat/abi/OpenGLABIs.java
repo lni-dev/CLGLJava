@@ -55,7 +55,11 @@ public enum OpenGLABIs implements ABI, Types {
 
         @Override
         public @NotNull StructureInfo calculateStructureLayout(boolean compress, @NotNull MemorySizeable @NotNull ... children) {
+
+            // Spec: An array or structure type has an extended alignment equal to the largest extended alignment of any of its members, rounded up to a multiple of 16.
             int alignment = getBiggestStructAlignment(16, Integer.MAX_VALUE, children);
+            if(alignment % 16 != 0) alignment += 16 - (alignment % 16);
+
             int[] sizes = new int[children.length * 2 + 1];
             int padding;
             int position = 0;
@@ -96,7 +100,7 @@ public enum OpenGLABIs implements ABI, Types {
         @Override
         public @NotNull ArrayInfo calculateArrayLayout(boolean compress, @NotNull MemorySizeable children, int length, int stride) {
             int alignment = children.getAlignment();
-            // base alignment in an array is at least that of a vec4.
+            // Spec: An array or structure type has an extended alignment equal to the largest extended alignment of any of its members, rounded up to a multiple of 16.
             // All data types are either 4 byte (bool, int, float) or 8 byte (double).
             // The alignment of a struct is at least 16 byte.
             // This means if the child-alignment is 4 we definitely have a scalar type (bool, int, float) -> array alignment is 16.
@@ -104,7 +108,7 @@ public enum OpenGLABIs implements ABI, Types {
             // which would result in an alignment of 16 and 32 respectively. This is bad, we cant differ between those too
             // here.
             // So let's assume no doubles for now!
-            alignment = Math.max(16, alignment);
+            if(alignment % 16 != 0) alignment += 16 - (alignment % 16);
 
             if (stride == -1) {
                 stride = children.getRequiredSize();
@@ -152,24 +156,17 @@ public enum OpenGLABIs implements ABI, Types {
 
         @Override
         public @NotNull ArrayInfo calculateMatrixLayout(@NotNull NativeType componentType, int width, int height) {
-
-            ArrayInfo vectorInfo = calculateVectorLayout(componentType, width);
-
-            ArrayInfo matrixInfo = calculateArrayLayout(false, vectorInfo, height, -1);
+            if(componentType != NativeType.FLOAT32 || width != 4 || height != 4)
+                throw new UnsupportedOperationException("Currently only float4x4 matrices are supported.");
 
             return new ArrayInfo(
-                    matrixInfo.getAlignment(),
-                    matrixInfo.isCompressed(),
-                    matrixInfo.getRequiredSize(),
-                    matrixInfo.getSizes(),
-                    matrixInfo.getLength(),
-                    matrixInfo.getStride(),
-                    index -> {
-                        int y = index / width;
-                        int x = index - (y * width);
-
-                        return matrixInfo.getPositions().position(y) + vectorInfo.getPositions().position(x);
-                    }
+                    16,
+                    false,
+                    64,
+                    new int[]{0, 64, 0},
+                    16,
+                    4,
+                    index -> index * 4
             );
         }
 

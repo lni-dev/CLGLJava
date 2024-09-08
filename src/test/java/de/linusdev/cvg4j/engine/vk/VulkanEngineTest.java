@@ -27,6 +27,7 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.SimpleVertex;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
+import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
@@ -39,6 +40,9 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkShaderModule;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkClearValue;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferBeginInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkRenderPassBeginInfo;
+import de.linusdev.lutils.image.Image;
+import de.linusdev.lutils.image.buffer.BufferBackedRGBAImage;
+import de.linusdev.lutils.image.png.reader.PNGReader;
 import de.linusdev.lutils.math.VMath;
 import de.linusdev.lutils.math.matrix.abstracts.floatn.Float4x4;
 import de.linusdev.lutils.math.matrix.array.floatn.ABFloat4x4;
@@ -113,8 +117,134 @@ class VulkanEngineTest {
         }
 
         @Override
-        public void onLoad(@NotNull VulkanRasterizationWindow window) {
+        public void onLoad(@NotNull Stack stack, @NotNull VulkanRasterizationWindow window) throws EngineException {
             window.setWindowAspectRatio(1, 1);
+
+            vulkanMemoryAllocator = new VulkanMemoryAllocator(engine.getVkInstance(), engine.getDevice());
+            vertexBuffer = vulkanMemoryAllocator.createStagedVertexBuffer(
+                    stack, "vertex-buffer-1", SimpleVertex.class, SimpleVertex::new,
+                    VertexElement.ofComplexInfo(new SimpleVertex().getInfo()),
+                    8, 0, VkVertexInputRate.VERTEX
+            );
+
+            indexBuffer = vulkanMemoryAllocator.createStagedInstanceBuffer(
+                    stack, "index-buffer-1", BBUShort1.class, () -> BBUShort1.newAllocatable(null),
+                    36
+            );
+
+
+            uniformBuffer = vulkanMemoryAllocator.createUniformBuffer(stack, "uniform-buf", ModelViewProjection::newUnAllocatedForOpenGLUniform, 2, 0);
+
+            Image grassSide = loadGrassSide();
+            Sampler2D<BufferBackedRGBAImage> grassSideSample = vulkanMemoryAllocator.createStagedSampler(
+                    stack, "grass-texture", grassSide
+            );
+
+            vulkanMemoryAllocator.allocate(stack);
+
+            vertexBufferAsArray = vertexBuffer.getInput().getBackedArray();
+
+            vertexBufferAsArray.getOrCreate(0).position.xyz(-.5f, -.5f,-.5f);
+            vertexBufferAsArray.getOrCreate(1).position.xyz(0.5f, -.5f,-.5f);
+            vertexBufferAsArray.getOrCreate(2).position.xyz(-.5f, -.5f,0.5f);
+            vertexBufferAsArray.getOrCreate(3).position.xyz(0.5f, -.5f,0.5f);
+
+            vertexBufferAsArray.getOrCreate(4).position.xyz(-.5f, 0.5f,-.5f);
+            vertexBufferAsArray.getOrCreate(5).position.xyz(0.5f, 0.5f,-.5f);
+            vertexBufferAsArray.getOrCreate(6).position.xyz(-.5f, 0.5f,0.5f);
+            vertexBufferAsArray.getOrCreate(7).position.xyz(0.5f, 0.5f,0.5f);
+
+            vertexBufferAsArray.getOrCreate(0).color.xyz(0.5f, 0.5f,0.5f);
+            vertexBufferAsArray.getOrCreate(1).color.xyz(0f, 1f,0f);
+            vertexBufferAsArray.getOrCreate(2).color.xyz(0f, 0f,1f);
+            vertexBufferAsArray.getOrCreate(3).color.xyz(1f, 0f,0.6f);
+
+            vertexBufferAsArray.getOrCreate(4).color.xyz(0.5f, 0.5f,0.5f);
+            vertexBufferAsArray.getOrCreate(5).color.xyz(0f, 1f,0f);
+            vertexBufferAsArray.getOrCreate(6).color.xyz(0f, 0f,1f);
+            vertexBufferAsArray.getOrCreate(7).color.xyz(1f, 0f,0.6f);
+
+            vertexBuffer.getInput().setCurrentCount(8);
+
+            var indexBufferArray = indexBuffer.getInput().getBackedArray();
+
+            // Bottom
+            indexBufferArray.getOrCreate(0).set((short) 0);
+            indexBufferArray.getOrCreate(1).set((short) 1);
+            indexBufferArray.getOrCreate(2).set((short) 2);
+
+            indexBufferArray.getOrCreate(3).set((short) 0);
+            indexBufferArray.getOrCreate(4).set((short) 1);
+            indexBufferArray.getOrCreate(5).set((short) 3);
+
+            // Top
+            indexBufferArray.getOrCreate(6).set((short) 4);
+            indexBufferArray.getOrCreate(7).set((short) 5);
+            indexBufferArray.getOrCreate(8).set((short) 6);
+
+            indexBufferArray.getOrCreate(9).set((short) 4);
+            indexBufferArray.getOrCreate(10).set((short) 5);
+            indexBufferArray.getOrCreate(11).set((short) 7);
+
+            // X
+            indexBufferArray.getOrCreate(12).set((short) 1);
+            indexBufferArray.getOrCreate(13).set((short) 3);
+            indexBufferArray.getOrCreate(14).set((short) 5);
+
+            indexBufferArray.getOrCreate(15).set((short) 1);
+            indexBufferArray.getOrCreate(16).set((short) 3);
+            indexBufferArray.getOrCreate(17).set((short) 7);
+
+            // -X
+            indexBufferArray.getOrCreate(18).set((short) 0);
+            indexBufferArray.getOrCreate(19).set((short) 2);
+            indexBufferArray.getOrCreate(20).set((short) 4);
+
+            indexBufferArray.getOrCreate(21).set((short) 0);
+            indexBufferArray.getOrCreate(22).set((short) 2);
+            indexBufferArray.getOrCreate(23).set((short) 6);
+
+            // Z
+            indexBufferArray.getOrCreate(24).set((short) 2);
+            indexBufferArray.getOrCreate(25).set((short) 3);
+            indexBufferArray.getOrCreate(26).set((short) 6);
+
+            indexBufferArray.getOrCreate(27).set((short) 2);
+            indexBufferArray.getOrCreate(28).set((short) 3);
+            indexBufferArray.getOrCreate(29).set((short) 7);
+
+            // -Z: Done
+            indexBufferArray.getOrCreate(30).set((short) 1);
+            indexBufferArray.getOrCreate(31).set((short) 0);
+            indexBufferArray.getOrCreate(32).set((short) 4);
+
+            indexBufferArray.getOrCreate(33).set((short) 1);
+            indexBufferArray.getOrCreate(34).set((short) 4);
+            indexBufferArray.getOrCreate(35).set((short) 5);
+
+            indexBuffer.getInput().setCurrentCount(36);
+
+
+            Image.copy(grassSide, grassSideSample.getInput().getBackedStruct());
+            var samplerFuture = engine.getTransientCommandPool().submitSingleTimeCommand(stack, buf -> {
+                grassSideSample.getOutput().getImage().transitionLayoutCommand(stack, buf, VkImageLayout.TRANSFER_DST_OPTIMAL);
+                grassSideSample.bufferCopyCommand(stack, buf);
+                grassSideSample.getOutput().getImage().transitionLayoutCommand(stack, buf, VkImageLayout.SHADER_READ_ONLY_OPTIMAL);
+            });
+
+            try {
+                samplerFuture.getResult();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public @NotNull Image loadGrassSide() {
+            try {
+                return PNGReader.readFromResource("textures/grass/grass_side.png");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         public void updateUniformBuffer(int index) {
@@ -237,106 +367,6 @@ class VulkanEngineTest {
 
                 @Override
                 public @NotNull BiResult<VertexBuffer<?>, IndexBuffer<?>> getVertexAndIndexBuffer() throws EngineException {
-
-                    vulkanMemoryAllocator = new VulkanMemoryAllocator(engine.getVkInstance(), engine.getDevice());
-                    vertexBuffer = vulkanMemoryAllocator.createStagedVertexBuffer(
-                            stack, "vertex-buffer-1", SimpleVertex.class, SimpleVertex::new,
-                            VertexElement.ofComplexInfo(new SimpleVertex().getInfo()),
-                            8, 0, VkVertexInputRate.VERTEX
-                    );
-
-                    indexBuffer = vulkanMemoryAllocator.createStagedInstanceBuffer(
-                            stack, "index-buffer-1", BBUShort1.class, () -> BBUShort1.newAllocatable(null),
-                            36
-                    );
-
-
-                    uniformBuffer = vulkanMemoryAllocator.createUniformBuffer(stack, "uniform-buf", ModelViewProjection::newUnAllocatedForOpenGLUniform, 2, 0);
-
-                    vulkanMemoryAllocator.allocate(stack);
-
-                    vertexBufferAsArray = vertexBuffer.getInput().getBackedArray();
-
-                    vertexBufferAsArray.getOrCreate(0).position.xyz(-.5f, -.5f,-.5f);
-                    vertexBufferAsArray.getOrCreate(1).position.xyz(0.5f, -.5f,-.5f);
-                    vertexBufferAsArray.getOrCreate(2).position.xyz(-.5f, -.5f,0.5f);
-                    vertexBufferAsArray.getOrCreate(3).position.xyz(0.5f, -.5f,0.5f);
-
-                    vertexBufferAsArray.getOrCreate(4).position.xyz(-.5f, 0.5f,-.5f);
-                    vertexBufferAsArray.getOrCreate(5).position.xyz(0.5f, 0.5f,-.5f);
-                    vertexBufferAsArray.getOrCreate(6).position.xyz(-.5f, 0.5f,0.5f);
-                    vertexBufferAsArray.getOrCreate(7).position.xyz(0.5f, 0.5f,0.5f);
-
-                    vertexBufferAsArray.getOrCreate(0).color.xyz(0.5f, 0.5f,0.5f);
-                    vertexBufferAsArray.getOrCreate(1).color.xyz(0f, 1f,0f);
-                    vertexBufferAsArray.getOrCreate(2).color.xyz(0f, 0f,1f);
-                    vertexBufferAsArray.getOrCreate(3).color.xyz(1f, 0f,0.6f);
-
-                    vertexBufferAsArray.getOrCreate(4).color.xyz(0.5f, 0.5f,0.5f);
-                    vertexBufferAsArray.getOrCreate(5).color.xyz(0f, 1f,0f);
-                    vertexBufferAsArray.getOrCreate(6).color.xyz(0f, 0f,1f);
-                    vertexBufferAsArray.getOrCreate(7).color.xyz(1f, 0f,0.6f);
-
-                    vertexBuffer.getInput().setCurrentCount(8);
-
-                    var indexBufferArray = indexBuffer.getInput().getBackedArray();
-
-                    // Bottom
-                    indexBufferArray.getOrCreate(0).set((short) 0);
-                    indexBufferArray.getOrCreate(1).set((short) 1);
-                    indexBufferArray.getOrCreate(2).set((short) 2);
-
-                    indexBufferArray.getOrCreate(3).set((short) 0);
-                    indexBufferArray.getOrCreate(4).set((short) 1);
-                    indexBufferArray.getOrCreate(5).set((short) 3);
-
-                    // Top
-                    indexBufferArray.getOrCreate(6).set((short) 4);
-                    indexBufferArray.getOrCreate(7).set((short) 5);
-                    indexBufferArray.getOrCreate(8).set((short) 6);
-
-                    indexBufferArray.getOrCreate(9).set((short) 4);
-                    indexBufferArray.getOrCreate(10).set((short) 5);
-                    indexBufferArray.getOrCreate(11).set((short) 7);
-
-                    // X
-                    indexBufferArray.getOrCreate(12).set((short) 1);
-                    indexBufferArray.getOrCreate(13).set((short) 3);
-                    indexBufferArray.getOrCreate(14).set((short) 5);
-
-                    indexBufferArray.getOrCreate(15).set((short) 1);
-                    indexBufferArray.getOrCreate(16).set((short) 3);
-                    indexBufferArray.getOrCreate(17).set((short) 7);
-
-                    // -X
-                    indexBufferArray.getOrCreate(18).set((short) 0);
-                    indexBufferArray.getOrCreate(19).set((short) 2);
-                    indexBufferArray.getOrCreate(20).set((short) 4);
-
-                    indexBufferArray.getOrCreate(21).set((short) 0);
-                    indexBufferArray.getOrCreate(22).set((short) 2);
-                    indexBufferArray.getOrCreate(23).set((short) 6);
-
-                    // Z
-                    indexBufferArray.getOrCreate(24).set((short) 2);
-                    indexBufferArray.getOrCreate(25).set((short) 3);
-                    indexBufferArray.getOrCreate(26).set((short) 6);
-
-                    indexBufferArray.getOrCreate(27).set((short) 2);
-                    indexBufferArray.getOrCreate(28).set((short) 3);
-                    indexBufferArray.getOrCreate(29).set((short) 7);
-
-                    // -Z: Done
-                    indexBufferArray.getOrCreate(30).set((short) 1);
-                    indexBufferArray.getOrCreate(31).set((short) 0);
-                    indexBufferArray.getOrCreate(32).set((short) 4);
-
-                    indexBufferArray.getOrCreate(33).set((short) 1);
-                    indexBufferArray.getOrCreate(34).set((short) 4);
-                    indexBufferArray.getOrCreate(35).set((short) 5);
-
-                    indexBuffer.getInput().setCurrentCount(36);
-
                     return new BiResult<>(vertexBuffer, indexBuffer);
                 }
 

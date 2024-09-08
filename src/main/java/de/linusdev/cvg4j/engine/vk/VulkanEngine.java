@@ -19,10 +19,12 @@ package de.linusdev.cvg4j.engine.vk;
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.RenderThread;
 import de.linusdev.cvg4j.engine.exception.EngineException;
+import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
 import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
+import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.device.SwapChainBuilder;
@@ -53,6 +55,7 @@ import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
+import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.async.exception.ErrorException;
 import de.linusdev.lutils.async.exception.NonBlockingThreadException;
 import de.linusdev.lutils.async.manager.AsyncManager;
@@ -70,6 +73,9 @@ import de.linusdev.lutils.thread.var.SyncVar;
 import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_TRUE;
 import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
@@ -93,6 +99,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     private final @NotNull GAME game;
 
+    private final @NotNull Executor executor = Executors.newWorkStealingPool(16);
     private final @NotNull Ticker ticker;
 
     private final @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> renderThread;
@@ -114,6 +121,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private Device device;
 
     private RenderPass renderPass;
+
+    private GraphicsQueueTransientCommandPool transientCommandPool;
 
     private final @NotNull SyncVar<VkScene<GAME>> currentScene = new SyncVarImpl<>(null);
 
@@ -151,6 +160,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
                     win.setSize(500, 500);
                     pickGPU(rt, win);
                     renderPass = RenderPass.create(rt.getStack(), vkInstance, device, swapChain);
+                    transientCommandPool = GraphicsQueueTransientCommandPool.create(this, rt.getStack(), vkInstance, device);
                     return win;
                 },
                 (rt, win, fut) -> fut.complete(win, Nothing.INSTANCE, null),
@@ -170,6 +180,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
             // cleanup
             currentScene.consumeIfNotNull(VkScene::close);
+            transientCommandPool.close();
             renderPass.close();
             swapChain.close();
             win.close();
@@ -202,6 +213,20 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     @Override
     public @NotNull AsyncManager getAsyncManager() {
         return this;
+    }
+
+    @Override
+    public @NotNull <R> Future<R, VulkanEngine<GAME>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
+        var future = CompletableFuture.<R, VulkanEngine<GAME>>create(getAsyncManager(), false);
+        executor.execute(() -> {
+            try {
+                future.complete(runnable.run(), this, null);
+            } catch (Throwable t) {
+                LOG.logThrowable(t);
+                future.complete(null, this, new ThrowableAsyncError(t));
+            }
+        });
+        return future;
     }
 
     @Override
@@ -252,9 +277,9 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     public TQFuture<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
         var fut = renderThreadTaskQueue.queueForExecution(LOAD_SCENE_TASK_ID, () -> {
-            scene.onLoad0(window, swapChain);
             DirectMemoryStack64 stack = renderThread.getStack();
             assert stack.createSafePoint();
+            scene.onLoad0(stack, window, swapChain);
             RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, scene.pipeline(stack));
             window.createFrameBuffers(renderPass);
             scene.setPipeLine(pipeLine);
@@ -285,6 +310,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         });
 
         return fut;
+    }
+
+    public GraphicsQueueTransientCommandPool getTransientCommandPool() {
+        return transientCommandPool;
     }
 
     private void createVkInstance(

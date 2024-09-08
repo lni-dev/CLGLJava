@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
+import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -24,7 +25,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class BufferArrayInput<V extends Structure> extends BufferInput implements VulkanBufferMappingListener {
+public class BufferArrayInput<V extends Structure> extends BufferInput implements MappingListener {
 
     private final @NotNull StructureArray<V> backedArray;
     private final int stride;

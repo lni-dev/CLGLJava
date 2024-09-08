@@ -18,6 +18,8 @@ package de.linusdev.cvg4j.engine.vk.memory.allocator;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.buffer.VulkanBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.image.VulkanSamplerImage;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferArrayInput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferOutput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferStructInput;
@@ -25,17 +27,25 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
+import de.linusdev.cvg4j.engine.vk.memory.image.ImageOutput;
+import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkImageTiling;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkVertexInputRate;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
+import de.linusdev.lutils.image.ImageSize;
+import de.linusdev.lutils.image.buffer.BufferBackedRGBAImage;
 import de.linusdev.lutils.nat.memory.Stack;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.nat.struct.info.ArrayInfo;
+import de.linusdev.lutils.nat.struct.info.StructureInfo;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -158,7 +168,6 @@ public class VulkanMemoryAllocator implements AutoCloseable {
         add(stack, stagingBuffer);
 
         VulkanBuffer vertexBuffer = new VulkanBuffer(vkInstance, device, debugName + "-out", info.getRequiredSize());
-        vertexInput.setVulkanBuffer(stagingBuffer);
 
         VulkanBuffer.create(stack, vkInstance, device, vertexBuffer,
                 new IntBitfieldImpl<>(
@@ -212,17 +221,66 @@ public class VulkanMemoryAllocator implements AutoCloseable {
         return new UniformBuffer<>(vkInstance, device, binding, inputs, outputs);
     }
 
+    public Sampler2D<BufferBackedRGBAImage> createStagedSampler(
+            @NotNull Stack stack,
+            @NotNull String debugName,
+            @NotNull ImageSize size
+    ) throws EngineException {
+
+        BufferStructInput<BufferBackedRGBAImage> input = new BufferStructInput<>(BufferBackedRGBAImage.newAllocatable(size));
+        StructureInfo info = input.getBackedStruct().getInfo();
+
+        // Add the staging buffer
+        input.setVulkanBuffer(addStagingBuffer(stack, debugName, info.getRequiredSize()));
+
+        VulkanSamplerImage image = VulkanSamplerImage.create(
+                stack, vkInstance, device,
+                debugName + "-out", size, info.getRequiredSize(),
+                VkFormat.R8G8B8A8_SRGB, VkImageTiling.OPTIMAL,
+                new IntBitfieldImpl<>(
+                        VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+                        VkImageUsageFlagBits.VK_IMAGE_USAGE_SAMPLED_BIT
+                ),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+                )
+        );
+
+        add(stack, image);
+
+
+        ImageOutput output = new ImageOutput(image);
+
+        // TODO: It is common use that the staging buffer is only used once and can be freed after that.
+        return new Sampler2D<>(vkInstance, device, input, output, size);
+    }
+
+
     public void allocate(@NotNull Stack stack) {
         for (MemoryTypeManager typeManager : typeManagers) {
             if(typeManager != null) typeManager.allocate(stack, vkInstance, device);
         }
     }
 
-    private void add(@NotNull Stack stack, @NotNull VulkanBuffer buffer) {
+    private void add(@NotNull Stack stack, @NotNull VulkanMemoryBoundObject buffer) {
         if(typeManagers[buffer.memoryTypeIndex] == null)
             typeManagers[buffer.memoryTypeIndex] = new MemoryTypeManager(stack, vkInstance, device, buffer.memoryTypeIndex);
 
         typeManagers[buffer.memoryTypeIndex].addBuffer(buffer);
+    }
+
+    private @NotNull VulkanBuffer addStagingBuffer(@NotNull Stack stack, @NotNull String debugName, int size) throws EngineException {
+        VulkanBuffer stagingBuffer = new VulkanBuffer(vkInstance, device, debugName + "-in", size);
+
+        VulkanBuffer.create(stack, vkInstance, device, stagingBuffer,
+                new IntBitfieldImpl<>(VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_SRC_BIT),
+                new IntBitfieldImpl<>(
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
+                        VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                ));
+
+        add(stack, stagingBuffer);
+        return stagingBuffer;
     }
 
     @Override

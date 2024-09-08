@@ -17,10 +17,12 @@
 package de.linusdev.cvg4j.engine;
 
 import de.linusdev.cvg4j.de.linusdev.cvg4j.GeneratedConstants;
-import de.linusdev.cvg4j.nat.abi.ABISelector;
+import de.linusdev.cvg4j.engine.info.Game;
+import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
-import de.linusdev.cvg4j.engine.info.Game;
+import de.linusdev.cvg4j.nat.abi.ABISelector;
+import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
@@ -62,4 +64,6 @@ public interface Engine<GAME extends Game> {
     @NotNull GAME getGame();
 
     @NotNull AsyncManager getAsyncManager();
+
+    <R> @NotNull Future<R, ? extends Engine<GAME>> runSupervised(@NotNull ReturnRunnable<R> runnable);
 }

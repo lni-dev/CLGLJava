@@ -16,11 +16,13 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.buffer.VulkanBuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkBuffer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class BufferInput implements VulkanBufferMappingListener {
+public abstract class BufferInput implements MappingListener {
 
     protected VulkanBuffer vulkanBuffer;
 
@@ -32,6 +34,10 @@ public abstract class BufferInput implements VulkanBufferMappingListener {
 
     public VulkanBuffer getVulkanBuffer() {
         return vulkanBuffer;
+    }
+
+    public @NotNull VkBuffer getVkBuffer() {
+        return vulkanBuffer.getVkBuffer();
     }
 
 }

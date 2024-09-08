@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.buffer.VulkanBuffer;
 import org.jetbrains.annotations.NotNull;
 
 public class BufferOutput {

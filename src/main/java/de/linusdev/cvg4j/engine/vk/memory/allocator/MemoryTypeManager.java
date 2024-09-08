@@ -47,7 +47,7 @@ public class MemoryTypeManager implements AutoCloseable {
     private final int memoryTypeIndex;
     private final @NotNull IntBitfield<VkMemoryPropertyFlagBits> memoryTypeFlags;
 
-    private final List<VulkanBuffer> buffers = new ArrayList<>();
+    private final List<VulkanMemoryBoundObject> buffers = new ArrayList<>();
     private boolean requiresAllocation = true;
 
     private final @NotNull VkDeviceMemory vkDeviceMemory;
@@ -65,7 +65,7 @@ public class MemoryTypeManager implements AutoCloseable {
         this.memoryTypeFlags = device.getMemoryPropFlagsOf(stack, memoryTypeIndex);
     }
 
-    public void addBuffer(@NotNull VulkanBuffer buffer) {
+    public void addBuffer(@NotNull VulkanMemoryBoundObject buffer) {
         requiresAllocation = true;
         buffers.add(buffer);
     }
@@ -78,12 +78,12 @@ public class MemoryTypeManager implements AutoCloseable {
 
         // calculate the size and offsets
         long size = 0;
-        for (VulkanBuffer buf : buffers) {
+        for (VulkanMemoryBoundObject buf : buffers) {
             if (size % buf.getRequiredAlignment() != 0) {
                 size += buf.getRequiredAlignment() - (size % buf.getRequiredAlignment());
             }
 
-            buf.offset.set(size);
+            buf.initOffset(size);
             size += buf.getActualSize().get();
         }
 
@@ -95,9 +95,11 @@ public class MemoryTypeManager implements AutoCloseable {
         vkInstance.vkAllocateMemory(device.getVkDevice(), ref(allocInfo), ref(null), ref(vkDeviceMemory)).check();
         stack.pop(); // allocInfo
 
-        for (VulkanBuffer buf : buffers) {
+        LOG.logDebug("Allocated " + size + " bytes memory. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+
+        for (VulkanMemoryBoundObject buf : buffers) {
             LOG.logDebug("Binding memory to buffer '" + buf.getDebugName() + "'. offset=" + buf.offset.get() );
-            vkInstance.vkBindBufferMemory(device.getVkDevice(), buf.vkBuffer, vkDeviceMemory, buf.offset);
+            buf.bind(stack, vkDeviceMemory);
         }
 
         if(canBeMapped()) {
@@ -124,7 +126,7 @@ public class MemoryTypeManager implements AutoCloseable {
             // initialise the buffers
             ByteBuffer mapped = BufferUtils.getByteBufferFromPointer(pointerToMappedMemory, (int) size).order(ByteOrder.nativeOrder());
 
-            for (VulkanBuffer buf : buffers) {
+            for (VulkanMemoryBoundObject buf : buffers) {
                 buf.mapped(mapped.slice((int) buf.getOffset().get(), buf.getSize()).order(ByteOrder.nativeOrder()));
             }
         }
@@ -141,7 +143,7 @@ public class MemoryTypeManager implements AutoCloseable {
 
     @Override
     public void close() {
-        for (VulkanBuffer buffer : buffers) {
+        for (VulkanMemoryBoundObject buffer : buffers) {
             buffer.close();
         }
 

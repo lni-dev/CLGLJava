@@ -16,17 +16,11 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.allocator;
 
-import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.memory.buffer.VulkanBufferMappingListener;
 import de.linusdev.cvg4j.nat.vulkan.VkDeviceSize;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkSharingMode;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkBuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkBufferCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkMemoryRequirements;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.nat.memory.Stack;
@@ -35,48 +29,21 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 
-import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class VulkanBuffer implements AutoCloseable {
+public abstract class VulkanMemoryBoundObject implements AutoCloseable {
 
-    public static void create(
-            @NotNull Stack stack,
-            @NotNull VkInstance vkInstance,
-            @NotNull Device device,
-            @NotNull VulkanBuffer vulkanBuffer,
-            @NotNull IntBitfield<VkBufferUsageFlagBits> usage,
-            @NotNull IntBitfield<VkMemoryPropertyFlagBits> memFlags
-    ) throws EngineException {
-        VkBufferCreateInfo bufferCreateInfo = stack.push(new VkBufferCreateInfo());
-        bufferCreateInfo.sType.set(VkStructureType.BUFFER_CREATE_INFO);
-        bufferCreateInfo.size.set(vulkanBuffer.getSize());
-        bufferCreateInfo.usage.replaceWith(usage);
-        bufferCreateInfo.sharingMode.set(VkSharingMode.EXCLUSIVE);
-
-        vkInstance.vkCreateBuffer(device.getVkDevice(), ref(bufferCreateInfo), ref(null), ref(vulkanBuffer.vkBuffer));
-
-        stack.pop(); // bufferCreateInfo
-
-        VkMemoryRequirements memoryRequirements = stack.push(new VkMemoryRequirements());
-        vkInstance.vkGetBufferMemoryRequirements(device.getVkDevice(), vulkanBuffer.vkBuffer, ref(memoryRequirements));
-        int memoryTypeIndex = device.findMemoryType(stack, memoryRequirements.memoryTypeBits.get(), memFlags);
-        vulkanBuffer.memoryRequirements(memoryRequirements, memoryTypeIndex, memFlags);
-
-        stack.pop(); // memoryRequirements
-    }
-
-    private final @NotNull VkInstance vkInstance;
-    private final @NotNull Device device;
+    protected final @NotNull VkInstance vkInstance;
+    protected final @NotNull Device device;
 
     /*
      * Information stored in this class
      */
-    private final @NotNull String debugName;
+    protected final @NotNull String debugName;
     /**
      * Whether this device is host visible. Only host visible buffers can be mapped.
      */
-    private boolean isHostVisible;
+    protected boolean isHostVisible;
     /**
      * The size (amount of bytes) that was set when creating the buffer
      */
@@ -84,15 +51,15 @@ public class VulkanBuffer implements AutoCloseable {
     /**
      * The alignment this buffer requires.
      */
-    long requiredAlignment = -1;
+    protected long requiredAlignment = -1;
     /**
      * The offset of this buffer inside the allocated memory
      */
-    final @NotNull VkDeviceSize offset;
+    protected final @NotNull VkDeviceSize offset;
     /**
      * The actual required size of this buffer. May be bigger than {@link #size}.
      */
-    final @NotNull VkDeviceSize actualSize;
+    protected final @NotNull VkDeviceSize actualSize;
 
     int memoryTypeIndex = -1;
 
@@ -100,16 +67,11 @@ public class VulkanBuffer implements AutoCloseable {
     protected ByteBuffer mappedByteBuffer;
 
     /*
-     * Managed by this class
-     */
-    final @NotNull VkBuffer vkBuffer;
-
-    /*
      * Listener
      */
-    private @Nullable VulkanBufferMappingListener mappingListener;
+    private @Nullable MappingListener mappingListener;
 
-    public VulkanBuffer(
+    public VulkanMemoryBoundObject(
             @NotNull VkInstance vkInstance, @NotNull Device device, @NotNull String debugName,
             int size
     ) {
@@ -118,18 +80,23 @@ public class VulkanBuffer implements AutoCloseable {
         this.debugName = debugName;
         this.size = size;
 
-        this.vkBuffer = allocate(new VkBuffer());
         this.offset = allocate(new VkDeviceSize());
         this.actualSize = allocate(new VkDeviceSize());
     }
 
-    void mapped(@NotNull ByteBuffer mappedByteBuffer) {
+    protected void initOffset(long offset) {
+        this.offset.set(offset);
+    }
+
+    protected abstract void bind(@NotNull Stack stack, @NotNull VkDeviceMemory vkDeviceMemory);
+
+    protected void mapped(@NotNull ByteBuffer mappedByteBuffer) {
         this.isMapped = true;
         this.mappedByteBuffer = mappedByteBuffer;
         if(mappingListener != null) mappingListener.vulkanBufferMapped(mappedByteBuffer);
     }
 
-    void memoryRequirements(
+    protected void memoryRequirements(
             @NotNull VkMemoryRequirements memoryRequirements,
             int memoryTypeIndex,
             @NotNull IntBitfield<VkMemoryPropertyFlagBits> memFlags
@@ -140,16 +107,24 @@ public class VulkanBuffer implements AutoCloseable {
         this.isHostVisible = memFlags.isSet(VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
     }
 
-    public int getSize() {
-        return size;
-    }
-
     public long getRequiredAlignment() {
         return requiredAlignment;
     }
 
     public @NotNull VkDeviceSize getActualSize() {
         return actualSize;
+    }
+
+    public @NotNull String getDebugName() {
+        return debugName;
+    }
+
+    public boolean isHostVisible() {
+        return isHostVisible;
+    }
+
+    public int getSize() {
+        return size;
     }
 
     public @NotNull VkDeviceSize getOffset() {
@@ -164,25 +139,13 @@ public class VulkanBuffer implements AutoCloseable {
         return mappedByteBuffer;
     }
 
-    public @NotNull VkBuffer getVkBuffer() {
-        return vkBuffer;
-    }
-
-    public @NotNull String getDebugName() {
-        return debugName;
-    }
-
-    public boolean isHostVisible() {
-        return isHostVisible;
-    }
-
-    public void setMappingListener(@Nullable VulkanBufferMappingListener mappingListener) {
+    public void setMappingListener(@Nullable MappingListener mappingListener) {
         this.mappingListener = mappingListener;
         if(mappingListener != null && isMapped) mappingListener.vulkanBufferMapped(mappedByteBuffer);
     }
 
     @Override
     public void close() {
-        vkInstance.vkDestroyBuffer(device.getVkDevice(), vkBuffer, ref(null));
+
     }
 }

@@ -14,29 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.buffer;
+package de.linusdev.cvg4j.engine.vk.memory.allocator;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
-import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.ByteBuffer;
 
-public class BufferStructInput<S extends Structure> extends BufferInput implements MappingListener {
-
-    private final @NotNull S backedStruct;
-
-    public BufferStructInput(@NotNull S backedStruct) {
-        this.backedStruct = backedStruct;
-    }
-
-    @Override
-    public void vulkanBufferMapped(@NotNull ByteBuffer mapped) {
-        this.backedStruct.claimBuffer(mapped);
-    }
-
-    @NotNull
-    public S getBackedStruct() {
-        return backedStruct;
-    }
+public interface MappingListener {
+    void vulkanBufferMapped(@NotNull ByteBuffer mapped);
 }

@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk;
 
+import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueuePermanentCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.frame.buffer.FrameBuffers;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
@@ -77,7 +78,8 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
      * Managed by this class
      */
     private FrameBuffers frameBuffers;
-    private CommandPool commandPool;
+    private GraphicsQueuePermanentCommandPool commandPool;
+
     private StructureArray<VkSemaphore> imageAvailableSemaphores;
     private StructureArray<VkSemaphore> renderFinishedSemaphores;
     private StructureArray<VkFence> frameSubmittedFences;
@@ -141,7 +143,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         this.graphicsQueue = device.getGraphicsQueue();
         this.presentationQueue = device.getPresentationQueue();
-        this.commandPool = CommandPool.create(stack, vkInstance, device, maxFramesInFlight);
+        this.commandPool = GraphicsQueuePermanentCommandPool.create(stack, vkInstance, device, maxFramesInFlight);
 
         this.imageAvailableSemaphores = StructureArray.newAllocated(maxFramesInFlight, VkSemaphore.class, VkSemaphore::new);
         this.renderFinishedSemaphores = StructureArray.newAllocated(maxFramesInFlight, VkSemaphore.class, VkSemaphore::new);

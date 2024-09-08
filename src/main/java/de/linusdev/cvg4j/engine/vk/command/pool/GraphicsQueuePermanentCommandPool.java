@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk;
+package de.linusdev.cvg4j.engine.vk.command.pool;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCommandPoolCreateFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkCommandBufferLevel;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandPool;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferAllocateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandPoolCreateInfo;
@@ -32,28 +30,27 @@ import org.jetbrains.annotations.NotNull;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
-import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class CommandPool implements AutoCloseable {
+public class GraphicsQueuePermanentCommandPool extends CommandPool {
 
-    public static @NotNull CommandPool create(
+    public static @NotNull GraphicsQueuePermanentCommandPool create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             int commandBufferCount
     ) {
-        CommandPool commandPool = new CommandPool(vkInstance, device.getVkDevice(), commandBufferCount);
+        GraphicsQueuePermanentCommandPool commandPool = new GraphicsQueuePermanentCommandPool(vkInstance, device, commandBufferCount);
 
         VkCommandPoolCreateInfo commandPoolCreateInfo = stack.push(new VkCommandPoolCreateInfo());
         commandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
         commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
         commandPoolCreateInfo.queueFamilyIndex.set(device.getGraphicsQueueIndex());
 
-        vkInstance.vkCreateCommandPool(device.getVkDevice(), ref(commandPoolCreateInfo), ref(null), ref(commandPool.getVkCommandPool())).check();
+        vkInstance.vkCreateCommandPool(device.getVkDevice(), ref(commandPoolCreateInfo), ref(null), ref(commandPool.vkCommandPool)).check();
 
         VkCommandBufferAllocateInfo commandBufferAllocateInfo = stack.push(new VkCommandBufferAllocateInfo());
         commandBufferAllocateInfo.sType.set(VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO);
-        commandBufferAllocateInfo.commandPool.set(commandPool.getVkCommandPool().get());
+        commandBufferAllocateInfo.commandPool.set(commandPool.vkCommandPool);
         commandBufferAllocateInfo.level.set(VkCommandBufferLevel.PRIMARY);
         commandBufferAllocateInfo.commandBufferCount.set(commandBufferCount);
 
@@ -69,26 +66,16 @@ public class CommandPool implements AutoCloseable {
         return commandPool;
     }
 
-    private final @NotNull VkInstance vkInstance;
-    private final @NotNull VkDevice vkDevice;
-
-    private final @NotNull VkCommandPool vkCommandPool;
     private final @NotNull StructureArray<VkCommandBuffer> vkCommandBuffers;
 
-    protected CommandPool(
+    protected GraphicsQueuePermanentCommandPool(
             @NotNull VkInstance vkInstance,
-            @NotNull VkDevice vkDevice,
+            @NotNull Device device,
             int commandBufferCount
     ) {
-        this.vkInstance = vkInstance;
-        this.vkDevice = vkDevice;
+        super(vkInstance, device);
 
-        this.vkCommandPool = allocate(new VkCommandPool());
         this.vkCommandBuffers = StructureArray.newAllocated(commandBufferCount, VkCommandBuffer.class, VkCommandBuffer::new);
-    }
-
-    public @NotNull VkCommandPool getVkCommandPool() {
-        return vkCommandPool;
     }
 
     public @NotNull VkCommandBuffer getVkCommandBuffer(int index) {
@@ -99,8 +86,4 @@ public class CommandPool implements AutoCloseable {
         return vkCommandBuffers;
     }
 
-    @Override
-    public void close() {
-        vkInstance.vkDestroyCommandPool(vkDevice, vkCommandPool, ref(null));
-    }
 }

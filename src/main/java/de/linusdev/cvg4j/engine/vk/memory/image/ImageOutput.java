@@ -14,12 +14,26 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.buffer;
+package de.linusdev.cvg4j.engine.vk.memory.image;
 
+import de.linusdev.cvg4j.engine.vk.memory.allocator.image.VulkanSamplerImage;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
+public class ImageOutput {
 
-public interface VulkanBufferMappingListener {
-    void vulkanBufferMapped(@NotNull ByteBuffer mapped);
+    private final @NotNull VulkanSamplerImage image;
+
+    public ImageOutput(@NotNull VulkanSamplerImage image) {
+        this.image = image;
+    }
+
+    public @NotNull VulkanSamplerImage getImage() {
+        return image;
+    }
+
+    public @NotNull VkImage getVkImage() {
+        return image.getVkImage();
+    }
+
 }

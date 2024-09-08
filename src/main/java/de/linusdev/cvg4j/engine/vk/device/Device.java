@@ -24,10 +24,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkQueue;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceCreateInfo;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkDeviceQueueCreateInfo;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceFeatures;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceMemoryProperties;
+import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
@@ -56,8 +53,7 @@ public class Device implements AutoCloseable {
             @NotNull List<@NotNull VulkanExtension> requiredDeviceExtensions,
             @NotNull List<@NotNull String> requiredVulkanLayers
     ) {
-        Device device = new Device(vkInstance, graphicsQueueIndex, presentationQueueIndex);
-        device.vkPhysicalDevice.set(vkPhysicalDevice.get());
+        Device device = new Device(vkInstance, vkPhysicalDevice, graphicsQueueIndex, presentationQueueIndex);
 
         boolean sameQueueIndices = graphicsQueueIndex == presentationQueueIndex;
 
@@ -108,8 +104,9 @@ public class Device implements AutoCloseable {
         // Device features
         VkPhysicalDeviceFeatures features = stack.push(new VkPhysicalDeviceFeatures());
 
-        //TODO: add this as game requirements!
+        //TODO: add this as game requirements and to the gpu selector!
         features.geometryShader.set(VulkanUtils.booleanToVkBool32(true));
+        features.samplerAnisotropy.set(VulkanUtils.booleanToVkBool32(true));
 
         // Device Create Info
         VkDeviceCreateInfo deviceCreateInfo = stack.push(new VkDeviceCreateInfo());
@@ -153,7 +150,7 @@ public class Device implements AutoCloseable {
     private final @NotNull VkInstance vkInstance;
 
     /*
-     * Manged by this class
+     * Managed by this class
      */
     protected final @NotNull VkPhysicalDevice vkPhysicalDevice;
     protected final @NotNull VkDevice vkDevice;
@@ -166,17 +163,46 @@ public class Device implements AutoCloseable {
     private final int graphicsQueueIndex;
     private final int presentationQueueIndex;
 
+    protected final @NotNull VkPhysicalDeviceProperties deviceProperties;
+    protected final @NotNull VkPhysicalDeviceFeatures deviceFeatures;
+
     protected Device(
-            @NotNull VkInstance vkInstance, int graphicsQueueIndex, int presentationQueueIndex
+            @NotNull VkInstance vkInstance,
+            @NotNull VkPhysicalDevice vkPhysicalDevice,
+            int graphicsQueueIndex,
+            int presentationQueueIndex
     ) {
         this.vkInstance = vkInstance;
         this.vkPhysicalDevice = allocate(new VkPhysicalDevice());
         this.vkDevice = allocate(new VkDevice());
         this.graphicsQueue = allocate(new VkQueue());
         this.presentationQueue = allocate(new VkQueue());
+        this.deviceProperties = allocate(new VkPhysicalDeviceProperties());
+        this.deviceFeatures = allocate(new VkPhysicalDeviceFeatures());
 
         this.graphicsQueueIndex = graphicsQueueIndex;
         this.presentationQueueIndex = presentationQueueIndex;
+
+        // Store vkPhysicalDevice
+        this.vkPhysicalDevice.set(vkPhysicalDevice.get());
+
+        // Get physical device properties.
+        vkInstance.vkGetPhysicalDeviceProperties(vkPhysicalDevice, ref(deviceProperties));
+        vkInstance.vkGetPhysicalDeviceFeatures(vkPhysicalDevice, ref(deviceFeatures));
+    }
+
+    /**
+     * {@link VkPhysicalDeviceFeatures} supported by this device.
+     */
+    public @NotNull VkPhysicalDeviceFeatures getPhysicalDeviceFeatures() {
+        return deviceFeatures;
+    }
+
+    /**
+     * {@link VkPhysicalDeviceProperties} containing the physical device properties of this device.
+     */
+    public @NotNull VkPhysicalDeviceProperties getPhysicalDeviceProperties() {
+        return deviceProperties;
     }
 
     /**
