@@ -20,6 +20,8 @@ import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.PossiblyUnresolvedType;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import org.jetbrains.annotations.NotNull;
@@ -30,6 +32,8 @@ import java.util.regex.Pattern;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 
 public class BitMaskType implements Type {
+
+    public static final LogInstance LOG = LLog.getLogInstance();
 
     public static final @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".bitmasks";
 
@@ -86,7 +90,7 @@ public class BitMaskType implements Type {
 
         JavaClass bitFieldEnumClazz = bitFieldEnum.resolveOrElse(
                 () -> {
-                    System.out.println("Generating missing BitMaskEnumType '" + bitFieldEnum.getName() + "'.");
+                    LOG.debug("Generating missing BitMaskEnumType '" + bitFieldEnum.getName() + "'.");
                     return new BitMaskEnumType(bitFieldEnum.getName(), getAsBaseType().getBitWidth(), null);
                 }, true
         ).getJavaClass(registry, generator);

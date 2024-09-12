@@ -104,16 +104,16 @@ public class StructType implements Type {
             memberNode.removeChild(commentNode);
 
         if(isPointer) {
-            System.out.println("Struct member with pointer found: " + memberNode.getTextContent());
+            LOG.debug("Struct member with pointer found: " + memberNode.getTextContent());
         }
 
         // Check if array
         // example: <type>char</type> <name>layerName</name>[<enum>VK_MAX_EXTENSION_NAME_SIZE</enum>]
-        System.out.println("Member: " + memberNode.getTextContent());
+        LOG.debug("Member: " + memberNode.getTextContent());
         Pattern pattern = Pattern.compile("(?<type>\\w+) +(?<name>\\w+)\\[(?<length>\\w+)\\]");
         Matcher matcher = pattern.matcher(memberNode.getTextContent());
         if(matcher.find()) {
-            System.out.println("Struct member with array found: " + memberNode.getTextContent());
+            LOG.debug("Struct member with array found: " + memberNode.getTextContent());
             isArray = true;
             String matchedType = matcher.group("type");
             String matchedName = matcher.group("name");
@@ -176,7 +176,7 @@ public class StructType implements Type {
             @NotNull SourceGenerator generator
     ) {
 
-        System.out.println("GEN Struct " + name + ", isUnion: " + union);
+        LOG.debug("GEN Struct " + name + ", isUnion: " + union);
         var clazz = generator.addJavaFile(getSubPackage());
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);
@@ -190,7 +190,7 @@ public class StructType implements Type {
         int index = 2;
         JavaExpression[] variables = new JavaExpression[members.size() + 2];
         for (Member member : members) {
-            System.out.println(
+            LOG.debug(
                     "Member: " + member.name
                             + " with type=" + member.type.getName()
                             + " is array=" + member.isArray
@@ -404,7 +404,7 @@ public class StructType implements Type {
             );
         });
 
-        System.out.println("END GEN Struct " + name);
+        LOG.debug("END GEN Struct " + name);
     }
 
     @Override

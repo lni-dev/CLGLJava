@@ -53,7 +53,7 @@ public class CommandsGenerator {
         Node aliasAttr = cmdNode.getAttributes().getNamedItem("alias");
         Node nameAttr = cmdNode.getAttributes().getNamedItem("name");
         if(aliasAttr != null) {
-            System.out.println("Skipping command alias with name: " + nameAttr.getNodeValue());
+            LOG.debug("Skipping command alias with name: " + nameAttr.getNodeValue());
             return;
         }
 
@@ -80,7 +80,7 @@ public class CommandsGenerator {
         StringBuilder cDef = new StringBuilder(protoNode.getTextContent() + "(\n");
 
 
-        System.out.println("Adding command with name: " + name);
+        LOG.debug("Adding command with name: " + name);
 
         Command cmd = new Command(
                 registry, name,
@@ -99,7 +99,7 @@ public class CommandsGenerator {
                 cmd.addParam(node);
                 cDef.append("\t").append(node.getTextContent()).append(", \n");
             } else
-                System.out.println("Unhandled Node in '<command>': " + node.getNodeName());
+                LOG.debug("Unhandled Node in '<command>': " + node.getNodeName());
         }
 
         cDef.setLength(cDef.length()-3);//remove last ", \n"

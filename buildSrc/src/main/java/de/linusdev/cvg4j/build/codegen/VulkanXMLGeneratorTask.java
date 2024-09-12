@@ -73,7 +73,6 @@ public class VulkanXMLGeneratorTask extends DefaultTask {
 
     @TaskAction
     void generate() throws ParserConfigurationException, IOException, SAXException {
-        System.out.println("GENERATE");
         RegistryLoader registry = new RegistryLoader(
                 vulkanXmlFile.get().getAsFile().toPath(),
                 vulkanVideoXmlFile.get().getAsFile().toPath()

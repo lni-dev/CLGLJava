@@ -16,13 +16,15 @@
 
 package de.linusdev.cvg4j.engine.vk.infos;
 
-import de.linusdev.cvg4j.nat.vulkan.VkBool32;
+import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilyInfo;
+import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkSurfaceKHR;
-import de.linusdev.cvg4j.nat.vulkan.structs.*;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkQueueFamilyProperties;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
-import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilyInfo;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.struct.array.StructureArray;

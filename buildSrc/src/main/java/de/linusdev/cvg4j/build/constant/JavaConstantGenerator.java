@@ -73,7 +73,6 @@ public class JavaConstantGenerator extends DefaultTask {
 
     @TaskAction
     void generate() throws IOException {
-        System.out.println("GENERATE");
         SourceGenerator generator = sourceGenerator.get();
 
         var clazz = generator.addJavaFile(basePackage.get());

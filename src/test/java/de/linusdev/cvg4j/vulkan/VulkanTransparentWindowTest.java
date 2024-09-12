@@ -22,11 +22,11 @@ import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.vulkan.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkPipelineStageFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
+import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
@@ -326,7 +326,7 @@ public class VulkanTransparentWindowTest {
             VkBool32 supported = new VkBool32();
             supported.allocate();
             vkInstance.vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, vkSurfaceKHR, TypedPointer64.of(supported)).check();
-            if(VulkanUtils.vkBool32ToBoolean(supported)) {
+            if(supported.getAsBool()) {
                 presentationQueueIndex = i;
             }
 

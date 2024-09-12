@@ -19,6 +19,8 @@ package de.linusdev.cvg4j.build.vkregistry.types;
 import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import de.linusdev.lutils.nat.pointer.BBPointer64;
@@ -29,6 +31,8 @@ import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.findInChildren;
 
 public class FunctionPointerType implements Type {
+
+    public static final LogInstance LOG = LLog.getLogInstance();
 
     private final static @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".funcpointer";
 
@@ -69,7 +73,7 @@ public class FunctionPointerType implements Type {
 
     @Override
     public void generate(@NotNull RegistryLoader registry, @NotNull SourceGenerator generator) {
-        System.out.println("GEN FunctionPointerType");
+        LOG.debug("GEN FunctionPointerType");
 
         var clazz = generator.addJavaFile(SUB_PACKAGE);
         clazz.setName(name);
@@ -86,7 +90,7 @@ public class FunctionPointerType implements Type {
         );
         constructor.setVisibility(JavaVisibility.PUBLIC);
 
-        System.out.println("END GEN FunctionPointerType");
+        LOG.debug("END GEN FunctionPointerType");
     }
 
     @Override

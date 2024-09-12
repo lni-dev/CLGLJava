@@ -18,11 +18,15 @@ package de.linusdev.cvg4j.build.vkregistry.types.abstracts;
 
 import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.CTypes;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.JavaClass;
 import org.jetbrains.annotations.NotNull;
 
 public interface Type {
+
+    LogInstance LOG = LLog.getLogInstance();
 
     @NotNull String getName();
 
@@ -34,7 +38,7 @@ public interface Type {
      * {@link TypeType#BASIC BASIC}, {@link TypeType#ALIAS_OF_BASIC ALIAS_OF_BASIC} or {@link TypeType#ENUM ENUM}
      */
     default @NotNull CTypes getAsBaseType() {
-        System.out.println(getClass().getSimpleName() + ": " + getName());
+        LOG.debug(getClass().getSimpleName() + ": " + getName());
         throw new UnsupportedOperationException();
     }
 

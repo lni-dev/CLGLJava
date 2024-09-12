@@ -20,6 +20,8 @@ import de.linusdev.cvg4j.build.vkregistry.types.*;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.PossiblyUnresolvedDefine;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.PossiblyUnresolvedType;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.ansi.sgr.SGR;
 import de.linusdev.lutils.ansi.sgr.SGRParameters;
 import de.linusdev.lutils.codegen.SourceGenerator;
@@ -47,6 +49,8 @@ import java.util.regex.Pattern;
  */
 public class RegistryLoader {
 
+    public static final LogInstance LOG = LLog.getLogInstance();
+    
     public static Iterable<Node> iterableNode(@NotNull Node node) {
         return new Iterable<>() {
             @NotNull
@@ -109,7 +113,7 @@ public class RegistryLoader {
         List<String> apisList = List.of(apis.split(","));
 
         if(!apisList.contains("vulkan")) {
-            System.out.println("Skipping a node, because it does not contain the api 'vulkan'.");
+            LOG.debug("Skipping a node, because it does not contain the api 'vulkan'.");
             return true;
         }
 
@@ -127,6 +131,7 @@ public class RegistryLoader {
     public final static String CUSTOM_JAVADOC_TAG_PREFIX = "cvg4j";
 
     private final @NotNull Map<String, Type> types = new HashMap<>();
+    private final @NotNull Map<String, Type> replacementTypes = new HashMap<>();
     private final @NotNull List<GroupedDefinesType> defines = new ArrayList<>();
     private AtomicInteger iterating = new AtomicInteger(0);
     private final @NotNull Map<String, Type> extraTypes = new HashMap<>();
@@ -152,11 +157,21 @@ public class RegistryLoader {
         addStandardTypes();
 
         SGR sgr = new SGR(SGRParameters.BACKGROUND_GREEN);
-        System.out.println(sgr.construct() + "READ documentVideo" + SGR.reset());
+        LOG.debug(sgr.construct() + "READ documentVideo" + SGR.reset());
         readRegistry(documentVideo.getChildNodes().item(0));
 
-        System.out.println(sgr.construct() + "READ documentVk" + SGR.reset());
+        LOG.debug(sgr.construct() + "READ documentVk" + SGR.reset());
         readRegistry(documentVk.getChildNodes().item(0));
+    }
+
+    /**
+     * Adds a type that already exists in the normal source, which will replace a type which would normally be generated.
+     * @param name The name in the registry.xml file
+     * @param type the already existing type.
+     */
+    public void addAlreadyExistingReplacementType(@NotNull String name, @NotNull Type type) {
+        types.put(name, type);
+        replacementTypes.put(name, type);
     }
 
     public void addType(@NotNull Type type) {
@@ -164,6 +179,11 @@ public class RegistryLoader {
     }
 
     public void addType(@NotNull Type type, boolean generate) {
+        if(replacementTypes.get(type.getName()) != null) {
+            LOG.debug("Skipping type '" + type.getName() + "', because a replacement exists!!");
+            return;
+        }
+
         if(type instanceof GroupedDefinesType td)
             defines.add(td);
 
@@ -213,7 +233,7 @@ public class RegistryLoader {
     }
 
     public void iterateTypes(@NotNull BiPredicate<String, Type> consumer) {
-        System.out.println("START iterateTypes");
+        LOG.debug("START iterateTypes");
         iterating.incrementAndGet();
 
         for (Map.Entry<String, Type> entry : types.entrySet()) {
@@ -225,7 +245,7 @@ public class RegistryLoader {
 
         types.putAll(extraTypes);
         extraTypes.clear();
-        System.out.println("END iterateTypes");
+        LOG.debug("END iterateTypes");
     }
 
     public PossiblyUnresolvedType getPUType(@NotNull String name) {
@@ -236,8 +256,14 @@ public class RegistryLoader {
         return new PossiblyUnresolvedDefine(this, name);
     }
 
+    private void addReplacementTypes() {
+        addAlreadyExistingReplacementType("VkBool32", new AlreadyExistingBasicType(
+                CTypes.UINT32, "de.linusdev.cvg4j.nat.vulkan.bool.VkBool32"
+        ));
+    }
+
     private void addStandardTypes() {
-        System.out.println("START addStandardTypes");
+        LOG.debug("START addStandardTypes");
 
         //Some basic Vulkan types
         types.put(
@@ -246,8 +272,10 @@ public class RegistryLoader {
         );
         types.put(
                 "VK_DEFINE_NON_DISPATCHABLE_HANDLE",
-                new AlreadyExistingBasicType("VkNonDispatchableHandle", CTypes.UINT64, "de.linusdev.cvg4j.nat.vulkan.handle")
+                new AlreadyExistingBasicType(CTypes.UINT64, "de.linusdev.cvg4j.nat.vulkan.handle.VkNonDispatchableHandle")
         );
+
+        addReplacementTypes();
 
         // VkVideo Version
         addVKVideoCodecVersions();
@@ -337,7 +365,7 @@ public class RegistryLoader {
         addType(CTypes.UINT64);
         addType(CTypes.INT64);
         addType(CTypes.INT);
-        System.out.println("END addStandardTypes");
+        LOG.debug("END addStandardTypes");
     }
 
     private void addWin32Types() {
@@ -462,12 +490,12 @@ public class RegistryLoader {
             else if(node.getNodeName().equals("commands"))
                 handleCommands(node);
             else
-                System.out.println(COLOR_ORANGE + "Unhandled Node: " + node.getNodeName() + SGR.reset());
+                LOG.debug(COLOR_ORANGE + "Unhandled Node: " + node.getNodeName() + SGR.reset());
         }
     }
 
     public void handleFeature(@NotNull Node featureNode) {
-        System.out.println("START handleFeature");
+        LOG.debug("START handleFeature");
 
         if(checkApiAttr(featureNode))
             return; // Only add vulkan api stuff
@@ -496,18 +524,18 @@ public class RegistryLoader {
                 else if (node.getNodeName().equals("enum"))
                     handleEnumExtension(node, name, null, Objects.requireNonNull(getDefineGroup("APIConstants")));
                 else
-                    System.out.println("Unhandled Node in '<require>' (extensions): " + node.getNodeName());
+                    LOG.debug("Unhandled Node in '<require>' (extensions): " + node.getNodeName());
                 //TODO: command Node
 
             }
 
         }
 
-        System.out.println("END handleFeature");
+        LOG.debug("END handleFeature");
     }
 
     public void handleExtensions(@NotNull Node extensionsNode) {
-        System.out.println("START handleExtensions");
+        LOG.debug("START handleExtensions");
 
         GroupedDefinesType constants = getDefineGroup("APIConstants");
 
@@ -535,7 +563,7 @@ public class RegistryLoader {
                     continue;
 
                 if (reqNode.getNodeName().equals("remove"))
-                    System.out.println("Ignored remove node.");
+                    LOG.debug("Ignored remove node.");
                 else if (!reqNode.getNodeName().equals("require"))
                     throw new IllegalStateException("Unexpected Node in <extension>: " + reqNode.getNodeName());
 
@@ -551,20 +579,20 @@ public class RegistryLoader {
                     else if (node.getNodeName().equals("commands"))
                         handleCommands(node);
                     else
-                        System.out.println("Unhandled Node in '<require>' (extensions): " + node.getNodeName());
+                        LOG.debug("Unhandled Node in '<require>' (extensions): " + node.getNodeName());
                         //TODO: command Node
                 }
             }
         }
 
-        System.out.println("END handleExtensions");
+        LOG.debug("END handleExtensions");
     }
 
     public void handleCommands(
             @NotNull Node commandsNode
     ) {
 
-        System.out.println("START handleCommands");
+        LOG.debug("START handleCommands");
 
         for (Node node : iterableNode(commandsNode)) {
             if (node.getNodeName().equals("comment"))
@@ -574,10 +602,10 @@ public class RegistryLoader {
             else if (node.getNodeName().equals("command"))
                 handleCommand(node);
             else
-                System.out.println("Unhandled Node in '<commands>': " + node.getNodeName());
+                LOG.debug("Unhandled Node in '<commands>': " + node.getNodeName());
         }
 
-        System.out.println("END handleCommands");
+        LOG.debug("END handleCommands");
     }
 
     public void handleCommand(
@@ -618,14 +646,14 @@ public class RegistryLoader {
             if(valueAttr == null && bitposAttr == null && aliasAttr == null && offsetAttr == null)
                 return; // skip this. It is only a reference to an already existing define.
             // Simple Constant (#define)
-            System.out.println("adding enum value '" + nameAttr.getNodeValue() + "' as define-constant due to extension/feature " + extensionOrFeatureName);
+            LOG.debug("adding enum value '" + nameAttr.getNodeValue() + "' as define-constant due to extension/feature " + extensionOrFeatureName);
             extensionConstants.addDefine(enumNode);
         } else {
             // Extension in a different enum
 
             String extend = extendsAttr.getNodeValue();
 
-            System.out.println("adding enum value '" + nameAttr.getNodeValue() + "' to '" + extend +  "' due to extension/feature " + extensionOrFeatureName);
+            LOG.debug("adding enum value '" + nameAttr.getNodeValue() + "' to '" + extend +  "' due to extension/feature " + extensionOrFeatureName);
 
             Type type = getType(extend);
 
@@ -699,7 +727,7 @@ public class RegistryLoader {
     }
 
     public void handleEnums(@NotNull Node enumsNode) {
-        System.out.println("START handleEnums");
+        LOG.debug("START handleEnums");
         Node nameAttr = enumsNode.getAttributes().getNamedItem("name");
         Node typeAttr = enumsNode.getAttributes().getNamedItem("type");
         Node commentAttr = enumsNode.getAttributes().getNamedItem("comment");
@@ -777,11 +805,11 @@ public class RegistryLoader {
             addType(n);
         }
 
-        System.out.println("END handleEnums");
+        LOG.debug("END handleEnums");
     }
 
     public void handleTypes(@NotNull Node typesNode) {
-        System.out.println("START handleTypes");
+        LOG.debug("START handleTypes");
         for(Node node : iterableNode(typesNode)) {
             if(node.getNodeName().equals("type"))
                 handleType(node);
@@ -790,10 +818,10 @@ public class RegistryLoader {
             else if(node.getNodeType() == Node.TEXT_NODE)
                 continue;
             else
-                System.out.println("Unhandled Node in 'types': " + node.getNodeName());
+                LOG.debug("Unhandled Node in 'types': " + node.getNodeName());
 
         }
-        System.out.println("END handleTypes");
+        LOG.debug("END handleTypes");
     }
 
     public void handleType(@NotNull Node typeNode) {
@@ -938,9 +966,9 @@ public class RegistryLoader {
             boolean union = false;
             if(category.equals("union")) {
                 union = true;
-                System.out.println("START handle union");
+                LOG.debug("START handle union");
             }
-            else System.out.println("START handle struct");
+            else LOG.debug("START handle struct");
 
             Node nameAttr = typeNode.getAttributes().getNamedItem("name");
             Node commentAttr = typeNode.getAttributes().getNamedItem("comment");
@@ -949,7 +977,7 @@ public class RegistryLoader {
 
             if(nameAttr == null)
                 throw new IllegalStateException("struct <type> without name attribute!");
-            System.out.println("Name: " + nameAttr.getNodeValue());
+            LOG.debug("Name: " + nameAttr.getNodeValue());
 
             StructType n = new StructType(
                     this,
@@ -968,7 +996,7 @@ public class RegistryLoader {
                 n.addMember(memberNode);
             }
 
-            System.out.println("END handle struct/union");
+            LOG.debug("END handle struct/union");
 
         }
         else if(category.equals("enum")) {
@@ -980,7 +1008,7 @@ public class RegistryLoader {
             Node aliasAttr = typeNode.getAttributes().getNamedItem("alias");
 
             if(nameAttr == null || aliasAttr == null) return; // skip
-            System.out.println("Adding GhostAlias '" + nameAttr.getNodeValue() + "' which refers to '" + aliasAttr.getNodeValue() + "'");
+            LOG.debug("Adding GhostAlias '" + nameAttr.getNodeValue() + "' which refers to '" + aliasAttr.getNodeValue() + "'");
             addType(new GhostAliasType(
                     nameAttr.getNodeValue(),
                     getPUType(aliasAttr.getNodeValue())

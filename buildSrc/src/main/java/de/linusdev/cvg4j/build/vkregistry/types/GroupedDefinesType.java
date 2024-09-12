@@ -19,6 +19,8 @@ package de.linusdev.cvg4j.build.vkregistry.types;
 import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +33,8 @@ import java.util.Map;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 
 public class GroupedDefinesType implements Type {
+
+    public static final LogInstance LOG = LLog.getLogInstance();
 
     private final static @Nullable String SUB_PACKAGE = VULKAN_PACKAGE + ".constants";
 
@@ -189,7 +193,7 @@ public class GroupedDefinesType implements Type {
             name = nameAttr.getNodeValue();
 
             if(valueAttr == null && aliasAttr == null) {
-                System.out.println("Skipping <enum> without value or alias attr.");
+                LOG.debug("Skipping <enum> without value or alias attr.");
                 skip = true;
                 alias = null;
                 type = null;

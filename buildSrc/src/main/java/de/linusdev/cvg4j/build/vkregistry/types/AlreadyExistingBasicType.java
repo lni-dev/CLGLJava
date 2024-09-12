@@ -20,7 +20,9 @@ import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
 import de.linusdev.lutils.codegen.SourceGenerator;
-import de.linusdev.lutils.codegen.java.*;
+import de.linusdev.lutils.codegen.java.JavaClass;
+import de.linusdev.lutils.codegen.java.JavaPackage;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.NotNull;
 
 public class AlreadyExistingBasicType implements Type {
@@ -30,13 +32,14 @@ public class AlreadyExistingBasicType implements Type {
     private final @NotNull String packageString;
 
     public AlreadyExistingBasicType(
-            @NotNull String name,
             @NotNull CTypes alias,
-            @NotNull String truePackageString
+            @Language("jvm-class-name")
+            @NotNull String truePackageStringAndName
     ) {
-        this.name = name;
+        int split = truePackageStringAndName.lastIndexOf('.');
+        this.name = truePackageStringAndName.substring(split+1);
         this.alias = alias;
-        this.packageString = truePackageString;
+        this.packageString = truePackageStringAndName.substring(0, split);
     }
 
     @Override

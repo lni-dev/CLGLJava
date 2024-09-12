@@ -19,6 +19,8 @@ package de.linusdev.cvg4j.build.vkregistry.types;
 import de.linusdev.cvg4j.build.vkregistry.RegistryLoader;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.TypeType;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.java.*;
 import de.linusdev.lutils.nat.enums.NativeEnumMember32;
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
 
 public class EnumType implements Type {
+
+    public static final LogInstance LOG = LLog.getLogInstance();
 
     private final static @NotNull String SUB_PACKAGE = VULKAN_PACKAGE + ".enums";
 
@@ -67,7 +71,7 @@ public class EnumType implements Type {
 
         namePrefixToIgnore = nameWords.stream().reduce((cur, add) -> cur.toUpperCase(Locale.ROOT) + "_" + add.toUpperCase(Locale.ROOT)).orElse("") + "_";
         namePrefixFix = nameWords.get(nameWords.size()-1).toUpperCase(Locale.ROOT) + "_";
-        System.out.println("enumName: " + this.name + ", namePrefixToIgnore: " + namePrefixToIgnore);
+        LOG.debug("enumName: " + this.name + ", namePrefixToIgnore: " + namePrefixToIgnore);
     }
 
     public String getEnumValueName(String vkName) {

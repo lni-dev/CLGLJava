@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.vulkan.utils;
+package de.linusdev.cvg4j.nat.vulkan.bool;
 
-import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
+import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
+import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 
-public class VulkanUtils {
+public class VkBool32 extends BBUInt1 {
 
-    public static long VK_NULL_HANDLE = 0L;
 
-    public static boolean vkBool32ToBoolean(int value) {
-        return value == APIConstants.VK_TRUE;
+    public VkBool32() {
+        super(false, null);
     }
 
-    public static int booleanToVkBool32(boolean value) {
-        return value ? APIConstants.VK_TRUE : APIConstants.VK_FALSE;
+    public void set(boolean bool) {
+        set(VulkanUtils.booleanToVkBool32(bool));
     }
 
-
-
-
+    public boolean getAsBool() {
+        return VulkanUtils.vkBool32ToBoolean(get());
+    }
 
 }
