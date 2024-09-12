@@ -24,7 +24,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferAllocateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandPoolCreateInfo;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
@@ -57,7 +57,7 @@ public class GraphicsQueuePermanentCommandPool extends CommandPool {
         vkInstance.vkAllocateCommandBuffers(device.getVkDevice(), ref(commandBufferAllocateInfo), ofArray(commandPool.getVkCommandBuffers())).check();
 
         for (int i = 0; i < commandBufferCount; i++) {
-            commandPool.getVkCommandBuffers().getOrCreate(i); // make sure they are all created, so we can just use get() later.
+            commandPool.getVkCommandBuffers().get(i); // make sure they are all created, so we can just use get() later.
         }
 
         stack.pop(); // commandBufferAllocateInfo
@@ -79,7 +79,7 @@ public class GraphicsQueuePermanentCommandPool extends CommandPool {
     }
 
     public @NotNull VkCommandBuffer getVkCommandBuffer(int index) {
-        return vkCommandBuffers.getOrCreate(index);
+        return vkCommandBuffers.get(index);
     }
 
     public @NotNull StructureArray<VkCommandBuffer> getVkCommandBuffers() {

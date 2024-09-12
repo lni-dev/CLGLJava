@@ -19,7 +19,7 @@ package de.linusdev.cvg4j.engine.vk.swapchain;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkColorSpaceKHR;
 import de.linusdev.lutils.nat.enums.EnumValue32;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 /**

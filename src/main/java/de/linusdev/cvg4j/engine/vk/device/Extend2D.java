@@ -17,10 +17,11 @@
 package de.linusdev.cvg4j.engine.vk.device;
 
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
+import de.linusdev.lutils.image.ImageSize;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt2;
 import org.jetbrains.annotations.NotNull;
 
-public class Extend2D extends BBUInt2 {
+public class Extend2D extends BBUInt2 implements ImageSize {
 
     private final @NotNull VkExtent2D backingExtend;
 
@@ -39,6 +40,16 @@ public class Extend2D extends BBUInt2 {
     }
 
     public int height() {
+        return y();
+    }
+
+    @Override
+    public int getWidth() {
+        return x();
+    }
+
+    @Override
+    public int getHeight() {
         return y();
     }
 }

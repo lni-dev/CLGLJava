@@ -23,7 +23,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkShaderModule;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkShaderModuleCreateInfo;
 import de.linusdev.lutils.nat.NativeParsable;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.engine.vk.pipeline;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
+import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
@@ -27,14 +28,11 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCullModeFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkShaderStageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkPipeline;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkPipelineCache;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkPipelineLayout;
+import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,13 +63,13 @@ public class RasterizationPipeline implements AutoCloseable {
         );
 
         // Shader stages
-        VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo = shaderStages.getOrCreate(0);
+        VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo = shaderStages.get(0);
         pipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
         pipelineShaderStageCreateInfo.module.set(vertexShader.getShaderModule().get());
         pipelineShaderStageCreateInfo.pName.set(stack.pushString(vertexShader.getMainMethodName()));
 
-        pipelineShaderStageCreateInfo = shaderStages.getOrCreate(1);
+        pipelineShaderStageCreateInfo = shaderStages.get(1);
         pipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
         pipelineShaderStageCreateInfo.module.set(fragmentShader.getShaderModule().get());
@@ -99,8 +97,8 @@ public class RasterizationPipeline implements AutoCloseable {
 
         // dynamic state (viewport and scissors will be dynamic)
         StructureArray<NativeEnumValue32<VkDynamicState>> dynamicStates = stack.pushArray(2, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
-        dynamicStates.getOrCreate(0).set(VkDynamicState.VIEWPORT);
-        dynamicStates.getOrCreate(1).set(VkDynamicState.SCISSOR);
+        dynamicStates.get(0).set(VkDynamicState.VIEWPORT);
+        dynamicStates.get(1).set(VkDynamicState.SCISSOR);
 
         VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = stack.push(new VkPipelineDynamicStateCreateInfo());
         dynamicStateCreateInfo.sType.set(VkStructureType.PIPELINE_DYNAMIC_STATE_CREATE_INFO);
@@ -154,12 +152,14 @@ public class RasterizationPipeline implements AutoCloseable {
         pipelineColorBlendStateCreateInfo.pAttachments.set(colorBlending);
 
         // Create Pipeline Layout
-        var uniformBuffer = info.getUniformBuffer();
-        uniformBuffer.createDescriptorSetLayout(stack);
+        FixedSizeDescriptorPool descriptorPool = info.getDescriptorPool();
+        StructureArray<VkDescriptorSetLayout> layouts = stack.pushArray(descriptorPool.getLayoutCount(), VkDescriptorSetLayout.class, VkDescriptorSetLayout::new);
+        info.getDescriptorPool().getLayouts(layouts);
+
         VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = stack.push(new VkPipelineLayoutCreateInfo());
         pipelineLayoutCreateInfo.sType.set(VkStructureType.PIPELINE_LAYOUT_CREATE_INFO);
-        pipelineLayoutCreateInfo.setLayoutCount.set(1);
-        pipelineLayoutCreateInfo.pSetLayouts.set(uniformBuffer.getVkDescriptorSetLayout());
+        pipelineLayoutCreateInfo.setLayoutCount.set(layouts.length());
+        pipelineLayoutCreateInfo.pSetLayouts.set(refL(layouts));
         pipelineLayoutCreateInfo.pushConstantRangeCount.set(0);
         pipelineLayoutCreateInfo.pPushConstantRanges.set(null);
 
@@ -203,6 +203,7 @@ public class RasterizationPipeline implements AutoCloseable {
         stack.pop(); // cache
         stack.pop(); // graphicsPipelineCreateInfo
         stack.pop(); // pipelineLayoutCreateInfo
+        stack.pop(); // layouts
         stack.pop(); // pipelineColorBlendStateCreateInfo
         stack.pop(); // colorBlending
         stack.pop(); // pipelineMultisampleStateCreateInfo

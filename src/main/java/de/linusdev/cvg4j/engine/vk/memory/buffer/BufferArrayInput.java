@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
 import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
+import de.linusdev.lutils.nat.struct.UStructSupplier;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -35,7 +36,7 @@ public class BufferArrayInput<V extends Structure> extends BufferInput implement
     public BufferArrayInput(
             int vertexCount,
             @NotNull Class<?> elementClass,
-            @NotNull StructureArray.ElementCreator<V> elementCreator
+            @NotNull UStructSupplier<V> elementCreator
     ) {
         this.backedArray = StructureArray.newAllocatable(
                 false, SVWrapper.of(vertexCount, elementClass), null, elementCreator

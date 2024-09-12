@@ -128,7 +128,7 @@ public class VulkanTest {
                 null,
                 BBTypedPointer64::newUnallocated1
         );
-        vLayerStrings.getOrCreate(0).set(NullTerminatedUTF8String.newAllocated("VK_LAYER_KHRONOS_validation"));
+        vLayerStrings.get(0).set(NullTerminatedUTF8String.newAllocated("VK_LAYER_KHRONOS_validation"));
 
         // VkApplicationInfo
         VkApplicationInfo vkApplicationInfo = new VkApplicationInfo();
@@ -189,7 +189,7 @@ public class VulkanTest {
         );
 
         for (int i = 0; i < _requiredDeviceExtensions.size(); i++) {
-            requiredDeviceExtensions.getOrCreate(i).set(NullTerminatedUTF8String.newAllocated(_requiredDeviceExtensions.get(i)));
+            requiredDeviceExtensions.get(i).set(NullTerminatedUTF8String.newAllocated(_requiredDeviceExtensions.get(i)));
         }
 
         VkSurfaceFormatKHR selectedSurfaceFormat = null;
@@ -361,7 +361,7 @@ public class VulkanTest {
         int graphicsQueueIndex = -1;
         int presentationQueueIndex = -1;
         for (int i = 0; i < vkQueueFamilyProperties.length(); i++) {
-            VkQueueFamilyProperties vkQueueFamilyProperty = vkQueueFamilyProperties.getOrCreate(i);
+            VkQueueFamilyProperties vkQueueFamilyProperty = vkQueueFamilyProperties.get(i);
             if(vkQueueFamilyProperty.queueFlags.isSet(VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT)) {
                 graphicsQueueIndex = i;
             }
@@ -399,7 +399,7 @@ public class VulkanTest {
         prio.set(1.0f);
 
         // Graphics Queue create info
-        vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.getOrCreate(0);
+        vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.get(0);
         vkDeviceQueueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
         vkDeviceQueueCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
         vkDeviceQueueCreateInfo.queueCount.set(1);
@@ -407,7 +407,7 @@ public class VulkanTest {
 
         if(differentQueueIndices) {
             // Presentation Queue create info
-            vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.getOrCreate(1);
+            vkDeviceQueueCreateInfo = vkDeviceQueueCreateInfos.get(1);
             vkDeviceQueueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
             vkDeviceQueueCreateInfo.queueFamilyIndex.set(presentationQueueIndex);
             vkDeviceQueueCreateInfo.queueCount.set(1);
@@ -507,7 +507,7 @@ public class VulkanTest {
             VkImageViewCreateInfo vkImageViewCreateInfo = new VkImageViewCreateInfo();
             vkImageViewCreateInfo.allocate();
             vkImageViewCreateInfo.sType.set(VkStructureType.IMAGE_VIEW_CREATE_INFO);
-            vkImageViewCreateInfo.image.set(swapchainImages.getOrCreate(i).get());
+            vkImageViewCreateInfo.image.set(swapchainImages.get(i).get());
             vkImageViewCreateInfo.viewType.set(VkImageViewType.TYPE_2D);
             vkImageViewCreateInfo.format.set(selectedSurfaceFormat.format.get());
             vkImageViewCreateInfo.components.r.set(VkComponentSwizzle.IDENTITY);
@@ -520,7 +520,7 @@ public class VulkanTest {
             vkImageViewCreateInfo.subresourceRange.baseArrayLayer.set(0);
             vkImageViewCreateInfo.subresourceRange.layerCount.set(1);
 
-            vkInstance.vkCreateImageView(device, TypedPointer64.of(vkImageViewCreateInfo), TypedPointer64.of(null), TypedPointer64.of(swapchainImageViews.getOrCreate(i))).check();
+            vkInstance.vkCreateImageView(device, TypedPointer64.of(vkImageViewCreateInfo), TypedPointer64.of(null), TypedPointer64.of(swapchainImageViews.get(i))).check();
         }
 
         // Read binary shaders and create Shader Modules
@@ -559,13 +559,13 @@ public class VulkanTest {
                 null,
                 VkPipelineShaderStageCreateInfo::new
         );
-        VkPipelineShaderStageCreateInfo vkPipelineShaderStageCreateInfo = shaderStages.getOrCreate(0);
+        VkPipelineShaderStageCreateInfo vkPipelineShaderStageCreateInfo = shaderStages.get(0);
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
         vkPipelineShaderStageCreateInfo.module.set(vertShader.get());
         vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main"));
 
-        vkPipelineShaderStageCreateInfo = shaderStages.getOrCreate(1);
+        vkPipelineShaderStageCreateInfo = shaderStages.get(1);
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
         vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
         vkPipelineShaderStageCreateInfo.module.set(fragShader.get());
@@ -806,10 +806,10 @@ public class VulkanTest {
 
         VkClearValue vkClearValue = new VkClearValue();
         vkClearValue.allocate();
-        vkClearValue.color.float32.getOrCreate(0).set(0f);
-        vkClearValue.color.float32.getOrCreate(1).set(0f);
-        vkClearValue.color.float32.getOrCreate(2).set(0f);
-        vkClearValue.color.float32.getOrCreate(3).set(1f);
+        vkClearValue.color.float32.get(0).set(0f);
+        vkClearValue.color.float32.get(1).set(0f);
+        vkClearValue.color.float32.get(2).set(0f);
+        vkClearValue.color.float32.get(3).set(1f);
 
         VkRenderPassBeginInfo vkRenderPassBeginInfo = new VkRenderPassBeginInfo();
         vkRenderPassBeginInfo.allocate();

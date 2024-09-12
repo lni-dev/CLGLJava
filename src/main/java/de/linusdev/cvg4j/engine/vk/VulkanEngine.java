@@ -48,6 +48,8 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
+import de.linusdev.cvg4j.window.input.InputManagerImpl;
+import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.llog.base.impl.StandardLogLevel;
@@ -64,8 +66,8 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt2;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
-import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -101,6 +103,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     private final @NotNull Executor executor = Executors.newWorkStealingPool(16);
     private final @NotNull Ticker ticker;
+    private final @NotNull InputManger inputManger;
 
     private final @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> renderThread;
     private final @NotNull TaskQueue renderThreadTaskQueue;
@@ -151,7 +154,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         this.ticker = new Ticker(this, game.getMillisPerTick());
         ticker.start();
 
-        LOG.logDebug("Creating render-thread");
+        LOG.debug("Creating render-thread");
         this.renderThread = new RenderThread<>(
                 this,
                 rt -> {
@@ -173,7 +176,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         this.renderThread.getThreadDeathFuture().then((win, secondary, error) -> {
             if(error != null) {
                 LOG.log(StandardLogLevel.ERROR, "Render thread died due to an error: ");
-                LOG.logThrowable(error.asThrowable());
+                LOG.throwable(error.asThrowable());
             } else {
                 LOG.log(StandardLogLevel.DEBUG, "Render thread died.");
             }
@@ -191,6 +194,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         // Wait until the render thread is created
         try {
             this.window = this.renderThread.create().getResult();
+            this.inputManger = new InputManagerImpl(window);
             LOG.log(StandardLogLevel.DEBUG, "Render thread created.");
         } catch (InterruptedException | ErrorException e) {
             throw new EngineException(e);
@@ -210,6 +214,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return device;
     }
 
+    public @NotNull InputManger getInputManger() {
+        return inputManger;
+    }
+
     @Override
     public @NotNull AsyncManager getAsyncManager() {
         return this;
@@ -222,7 +230,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             try {
                 future.complete(runnable.run(), this, null);
             } catch (Throwable t) {
-                LOG.logThrowable(t);
+                LOG.throwable(t);
                 future.complete(null, this, new ThrowableAsyncError(t));
             }
         });
@@ -278,22 +286,23 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     public TQFuture<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
         var fut = renderThreadTaskQueue.queueForExecution(LOAD_SCENE_TASK_ID, () -> {
             DirectMemoryStack64 stack = renderThread.getStack();
-            assert stack.createSafePoint();
-            scene.onLoad0(stack, window, swapChain);
-            RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, scene.pipeline(stack));
-            window.createFrameBuffers(renderPass);
-            scene.setPipeLine(pipeLine);
-            assert stack.checkSafePoint();
+            try(var ignored = stack.safePoint()) {
+                scene.onLoad0(stack, window, swapChain);
+                RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, scene.pipeline(stack));
+                window.createFrameBuffers(renderPass);
+                scene.setPipeLine(pipeLine);
+            }
+
             return scene;
         });
 
         fut.then((loadedScene, secondary, error) -> {
             if(error != null){
-                LOG.logThrowable(error.asThrowable());
+                LOG.throwable(error.asThrowable());
                 return;
             }
             currentScene.set(loadedScene);
-            LOG.logDebug("Scene loaded.");
+            LOG.debug("Scene loaded.");
         });
 
        return fut;
@@ -319,79 +328,78 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private void createVkInstance(
             @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt
     ) throws EngineException {
-        LOG.logDebug("Start creating VkInstance.");
+        LOG.debug("Start creating VkInstance.");
 
         DirectMemoryStack64 stack = rt.getStack();
-        assert stack.createSafePoint();
+        try (var ignored = stack.safePoint()){
+            vulkanInfo.load(stack);
 
-        vulkanInfo.load(stack);
+            // Check minRequiredInstanceVersion
+            vulkanInfo.isVulkanApiVersionAvailable(game.minRequiredInstanceVersion());
+            vulkanInfo.areInstanceExtensionsAvailable(game.requiredInstanceExtensions());
 
-        // Check minRequiredInstanceVersion
-        vulkanInfo.isVulkanApiVersionAvailable(game.minRequiredInstanceVersion());
-        vulkanInfo.areInstanceExtensionsAvailable(game.requiredInstanceExtensions());
+            // add all required vulkan extensions
+            vulkanExtensions.addAll(game.requiredInstanceExtensions());
+            vulkanExtensions.addAll(vulkanInfo.getGlfwRequiredInstanceExtensions());
 
-        // add all required vulkan extensions
-        vulkanExtensions.addAll(game.requiredInstanceExtensions());
-        vulkanExtensions.addAll(vulkanInfo.getGlfwRequiredInstanceExtensions());
+            // VkApplicationInfo
+            NullTerminatedUTF8String appName = stack.pushString(game.name());
+            NullTerminatedUTF8String engineName = stack.pushString(Engine.name());
 
-        // VkApplicationInfo
-        NullTerminatedUTF8String appName = stack.pushString(game.name());
-        NullTerminatedUTF8String engineName = stack.pushString(Engine.name());
+            VkApplicationInfo vkApplicationInfo = stack.push(new VkApplicationInfo());
+            vkApplicationInfo.sType.set(VkStructureType.APPLICATION_INFO);
+            vkApplicationInfo.pNext.set(0);
+            vkApplicationInfo.pApplicationName.set(appName);
+            vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
+            vkApplicationInfo.pEngineName.set(engineName);
+            vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
+            vkApplicationInfo.apiVersion.set(game.minRequiredInstanceVersion().getAsInt());
+            LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
 
-        VkApplicationInfo vkApplicationInfo = stack.push(new VkApplicationInfo());
-        vkApplicationInfo.sType.set(VkStructureType.APPLICATION_INFO);
-        vkApplicationInfo.pNext.set(0);
-        vkApplicationInfo.pApplicationName.set(appName);
-        vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
-        vkApplicationInfo.pEngineName.set(engineName);
-        vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
-        vkApplicationInfo.apiVersion.set(game.minRequiredInstanceVersion().getAsInt());
-        LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
+            // VkInstanceCreateInfo
+            StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledExtensionsNatArray = vulkanExtensions.toNativeArray(stack::pushArray, stack::pushString);
+            @Nullable StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledLayersNatArray = null;
 
-        // VkInstanceCreateInfo
-        StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledExtensionsNatArray = vulkanExtensions.toNativeArray(stack::pushArray, stack::pushString);
-        @Nullable StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledLayersNatArray = null;
+            if(!game.activatedVulkanLayers().isEmpty()) {
+                enabledLayersNatArray = stack.pushArray(game.activatedVulkanLayers().size(), BBTypedPointer64.class, BBTypedPointer64::newUnallocated1);
+                int i = 0;
+                for (String ext : game.activatedVulkanLayers())
+                    enabledLayersNatArray.get(i++).set(stack.pushString(ext));
+            }
 
-        if(!game.activatedVulkanLayers().isEmpty()) {
-            enabledLayersNatArray = stack.pushArray(game.activatedVulkanLayers().size(), BBTypedPointer64.class, BBTypedPointer64::newUnallocated1);
-            int i = 0;
-            for (String ext : game.activatedVulkanLayers())
-                enabledLayersNatArray.getOrCreate(i++).set(stack.pushString(ext));
+
+            VkInstanceCreateInfo vkInstanceCreateInfo = stack.push(new VkInstanceCreateInfo());
+            vkInstanceCreateInfo.sType.set(VkStructureType.INSTANCE_CREATE_INFO);
+            vkInstanceCreateInfo.pNext.set(0);
+            vkInstanceCreateInfo.pApplicationInfo.set(vkApplicationInfo);
+            vkInstanceCreateInfo.enabledExtensionCount.set(enabledExtensionsNatArray.length());
+            vkInstanceCreateInfo.ppEnabledExtensionNames.set(enabledExtensionsNatArray.getPointer());
+            vkInstanceCreateInfo.enabledLayerCount.set(enabledLayersNatArray == null ? 0 : enabledLayersNatArray.length());
+            vkInstanceCreateInfo.ppEnabledLayerNames.set(refL(enabledLayersNatArray));
+            vkInstanceCreateInfo.flags.set(0);
+            LOG.log(StandardLogLevel.DATA, "VkInstanceCreateInfo: " + vkInstanceCreateInfo);
+
+            // Create VkInstance
+            vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
+            vkInstance.initMethodPointers();
+
+            if(enabledLayersNatArray != null) {
+                for (int i = 0; i < enabledLayersNatArray.length(); i++)
+                    stack.pop(); // string in enabledLayersNatArray
+                stack.pop(); // enabledLayersNatArray
+            }
+
+            for (int i = 0; i < enabledExtensionsNatArray.length(); i++)
+                stack.pop(); // string in enabledExtensionsNatArray
+            stack.pop(); // enabledExtensionsNatArray
+
+            stack.pop(); // vkInstanceCreateInfo
+            stack.pop(); // vkApplicationInfo
+            stack.pop(); // engineName
+            stack.pop(); // appName
         }
 
-
-        VkInstanceCreateInfo vkInstanceCreateInfo = stack.push(new VkInstanceCreateInfo());
-        vkInstanceCreateInfo.sType.set(VkStructureType.INSTANCE_CREATE_INFO);
-        vkInstanceCreateInfo.pNext.set(0);
-        vkInstanceCreateInfo.pApplicationInfo.set(vkApplicationInfo);
-        vkInstanceCreateInfo.enabledExtensionCount.set(enabledExtensionsNatArray.length());
-        vkInstanceCreateInfo.ppEnabledExtensionNames.set(enabledExtensionsNatArray.getPointer());
-        vkInstanceCreateInfo.enabledLayerCount.set(enabledLayersNatArray == null ? 0 : enabledLayersNatArray.length());
-        vkInstanceCreateInfo.ppEnabledLayerNames.set(refL(enabledLayersNatArray));
-        vkInstanceCreateInfo.flags.set(0);
-        LOG.log(StandardLogLevel.DATA, "VkInstanceCreateInfo: " + vkInstanceCreateInfo);
-
-        // Create VkInstance
-        vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
-        vkInstance.initMethodPointers();
-
-        if(enabledLayersNatArray != null) {
-            for (int i = 0; i < enabledLayersNatArray.length(); i++)
-                stack.pop(); // string in enabledLayersNatArray
-            stack.pop(); // enabledLayersNatArray
-        }
-
-        for (int i = 0; i < enabledExtensionsNatArray.length(); i++)
-            stack.pop(); // string in enabledExtensionsNatArray
-        stack.pop(); // enabledExtensionsNatArray
-
-        stack.pop(); // vkInstanceCreateInfo
-        stack.pop(); // vkApplicationInfo
-        stack.pop(); // engineName
-        stack.pop(); // appName
-        assert stack.checkSafePoint();
-
-        LOG.logDebug("Finished creating VkInstance.");
+        LOG.debug("Finished creating VkInstance.");
     }
 
     /**
@@ -401,89 +409,88 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt,
             @NotNull VulkanRasterizationWindow window
     ) throws EngineException {
-        LOG.logDebug("Start picking gpu.");
+        LOG.debug("Start picking gpu.");
         DirectMemoryStack64 stack = rt.getStack();
         // Pick GPU
-        assert stack.createSafePoint();
+        try(var ignored = stack.safePoint()) {
+            BBUInt1 integer = stack.pushUnsignedInt();
+            vkInstance.vkEnumeratePhysicalDevices(ref(integer), ref(null)).check();
 
-        BBUInt1 integer = stack.pushUnsignedInt();
-        vkInstance.vkEnumeratePhysicalDevices(ref(integer), ref(null)).check();
-
-        StructureArray<VkPhysicalDevice> vkPhysicalDevices = stack.pushArray(integer.get(), VkPhysicalDevice.class, VkPhysicalDevice::new);
-        vkInstance.vkEnumeratePhysicalDevices(ref(integer), ofArray(vkPhysicalDevices)).check();
+            StructureArray<VkPhysicalDevice> vkPhysicalDevices = stack.pushArray(integer.get(), VkPhysicalDevice.class, VkPhysicalDevice::new);
+            vkInstance.vkEnumeratePhysicalDevices(ref(integer), ofArray(vkPhysicalDevices)).check();
 
 
-        GPUSelectionProgress progress = game.gpuSelector().startSelection();
+            GPUSelectionProgress progress = game.gpuSelector().startSelection();
 
-        VkPhysicalDevice lastChecked = null;
-        GpuInfo info = null;
-        VkPhysicalDeviceProperties props = stack.push(new VkPhysicalDeviceProperties());
-        StructureArray<VkExtensionProperties> extensions = stack.pushArray(200, VkExtensionProperties.class, VkExtensionProperties::new);
-        StructureArray<VkQueueFamilyProperties> queueFamilies = stack.pushArray(100, VkQueueFamilyProperties.class, VkQueueFamilyProperties::new);
-        VkBool32 queueFamilySupportsSurface = stack.push(new VkBool32());
+            VkPhysicalDevice lastChecked = null;
+            GpuInfo info = null;
+            VkPhysicalDeviceProperties props = stack.push(new VkPhysicalDeviceProperties());
+            StructureArray<VkExtensionProperties> extensions = stack.pushArray(200, VkExtensionProperties.class, VkExtensionProperties::new);
+            StructureArray<VkQueueFamilyProperties> queueFamilies = stack.pushArray(100, VkQueueFamilyProperties.class, VkQueueFamilyProperties::new);
+            VkBool32 queueFamilySupportsSurface = stack.push(new VkBool32());
 
-        VkSurfaceCapabilitiesKHR surfacesCaps = stack.push(new VkSurfaceCapabilitiesKHR());
-        StructureArray<VkSurfaceFormatKHR> surfaceFormats = stack.pushArray(100, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
-        StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes = stack.pushArray(100, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
+            VkSurfaceCapabilitiesKHR surfacesCaps = stack.push(new VkSurfaceCapabilitiesKHR());
+            StructureArray<VkSurfaceFormatKHR> surfaceFormats = stack.pushArray(100, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
+            StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes = stack.pushArray(100, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
 
-        for (VkPhysicalDevice dev : vkPhysicalDevices) {
-            if(progress.canSelectionStop()) break;
-            lastChecked = dev;
+            for (VkPhysicalDevice dev : vkPhysicalDevices) {
+                if(progress.canSelectionStop()) break;
+                lastChecked = dev;
 
-            info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), dev,
-                    integer, props, extensions, queueFamilies, queueFamilySupportsSurface,
-                    SurfaceInfo.ofVkSurface(vkInstance, window.getVkSurface(), dev,
-                            integer, surfacesCaps, surfaceFormats, presentModes
-                    )
-            );
+                info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), dev,
+                        integer, props, extensions, queueFamilies, queueFamilySupportsSurface,
+                        SurfaceInfo.ofVkSurface(vkInstance, window.getVkSurface(), dev,
+                                integer, surfacesCaps, surfaceFormats, presentModes
+                        )
+                );
 
-            // calculate gpu priority
-            int priority = progress.addGpu(dev, info);
-            LOG.logDebug("Checking gpu '"+ props.deviceName.get() + "': " + priority);
+                // calculate gpu priority
+                int priority = progress.addGpu(dev, info);
+                LOG.debug("Checking gpu '"+ props.deviceName.get() + "': " + priority);
 
+            }
+
+            VkPhysicalDevice best = progress.getBestGPU();
+
+            if(best == null)
+                throw new EngineException("No suitable gpu available.");
+
+            // get the gpu information again (if required)...
+            if(lastChecked != best) {
+                info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), best,
+                        integer, props, extensions,
+                        queueFamilies, queueFamilySupportsSurface,
+                        SurfaceInfo.ofVkSurface(vkInstance, window.getVkSurface(), best,
+                                integer, surfacesCaps, surfaceFormats, presentModes
+                        )
+                );
+            }
+
+            // Chose surface format and present mode
+            LOG.debug("Selected gpu: " + info.props().deviceName.get());
+
+            try(var ignored2 = stack.safePoint()) {
+                createDevice(stack, info);
+            }
+
+            try(var ignored2 = stack.safePoint()) {
+                createSwapChain(stack, device, window, info.surfaceInfo(), false);
+            }
+
+            stack.pop(); // presentModes
+            stack.pop(); // surfaceFormats
+            stack.pop(); // surfacesCaps
+
+            stack.pop(); // queueFamilySupportsSurface
+            stack.pop(); // queueFamilies
+            stack.pop(); // extensions
+            stack.pop(); // props
+            stack.pop(); // vkPhysicalDevices
+
+            stack.pop(); // integer
         }
 
-        VkPhysicalDevice best = progress.getBestGPU();
-
-        if(best == null)
-            throw new EngineException("No suitable gpu available.");
-
-        // get the gpu information again (if required)...
-        if(lastChecked != best) {
-            info = GpuInfo.ofPhysicalDevice(vkInstance, window.getVkSurface(), best,
-                    integer, props, extensions,
-                    queueFamilies, queueFamilySupportsSurface,
-                    SurfaceInfo.ofVkSurface(vkInstance, window.getVkSurface(), best,
-                            integer, surfacesCaps, surfaceFormats, presentModes
-                    )
-            );
-        }
-
-        // Chose surface format and present mode
-        LOG.logDebug("Selected gpu: " + info.props().deviceName.get());
-
-        assert stack.createSafePoint();
-        createDevice(stack, info);
-
-        assert stack.checkSafePoint();
-
-        assert stack.createSafePoint();
-        createSwapChain(stack, device, window, info.surfaceInfo(), false);
-        assert stack.checkSafePoint();
-
-        stack.pop(); // presentModes
-        stack.pop(); // surfaceFormats
-        stack.pop(); // surfacesCaps
-
-        stack.pop(); // queueFamilySupportsSurface
-        stack.pop(); // queueFamilies
-        stack.pop(); // extensions
-        stack.pop(); // props
-        stack.pop(); // vkPhysicalDevices
-
-        stack.pop(); // integer
-        assert stack.checkSafePoint();
-        LOG.logDebug("Finished picking gpu.");
+        LOG.debug("Finished picking gpu.");
     }
 
     private void createDevice(
@@ -501,7 +508,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
                 game.activatedVulkanLayers()
         );
 
-        LOG.logDebug("Device created");
+        LOG.debug("Device created");
     }
 
     private void createSwapChain(
@@ -534,16 +541,16 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
 
         // Calculate swap extend
-        LOG.logDebug("Calculate swap extend");
+        LOG.debug("Calculate swap extend");
         Extend2D swapChainExtend = new Extend2D(stack.push(new VkExtent2D()));
         if(info.surfacesCaps().currentExtent.width.get() != 0xFFFFFFFF) {
-            LOG.logDebug("Swap extend is fixed");
+            LOG.debug("Swap extend is fixed");
             swapChainExtend.xy(
                     info.surfacesCaps().currentExtent.width.get(),
                     info.surfacesCaps().currentExtent.height.get()
             );
         } else {
-            LOG.logDebug("Swap extend is not fixed, select it based on frame buffer size.");
+            LOG.debug("Swap extend is not fixed, select it based on frame buffer size.");
             BBInt2 size = unionWith(BBInt2.newAllocatable(null), swapChainExtend);
             window.getFrameBufferSize(size);
 
@@ -565,10 +572,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
         if(recreate) {
             builder.recreateSwapChain(stack, swapChain);
-            LOG.logDebug("SwapChain recreated");
+            LOG.debug("SwapChain recreated");
         } else {
             swapChain = builder.buildSwapChain(stack, window, vkInstance, device);
-            LOG.logDebug("SwapChain created");
+            LOG.debug("SwapChain created");
         }
 
         stack.pop(); // swapChainExtend

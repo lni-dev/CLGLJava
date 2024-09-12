@@ -16,9 +16,11 @@
 
 package de.linusdev.cvg4j.engine.vk.swapchain;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
+import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCompositeAlphaFlagBitsKHR;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
@@ -33,12 +35,13 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSwapchainCreateInfoKHR;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
+import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.Vector;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.array.NativeInt32Array;
 import de.linusdev.lutils.nat.enums.EnumValue32;
 import de.linusdev.lutils.nat.enums.JavaEnumValue32;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
@@ -61,13 +64,21 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             @NotNull Extend2D swapChainExtend,
             EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform,
             EnumValue32<VkPresentModeKHR> presentMode
-    ) {
+    ) throws EngineException {
         SwapChain swapChain = new SwapChain(
                 vkInstance, device, window,
                 swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode
         );
 
         swapChain.recreate(false, stack, null, null, null, null, null);
+
+        swapChain.allocator.createDeviceLocalVulkanImage(stack, "depth-image", swapChainExtend,
+                VkFormat.D32_SFLOAT, //TODO: this must be selected
+                VkImageTiling.OPTIMAL,
+                new IntBitfieldImpl<>(VkImageUsageFlagBits.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
+        );
+
+        //TODO: ImageView must have aspect mask: VK_IMAGE_ASPECT_DEPTH_BIT!!!!!
 
         return swapChain;
     }
@@ -81,7 +92,11 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
      */
     private final @NotNull VkSwapchainKHR vkSwapChain;
     private final @NotNull StructureArray<VkImageView> swapChainImageViews;
+    private final @NotNull VulkanMemoryAllocator allocator;
 
+    /*
+     * Information stored in this class
+     */
     private final int swapChainImageCount;
     private final @NotNull EnumValue32<VkFormat> format;
     private final @NotNull EnumValue32<VkColorSpaceKHR> colorSpace;
@@ -106,6 +121,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
 
         this.vkSwapChain = allocate(new VkSwapchainKHR());
         this.swapChainImageViews = StructureArray.newAllocated(swapChainImageCount, VkImageView.class, VkImageView::new);
+        this.allocator = new VulkanMemoryAllocator(vkInstance, device);
 
         /*
          * Information about this swap chain
@@ -234,7 +250,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         for (int i = 0; i < swapChainImageViews.length(); i++) {
 
             imageViewCreateInfo.sType.set(VkStructureType.IMAGE_VIEW_CREATE_INFO);
-            imageViewCreateInfo.image.set(swapchainImages.getOrCreate(i).get());
+            imageViewCreateInfo.image.set(swapchainImages.get(i).get());
             imageViewCreateInfo.viewType.set(VkImageViewType.TYPE_2D);
             imageViewCreateInfo.format.set(swapChainCreateInfo.imageFormat);
             imageViewCreateInfo.components.r.set(VkComponentSwizzle.IDENTITY);
@@ -247,7 +263,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             imageViewCreateInfo.subresourceRange.baseArrayLayer.set(0);
             imageViewCreateInfo.subresourceRange.layerCount.set(1);
 
-            vkInstance.vkCreateImageView(device.getVkDevice(), ref(imageViewCreateInfo), ref(null), ref(swapChainImageViews.getOrCreate(i))).check();
+            vkInstance.vkCreateImageView(device.getVkDevice(), ref(imageViewCreateInfo), ref(null), ref(swapChainImageViews.get(i))).check();
         }
 
         stack.pop(); // vkImageViewCreateInfo

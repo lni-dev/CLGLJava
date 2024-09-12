@@ -29,7 +29,7 @@ import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -69,7 +69,7 @@ public class Device implements AutoCloseable {
         prio.set(1.0f);
 
         // Graphics Queue create info
-        queueCreateInfo = queueCreateInfos.getOrCreate(0);
+        queueCreateInfo = queueCreateInfos.get(0);
         queueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
         queueCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
         queueCreateInfo.queueCount.set(1);
@@ -77,7 +77,7 @@ public class Device implements AutoCloseable {
 
         if(!sameQueueIndices) {
             // Presentation Queue create info
-            queueCreateInfo = queueCreateInfos.getOrCreate(1);
+            queueCreateInfo = queueCreateInfos.get(1);
             queueCreateInfo.sType.set(VkStructureType.DEVICE_QUEUE_CREATE_INFO);
             queueCreateInfo.queueFamilyIndex.set(presentationQueueIndex);
             queueCreateInfo.queueCount.set(1);
@@ -89,7 +89,7 @@ public class Device implements AutoCloseable {
 
         int i = 0;
         for (VulkanExtension ext : requiredDeviceExtensions)
-            reqDevExtNatArray.getOrCreate(i++).set(stack.pushString(ext.extensionName()));
+            reqDevExtNatArray.get(i++).set(stack.pushString(ext.extensionName()));
 
         // Vulkan Layers
         @Nullable StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledLayersNatArray = null;
@@ -98,7 +98,7 @@ public class Device implements AutoCloseable {
             enabledLayersNatArray = stack.pushArray(requiredVulkanLayers.size(), BBTypedPointer64.class, BBTypedPointer64::newUnallocated1);
             i = 0;
             for (String ext : requiredVulkanLayers)
-                enabledLayersNatArray.getOrCreate(i++).set(stack.pushString(ext));
+                enabledLayersNatArray.get(i++).set(stack.pushString(ext));
         }
 
         // Device features
@@ -222,7 +222,7 @@ public class Device implements AutoCloseable {
         vkInstance.vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, ref(memProps));
 
         for (int i = 0; i < memProps.memoryTypeCount.get(); i++) {
-            if((allowedTypes & (1 << i)) > 0 && memProps.memoryTypes.getOrCreate(i).propertyFlags.isSet(requiredPropertyFlags)) {
+            if((allowedTypes & (1 << i)) > 0 && memProps.memoryTypes.get(i).propertyFlags.isSet(requiredPropertyFlags)) {
                 stack.pop(); // memProps
                 return i;
             }
@@ -240,7 +240,7 @@ public class Device implements AutoCloseable {
         vkInstance.vkGetPhysicalDeviceMemoryProperties(vkPhysicalDevice, ref(memProps));
 
         IntBitfieldImpl<VkMemoryPropertyFlagBits> ret = new IntBitfieldImpl<>(
-                memProps.memoryTypes.getOrCreate(memoryTypeIndex).propertyFlags.getValue()
+                memProps.memoryTypes.get(memoryTypeIndex).propertyFlags.getValue()
         );
 
         stack.pop(); // memProps
@@ -250,6 +250,10 @@ public class Device implements AutoCloseable {
 
     public @NotNull VkDevice getVkDevice() {
         return vkDevice;
+    }
+
+    public @NotNull VkInstance getVkInstance() {
+        return vkInstance;
     }
 
     public int getGraphicsQueueIndex() {

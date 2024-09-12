@@ -25,7 +25,7 @@ import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.pointer.Pointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
@@ -61,7 +61,7 @@ public class VulkanEngineInfo {
 
         availableInstanceExtensions = new VulkanExtension[extensions.length()];
         for (int i = 0; i < extensions.length(); i++) {
-            VkExtensionProperties extension = extensions.getOrCreate(i);
+            VkExtensionProperties extension = extensions.get(i);
             availableInstanceExtensions[i] = VulkanExtension.of(extension.extensionName.get(), extension.specVersion.get());
         }
 
@@ -69,7 +69,7 @@ public class VulkanEngineInfo {
 
         glfwRequiredInstanceExtensions = new VulkanExtension[reqExtensions.length()];
         for (int i = 0; i < reqExtensions.length(); i++) {
-            Pointer64 pName = reqExtensions.getOrCreate(i);
+            Pointer64 pName = reqExtensions.get(i);
             glfwRequiredInstanceExtensions[i] = VulkanExtension.of(
                     BufferUtils.readNullTerminatedUtf8String(pName.get()),
                     0

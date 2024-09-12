@@ -28,7 +28,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkSurfaceFormatKHR;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.nat.enums.EnumValue32;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -28,7 +28,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Consumer;

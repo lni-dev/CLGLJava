@@ -25,7 +25,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkRenderPass;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkFramebufferCreateInfo;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
 

@@ -38,8 +38,8 @@ import de.linusdev.cvg4j.nat.vulkan.handles.*;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
-import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.thread.var.SyncVar;
 import de.linusdev.lutils.thread.var.SyncVarImpl;
@@ -158,9 +158,9 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
         vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
 
         for (int i = 0; i < maxFramesInFlight; i++) {
-            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(imageAvailableSemaphores.getOrCreate(i))).check();
-            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(renderFinishedSemaphores.getOrCreate(i))).check();
-            vkInstance.vkCreateFence(device.getVkDevice(), ref(vkFenceCreateInfo), ref(null), ref(frameSubmittedFences.getOrCreate(i))).check();
+            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(imageAvailableSemaphores.get(i))).check();
+            vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(renderFinishedSemaphores.get(i))).check();
+            vkInstance.vkCreateFence(device.getVkDevice(), ref(vkFenceCreateInfo), ref(null), ref(frameSubmittedFences.get(i))).check();
         }
 
         stack.pop(); // vkFenceCreateInfo

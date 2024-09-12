@@ -81,7 +81,7 @@ public record GpuInfo(
         // Check which queue families support the surface
         for (int i = 0; i < queueFamilyCount; i++) {
             vkInstance.vkGetPhysicalDeviceSurfaceSupportKHR(dev, i, vkSurface, ref(queueFamilySupportsSurface)).check();
-            queueFamilyInfoList.add(new QueueFamilyInfo(i, queueFamilies.getOrCreate(i), VulkanUtils.vkBool32ToBoolean(queueFamilySupportsSurface.get())));
+            queueFamilyInfoList.add(new QueueFamilyInfo(i, queueFamilies.get(i), VulkanUtils.vkBool32ToBoolean(queueFamilySupportsSurface.get())));
         }
 
         // Fill GpuInfo

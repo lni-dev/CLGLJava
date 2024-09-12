@@ -45,7 +45,7 @@ class BasicPresentModeSelector implements PresentModeSelector {
         NativeEnumValue32<VkPresentModeKHR> best = null;
 
         for (int i = 0; i < presentModeCounts; i++) {
-            NativeEnumValue32<VkPresentModeKHR> availableMode = formats.getOrCreate(i);
+            NativeEnumValue32<VkPresentModeKHR> availableMode = formats.get(i);
 
             for (PresentModeWithPriority pm : this.modes) {
                 if(pm.allows(availableMode) && pm.priority().priority() > bestModePriority) {

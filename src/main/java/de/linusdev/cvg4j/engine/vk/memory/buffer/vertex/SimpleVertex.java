@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer.vertex;
 
+import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat2;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat3;
 import de.linusdev.lutils.nat.struct.abstracts.ComplexStructure;
 import de.linusdev.lutils.nat.struct.annos.StructValue;
@@ -29,8 +30,11 @@ public class SimpleVertex extends ComplexStructure {
     @StructValue(1)
     public final @NotNull BBFloat3 color = BBFloat3.newUnallocated();
 
+    @StructValue(2)
+    public final @NotNull BBFloat2 texCoord = BBFloat2.newUnallocated();
+
     public SimpleVertex() {
         super(false);
-        init(null, true, position, color);
+        init(null, true, position, color, texCoord);
     }
 }

@@ -19,6 +19,8 @@ package de.linusdev.cvg4j.engine.vk;
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.obj.ModelViewProjection;
+import de.linusdev.cvg4j.engine.vk.descriptor.pool.DescriptorSet;
+import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanMemoryAllocator;
@@ -30,6 +32,7 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
+import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
@@ -40,18 +43,20 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkShaderModule;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkClearValue;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkCommandBufferBeginInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkRenderPassBeginInfo;
+import de.linusdev.cvg4j.window.input.Key;
 import de.linusdev.lutils.image.Image;
-import de.linusdev.lutils.image.buffer.BufferBackedRGBAImage;
+import de.linusdev.lutils.image.buffer.BBInt32Image;
 import de.linusdev.lutils.image.png.reader.PNGReader;
 import de.linusdev.lutils.math.VMath;
 import de.linusdev.lutils.math.matrix.abstracts.floatn.Float4x4;
 import de.linusdev.lutils.math.matrix.array.floatn.ABFloat4x4;
 import de.linusdev.lutils.math.special.CameraMatrix;
+import de.linusdev.lutils.math.vector.abstracts.floatn.Float3;
 import de.linusdev.lutils.math.vector.abstracts.floatn.Float4;
 import de.linusdev.lutils.math.vector.array.floatn.ABFloat3;
 import de.linusdev.lutils.math.vector.array.floatn.ABFloat4;
 import de.linusdev.lutils.math.vector.buffer.shortn.BBUShort1;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.result.BiResult;
@@ -106,11 +111,15 @@ class VulkanEngineTest {
         protected final long startTime = System.currentTimeMillis();
 
         protected VulkanMemoryAllocator vulkanMemoryAllocator;
+        protected FixedSizeDescriptorPool descriptorPool;
         protected VertexBuffer<SimpleVertex> vertexBuffer;
         protected IndexBuffer<BBUShort1> indexBuffer;
         protected StructureArray<SimpleVertex> vertexBufferAsArray;
 
         protected UniformBuffer<ModelViewProjection> uniformBuffer;
+        protected Sampler2D<BBInt32Image> grassSideSampler;
+
+        private final Float3 cameraPosition = new ABFloat3(0, 0, 2);
 
         public TestScene(@NotNull VulkanEngine<TestGame> engine) {
             super(engine);
@@ -136,100 +145,116 @@ class VulkanEngineTest {
             uniformBuffer = vulkanMemoryAllocator.createUniformBuffer(stack, "uniform-buf", ModelViewProjection::newUnAllocatedForOpenGLUniform, 2, 0);
 
             Image grassSide = loadGrassSide();
-            Sampler2D<BufferBackedRGBAImage> grassSideSample = vulkanMemoryAllocator.createStagedSampler(
-                    stack, "grass-texture", grassSide
+            grassSideSampler = vulkanMemoryAllocator.createStagedSampler(
+                    stack, "grass-texture",0, grassSide, VkImageLayout.SHADER_READ_ONLY_OPTIMAL
             );
 
             vulkanMemoryAllocator.allocate(stack);
 
+
+
+
             vertexBufferAsArray = vertexBuffer.getInput().getBackedArray();
 
-            vertexBufferAsArray.getOrCreate(0).position.xyz(-.5f, -.5f,-.5f);
-            vertexBufferAsArray.getOrCreate(1).position.xyz(0.5f, -.5f,-.5f);
-            vertexBufferAsArray.getOrCreate(2).position.xyz(-.5f, -.5f,0.5f);
-            vertexBufferAsArray.getOrCreate(3).position.xyz(0.5f, -.5f,0.5f);
+            vertexBufferAsArray.get(0).position.xyz(-.5f, -.5f,-.5f);
+            vertexBufferAsArray.get(1).position.xyz(0.5f, -.5f,-.5f);
+            vertexBufferAsArray.get(2).position.xyz(-.5f, -.5f,0.5f);
+            vertexBufferAsArray.get(3).position.xyz(0.5f, -.5f,0.5f);
 
-            vertexBufferAsArray.getOrCreate(4).position.xyz(-.5f, 0.5f,-.5f);
-            vertexBufferAsArray.getOrCreate(5).position.xyz(0.5f, 0.5f,-.5f);
-            vertexBufferAsArray.getOrCreate(6).position.xyz(-.5f, 0.5f,0.5f);
-            vertexBufferAsArray.getOrCreate(7).position.xyz(0.5f, 0.5f,0.5f);
+            vertexBufferAsArray.get(4).position.xyz(-.5f, 0.5f,-.5f);
+            vertexBufferAsArray.get(5).position.xyz(0.5f, 0.5f,-.5f);
+            vertexBufferAsArray.get(6).position.xyz(-.5f, 0.5f,0.5f);
+            vertexBufferAsArray.get(7).position.xyz(0.5f, 0.5f,0.5f);
 
-            vertexBufferAsArray.getOrCreate(0).color.xyz(0.5f, 0.5f,0.5f);
-            vertexBufferAsArray.getOrCreate(1).color.xyz(0f, 1f,0f);
-            vertexBufferAsArray.getOrCreate(2).color.xyz(0f, 0f,1f);
-            vertexBufferAsArray.getOrCreate(3).color.xyz(1f, 0f,0.6f);
+            vertexBufferAsArray.get(0).color.xyz(0.5f, 0.5f,0.5f);
+            vertexBufferAsArray.get(1).color.xyz(0f, 1f,0f);
+            vertexBufferAsArray.get(2).color.xyz(0f, 0f,1f);
+            vertexBufferAsArray.get(3).color.xyz(1f, 0f,0.6f);
 
-            vertexBufferAsArray.getOrCreate(4).color.xyz(0.5f, 0.5f,0.5f);
-            vertexBufferAsArray.getOrCreate(5).color.xyz(0f, 1f,0f);
-            vertexBufferAsArray.getOrCreate(6).color.xyz(0f, 0f,1f);
-            vertexBufferAsArray.getOrCreate(7).color.xyz(1f, 0f,0.6f);
+            vertexBufferAsArray.get(4).color.xyz(0.5f, 0.5f,0.5f);
+            vertexBufferAsArray.get(5).color.xyz(0f, 1f,0f);
+            vertexBufferAsArray.get(6).color.xyz(0f, 0f,1f);
+            vertexBufferAsArray.get(7).color.xyz(1f, 0f,0.6f);
+
+            vertexBufferAsArray.get(0).texCoord.xy(1, 1);
+            vertexBufferAsArray.get(1).texCoord.xy(0, 1);
+            vertexBufferAsArray.get(2).texCoord.xy(-.5f, -.5f);
+            vertexBufferAsArray.get(3).texCoord.xy(0.5f, -.5f);
+
+            vertexBufferAsArray.get(4).texCoord.xy(1, 0);
+            vertexBufferAsArray.get(5).texCoord.xy(0, 0);
+            vertexBufferAsArray.get(6).texCoord.xy(-.5f, 0.5f);
+            vertexBufferAsArray.get(7).texCoord.xy(0.5f, 0.5f);
 
             vertexBuffer.getInput().setCurrentCount(8);
 
             var indexBufferArray = indexBuffer.getInput().getBackedArray();
 
             // Bottom
-            indexBufferArray.getOrCreate(0).set((short) 0);
-            indexBufferArray.getOrCreate(1).set((short) 1);
-            indexBufferArray.getOrCreate(2).set((short) 2);
+            indexBufferArray.get(0).set((short) 0);
+            indexBufferArray.get(1).set((short) 1);
+            indexBufferArray.get(2).set((short) 2);
 
-            indexBufferArray.getOrCreate(3).set((short) 0);
-            indexBufferArray.getOrCreate(4).set((short) 1);
-            indexBufferArray.getOrCreate(5).set((short) 3);
+            indexBufferArray.get(3).set((short) 0);
+            indexBufferArray.get(4).set((short) 1);
+            indexBufferArray.get(5).set((short) 3);
 
             // Top
-            indexBufferArray.getOrCreate(6).set((short) 4);
-            indexBufferArray.getOrCreate(7).set((short) 5);
-            indexBufferArray.getOrCreate(8).set((short) 6);
+            indexBufferArray.get(6).set((short) 4);
+            indexBufferArray.get(7).set((short) 5);
+            indexBufferArray.get(8).set((short) 6);
 
-            indexBufferArray.getOrCreate(9).set((short) 4);
-            indexBufferArray.getOrCreate(10).set((short) 5);
-            indexBufferArray.getOrCreate(11).set((short) 7);
+            indexBufferArray.get(9).set((short) 4);
+            indexBufferArray.get(10).set((short) 5);
+            indexBufferArray.get(11).set((short) 7);
 
             // X
-            indexBufferArray.getOrCreate(12).set((short) 1);
-            indexBufferArray.getOrCreate(13).set((short) 3);
-            indexBufferArray.getOrCreate(14).set((short) 5);
+            indexBufferArray.get(12).set((short) 1);
+            indexBufferArray.get(13).set((short) 3);
+            indexBufferArray.get(14).set((short) 5);
 
-            indexBufferArray.getOrCreate(15).set((short) 1);
-            indexBufferArray.getOrCreate(16).set((short) 3);
-            indexBufferArray.getOrCreate(17).set((short) 7);
+            indexBufferArray.get(15).set((short) 1);
+            indexBufferArray.get(16).set((short) 3);
+            indexBufferArray.get(17).set((short) 7);
 
             // -X
-            indexBufferArray.getOrCreate(18).set((short) 0);
-            indexBufferArray.getOrCreate(19).set((short) 2);
-            indexBufferArray.getOrCreate(20).set((short) 4);
+            indexBufferArray.get(18).set((short) 0);
+            indexBufferArray.get(19).set((short) 2);
+            indexBufferArray.get(20).set((short) 4);
 
-            indexBufferArray.getOrCreate(21).set((short) 0);
-            indexBufferArray.getOrCreate(22).set((short) 2);
-            indexBufferArray.getOrCreate(23).set((short) 6);
+            indexBufferArray.get(21).set((short) 0);
+            indexBufferArray.get(22).set((short) 2);
+            indexBufferArray.get(23).set((short) 6);
 
             // Z
-            indexBufferArray.getOrCreate(24).set((short) 2);
-            indexBufferArray.getOrCreate(25).set((short) 3);
-            indexBufferArray.getOrCreate(26).set((short) 6);
+            indexBufferArray.get(24).set((short) 2);
+            indexBufferArray.get(25).set((short) 3);
+            indexBufferArray.get(26).set((short) 6);
 
-            indexBufferArray.getOrCreate(27).set((short) 2);
-            indexBufferArray.getOrCreate(28).set((short) 3);
-            indexBufferArray.getOrCreate(29).set((short) 7);
+            indexBufferArray.get(27).set((short) 2);
+            indexBufferArray.get(28).set((short) 3);
+            indexBufferArray.get(29).set((short) 7);
 
             // -Z: Done
-            indexBufferArray.getOrCreate(30).set((short) 1);
-            indexBufferArray.getOrCreate(31).set((short) 0);
-            indexBufferArray.getOrCreate(32).set((short) 4);
+            indexBufferArray.get(30).set((short) 1);
+            indexBufferArray.get(31).set((short) 0);
+            indexBufferArray.get(32).set((short) 4);
 
-            indexBufferArray.getOrCreate(33).set((short) 1);
-            indexBufferArray.getOrCreate(34).set((short) 4);
-            indexBufferArray.getOrCreate(35).set((short) 5);
+            indexBufferArray.get(33).set((short) 1);
+            indexBufferArray.get(34).set((short) 4);
+            indexBufferArray.get(35).set((short) 5);
 
             indexBuffer.getInput().setCurrentCount(36);
 
+            descriptorPool = new FixedSizeDescriptorPool(engine.getVkInstance(), engine.getDevice());
+            descriptorPool.add(new DescriptorSet(vkInstance, device, 0, uniformBuffer));
+            descriptorPool.add(new DescriptorSet(vkInstance, device, 1, grassSideSampler));
 
-            Image.copy(grassSide, grassSideSample.getInput().getBackedStruct());
+            descriptorPool.create(stack);
+
+            Image.copy(grassSide, grassSideSampler.getInput().getBackedStruct());
             var samplerFuture = engine.getTransientCommandPool().submitSingleTimeCommand(stack, buf -> {
-                grassSideSample.getOutput().getImage().transitionLayoutCommand(stack, buf, VkImageLayout.TRANSFER_DST_OPTIMAL);
-                grassSideSample.bufferCopyCommand(stack, buf);
-                grassSideSample.getOutput().getImage().transitionLayoutCommand(stack, buf, VkImageLayout.SHADER_READ_ONLY_OPTIMAL);
+                grassSideSampler.bufferCopyCommand(stack, buf);
             });
 
             try {
@@ -256,7 +281,7 @@ class VulkanEngineTest {
             VMath.rotationMatrix((float) (secondsPast * 1.57f), VMath.normalize(new ABFloat3(0f,0,1), new ABFloat3()),mvp.model);
 
             CameraMatrix cam = new CameraMatrix(new ABFloat4x4(), mvp.view);
-            cam.position().xyz(2, 2, 2);
+            cam.position().xyz(cameraPosition);
             cam.lookAt(new ABFloat3(0, 0, 0));
             cam.calculateViewMatrix();
 
@@ -302,10 +327,10 @@ class VulkanEngineTest {
             commandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
 
             VkClearValue vkClearValue = stack.push(new VkClearValue());
-            vkClearValue.color.float32.getOrCreate(0).set(0f);
-            vkClearValue.color.float32.getOrCreate(1).set(0f);
-            vkClearValue.color.float32.getOrCreate(2).set(0f);
-            vkClearValue.color.float32.getOrCreate(3).set(1f);
+            vkClearValue.color.float32.get(0).set(0f);
+            vkClearValue.color.float32.get(1).set(0f);
+            vkClearValue.color.float32.get(2).set(0f);
+            vkClearValue.color.float32.get(3).set(1f);
 
             VkRenderPassBeginInfo renderPassBeginInfo = stack.push(new VkRenderPassBeginInfo());
             renderPassBeginInfo.sType.set(VkStructureType.RENDER_PASS_BEGIN_INFO);
@@ -329,7 +354,7 @@ class VulkanEngineTest {
             vkInstance.vkCmdBindIndexBuffer(commandBuffer, indexBuffer.getVkBuffer(), indexBuffer.getOffset(), VkIndexType.UINT16);
             vkInstance.vkCmdSetViewport(commandBuffer, 0, 1, ref(viewport));
             vkInstance.vkCmdSetScissor(commandBuffer, 0, 1, ref(scissors));
-            uniformBuffer.bindCommand(stack, commandBuffer, pipeLine, currentFrame);
+            descriptorPool.bindCommand(stack, commandBuffer, pipeLine, uniformBuffer.getVkDescriptorSet(currentFrame), grassSideSampler.getVkDescriptorSet());
             vkInstance.vkCmdDrawIndexed(commandBuffer, indexBuffer.getCurrentCount(), 1, 0, 0, 0);
             vkInstance.vkCmdEndRenderPass(commandBuffer);
             vkInstance.vkEndCommandBuffer(commandBuffer).check();
@@ -371,14 +396,31 @@ class VulkanEngineTest {
                 }
 
                 @Override
-                public @NotNull UniformBuffer<?> getUniformBuffer() {
-                    return uniformBuffer;
+                public @NotNull FixedSizeDescriptorPool getDescriptorPool() {
+                    return descriptorPool;
                 }
             };
         }
 
+
         @Override
         public void tick() {
+            Key KEY_W = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_W);
+            Key KEY_A = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_A);
+            Key KEY_S = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_S);
+            Key KEY_D = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_D);
+
+            if(engine.getInputManger().isKeyPressed(KEY_W)) {
+                cameraPosition.z(cameraPosition.z() - 0.05f);
+            } else if(engine.getInputManger().isKeyPressed(KEY_A)) {
+                cameraPosition.x(cameraPosition.x() - 0.05f);
+            } else if(engine.getInputManger().isKeyPressed(KEY_S)) {
+                cameraPosition.z(cameraPosition.z() + 0.05f);
+            }else if(engine.getInputManger().isKeyPressed(KEY_D)) {
+                cameraPosition.x(cameraPosition.x() + 0.05f);
+            }
+
+
             if(true) return;
             float factor = 0.61f;
             for (SimpleVertex simpleVertex : vertexBufferAsArray) {
@@ -403,7 +445,7 @@ class VulkanEngineTest {
 
         @Override
         public void close() {
-            uniformBuffer.close();
+            descriptorPool.close();
             vulkanMemoryAllocator.close();
             super.close();
         }

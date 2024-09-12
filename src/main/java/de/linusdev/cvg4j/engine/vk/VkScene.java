@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.scene.Scene;
+import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
@@ -28,7 +29,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkRect2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkViewport;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +39,10 @@ import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapChainRecreationListener {
 
     protected final @NotNull VulkanEngine<GAME> engine;
+
+    protected final @NotNull VkInstance vkInstance;
+    protected final @NotNull Device device;
+
     protected SwapChain swapChain;
 
     protected RasterizationPipeline pipeLine;
@@ -51,6 +56,8 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     protected VkScene(@NotNull VulkanEngine<GAME> engine) {
         this.engine = engine;
+        this.vkInstance = engine.getVkInstance();
+        this.device = engine.getDevice();
 
         this.viewport = allocate(new VkViewport());
         this.scissors = allocate(new VkRect2D());

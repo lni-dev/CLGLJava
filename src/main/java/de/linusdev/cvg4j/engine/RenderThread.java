@@ -26,7 +26,7 @@ import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.interfaces.TBiConsumer;
 import de.linusdev.lutils.interfaces.TFunction;
 import de.linusdev.lutils.interfaces.TriConsumer;
-import de.linusdev.lutils.nat.memory.DirectMemoryStack64;
+import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
 import org.jetbrains.annotations.NotNull;
 
 public class RenderThread<GAME extends Game, CR, WINDOW> extends Thread {

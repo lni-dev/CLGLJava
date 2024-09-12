@@ -76,7 +76,7 @@ public class VulkanExtensionList {
 
         int i = 0;
         for (String ext : this.map.keySet()) {
-            natArray.getOrCreate(i++).set(stringSupplier.apply(ext));
+            natArray.get(i++).set(stringSupplier.apply(ext));
         }
 
         return natArray;

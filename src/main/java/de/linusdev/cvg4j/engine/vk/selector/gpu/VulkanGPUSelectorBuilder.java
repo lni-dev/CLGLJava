@@ -163,7 +163,7 @@ public class VulkanGPUSelectorBuilder {
                     info -> {
                         var array = getArray.apply(info);
                         for (int i = 0; i < getArrayLength.applyAsInt(info); i++) {
-                            if(comparer.applyAsInt(array.getOrCreate(i), that) == 0)
+                            if(comparer.applyAsInt(array.get(i), that) == 0)
                                 return true;
                         }
                         return false;
@@ -178,7 +178,7 @@ public class VulkanGPUSelectorBuilder {
                     info -> {
                         var array = getArray.apply(info);
                         for (int i = 0; i < getArrayLength.applyAsInt(info); i++) {
-                            if(comparer.applyAsInt(array.getOrCreate(i), that) >= 0)
+                            if(comparer.applyAsInt(array.get(i), that) >= 0)
                                 return true;
                         }
                         return false;
@@ -194,7 +194,7 @@ public class VulkanGPUSelectorBuilder {
                         var array = getArray.apply(info);
                         for (I req : that) {
                             for (int i = 0; i < getArrayLength.applyAsInt(info); i++) {
-                                if(comparer.applyAsInt(array.getOrCreate(i), req) < 0)
+                                if(comparer.applyAsInt(array.get(i), req) < 0)
                                     return false;
                             }
                         }

@@ -45,7 +45,7 @@ class BasicSurfaceFormatSelector implements SurfaceFormatSelector {
         VkSurfaceFormatKHR best = null;
 
         for (int i = 0; i < formatCounts; i++) {
-            VkSurfaceFormatKHR availableFormat = formats.getOrCreate(i);
+            VkSurfaceFormatKHR availableFormat = formats.get(i);
 
             for (FormatWithPriority fc : this.formats) {
                 if(fc.allows(availableFormat) && fc.priority().priority() > bestFormatPriority) {

@@ -26,7 +26,7 @@ import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkRenderPass;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
-import de.linusdev.lutils.nat.memory.Stack;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
