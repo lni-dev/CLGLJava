@@ -16,8 +16,8 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.buffer.VulkanBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.manager.MappingListener;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.buffer.VulkanBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkBuffer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.allocator.image;
+package de.linusdev.cvg4j.engine.vk.memory.manager.objects.image;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
@@ -25,7 +25,10 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkPipelineStageFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
-import de.linusdev.cvg4j.nat.vulkan.handles.*;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageMemoryBarrier;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
@@ -47,6 +50,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
      */
     protected @NotNull ImageSize imageSize;
     protected final @NotNull IntBitfield<VkImageUsageFlagBits> usage;
+    protected final @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask;
     protected final @NotNull VkImageTiling vkImageTiling;
     /**
      * {@link VkFormat} {@link #vkImage} uses.
@@ -65,12 +69,14 @@ public class VulkanImage extends VulkanMemoryBoundObject {
 
     public VulkanImage(
             @NotNull Device device, @NotNull String debugName, int size, @NotNull ImageSize imageSize,
-            @NotNull IntBitfield<VkImageUsageFlagBits> usage, @NotNull VkImageTiling vkImageTiling,
+            @NotNull IntBitfield<VkImageUsageFlagBits> usage,
+            @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask, @NotNull VkImageTiling vkImageTiling,
             @NotNull VkFormat vkFormat
     ) {
         super(device, debugName, size);
         this.imageSize = imageSize;
         this.usage = usage;
+        this.viewAspectMask = viewAspectMask;
         this.vkImageTiling = vkImageTiling;
         this.vkFormat = vkFormat;
         this.currentLayout = VkImageLayout.UNDEFINED;
@@ -85,7 +91,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         return this;
     }
 
-    protected void recreate(
+    public void recreate(
             @NotNull Stack stack,
             @Nullable Integer newSizeInBytes,
             @Nullable ImageSize newImageSize
@@ -97,21 +103,14 @@ public class VulkanImage extends VulkanMemoryBoundObject {
 
         MemoryRequirementsChange change = null;
         if(newImageSize != null) {
-            VkMemoryRequirements memoryRequirements = stack.push(new VkMemoryRequirements());
-            vkInstance.vkGetImageMemoryRequirements(device.getVkDevice(), getVkImage(), ref(memoryRequirements));
-
              change = new MemoryRequirementsChange(
                     offset.get(),
-                    actualSize.get(), requiredAlignment,
-                    memoryRequirements.size.get(), memoryRequirements.alignment.get()
-            );
+                    actualSize.get(), requiredAlignment
+             );
 
             // update information
             imageSize = newImageSize;
             size = newSizeInBytes;
-            memoryRequirements(memoryRequirements);
-
-            stack.pop(); // memoryRequirements
         }
 
         VkImageCreateInfo imageCreateInfo = stack.push(new VkImageCreateInfo());
@@ -132,6 +131,17 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         vkInstance.vkCreateImage(device.getVkDevice(), ref(imageCreateInfo), ref(null), ref(vkImage)).check();
 
         stack.pop(); // imageCreateInfo
+
+        if(change != null) {
+            VkMemoryRequirements memoryRequirements = stack.push(new VkMemoryRequirements());
+            vkInstance.vkGetImageMemoryRequirements(device.getVkDevice(), getVkImage(), ref(memoryRequirements));
+            memoryRequirements(memoryRequirements);
+
+            change.newRequiredSize = memoryRequirements.size.get();
+            change.newRequiredAlignment = memoryRequirements.alignment.get();
+
+            stack.pop(); // memoryRequirements
+        }
 
         if(memoryTypeManager != null)
             memoryTypeManager.onChanged(stack, this, change);
@@ -172,7 +182,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         viewCreateInfo.image.set(vkImage);
         viewCreateInfo.viewType.set(VkImageViewType.TYPE_2D);
         viewCreateInfo.format.set(vkFormat);
-        viewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
+        viewCreateInfo.subresourceRange.aspectMask.replaceWith(viewAspectMask);
         viewCreateInfo.subresourceRange.baseMipLevel.set(0);
         viewCreateInfo.subresourceRange.levelCount.set(1);
         viewCreateInfo.subresourceRange.baseArrayLayer.set(0);

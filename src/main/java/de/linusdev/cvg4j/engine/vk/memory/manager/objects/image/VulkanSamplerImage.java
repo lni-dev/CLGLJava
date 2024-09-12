@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.allocator.image;
+package de.linusdev.cvg4j.engine.vk.memory.manager.objects.image;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
@@ -41,10 +42,10 @@ public class VulkanSamplerImage extends VulkanImage {
 
     public VulkanSamplerImage(
             @NotNull Device device, @NotNull String debugName, int sizeInBytes, @NotNull ImageSize imageSize,
-            @NotNull IntBitfield<VkImageUsageFlagBits> usage, @NotNull VkImageTiling vkImageTiling,
-            @NotNull VkFormat vkFormat
+            @NotNull IntBitfield<VkImageUsageFlagBits> usage, @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask,
+            @NotNull VkImageTiling vkImageTiling, @NotNull VkFormat vkFormat
     ) {
-        super(device, debugName, sizeInBytes, imageSize, usage, vkImageTiling, vkFormat);
+        super(device, debugName, sizeInBytes, imageSize, usage, viewAspectMask, vkImageTiling, vkFormat);
 
         this.vkSampler = allocate(new VkSampler());
     }

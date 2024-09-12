@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.allocator.buffer;
+package de.linusdev.cvg4j.engine.vk.memory.manager.objects.buffer;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;

@@ -22,6 +22,7 @@ import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkRenderPass;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkFramebufferCreateInfo;
@@ -81,13 +82,16 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
 
         // Create Framebuffers
         VkFramebufferCreateInfo frameBufferCreateInfo = stack.push(new VkFramebufferCreateInfo());
+        var attachmentImages = stack.pushArray(2, VkImageView.class, VkImageView::new);
+        attachmentImages.get(1).set(swapChain.getDepthImage().getVkImageView()); // must be at index 1, like it was in the render pass.
         int i = 0;
         for (VkFramebuffer vkFramebuffer : frameBuffers) {
+            attachmentImages.get(0).set(swapChain.getSwapChainImageViews().get(i));
 
             frameBufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
             frameBufferCreateInfo.renderPass.set(vkRenderPass);
-            frameBufferCreateInfo.attachmentCount.set(1);
-            frameBufferCreateInfo.pAttachments.set(swapChain.getSwapChainImageViews().get(i));
+            frameBufferCreateInfo.attachmentCount.set(attachmentImages.length());
+            frameBufferCreateInfo.pAttachments.setOfArray(attachmentImages);
             frameBufferCreateInfo.width.set(swapChain.getExtend().width());
             frameBufferCreateInfo.height.set(swapChain.getExtend().height());
             frameBufferCreateInfo.layers.set(1);
@@ -102,6 +106,7 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
             i++;
         }
 
+        stack.pop(); // attachmentImages
         stack.pop(); // frameBufferCreateInfo
     }
 

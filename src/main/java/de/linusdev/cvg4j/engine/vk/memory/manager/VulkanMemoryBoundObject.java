@@ -18,7 +18,6 @@ package de.linusdev.cvg4j.engine.vk.memory.manager;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
 import de.linusdev.cvg4j.nat.vulkan.VkDeviceSize;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;

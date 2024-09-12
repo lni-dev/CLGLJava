@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.image;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.image.VulkanSamplerImage;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanSamplerImage;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
 import org.jetbrains.annotations.NotNull;
 

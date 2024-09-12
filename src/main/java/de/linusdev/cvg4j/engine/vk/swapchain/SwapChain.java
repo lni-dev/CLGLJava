@@ -20,7 +20,8 @@ import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanMemoryAllocator;
+import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
 import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCompositeAlphaFlagBitsKHR;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
@@ -44,6 +45,7 @@ import de.linusdev.lutils.nat.enums.JavaEnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -65,22 +67,11 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform,
             EnumValue32<VkPresentModeKHR> presentMode
     ) throws EngineException {
-        SwapChain swapChain = new SwapChain(
+        return new SwapChain(
                 vkInstance, device, window,
-                swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode
-        );
-
-        swapChain.recreate(false, stack, null, null, null, null, null);
-
-        swapChain.allocator.createDeviceLocalVulkanImage(stack, "depth-image", swapChainExtend,
-                VkFormat.D32_SFLOAT, //TODO: this must be selected
-                VkImageTiling.OPTIMAL,
-                new IntBitfieldImpl<>(VkImageUsageFlagBits.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT)
-        );
-
-        //TODO: ImageView must have aspect mask: VK_IMAGE_ASPECT_DEPTH_BIT!!!!!
-
-        return swapChain;
+                swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode,
+                VkFormat.D32_SFLOAT //TODO: must be selected/found
+        ).create(stack);
     }
 
     private final @NotNull VkInstance vkInstance;
@@ -92,7 +83,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
      */
     private final @NotNull VkSwapchainKHR vkSwapChain;
     private final @NotNull StructureArray<VkImageView> swapChainImageViews;
-    private final @NotNull VulkanMemoryAllocator allocator;
+    private final @NotNull OnDemandVulkanMemoryAllocator allocator;
+    private VulkanImage depthImage;
 
     /*
      * Information stored in this class
@@ -103,6 +95,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     private final @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform;
     private final @NotNull EnumValue32<VkPresentModeKHR> presentMode;
     private final @NotNull Extend2D extend;
+    private final @NotNull VkFormat depthFormat;
+
 
     public SwapChain(
             @NotNull VkInstance vkInstance,
@@ -113,15 +107,17 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,
             @NotNull Extend2D extend,
             @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform,
-            @NotNull EnumValue32<VkPresentModeKHR> presentMode
+            @NotNull EnumValue32<VkPresentModeKHR> presentMode,
+            @NotNull VkFormat depthFormat
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
         this.window = window;
+        this.depthFormat = depthFormat;
 
         this.vkSwapChain = allocate(new VkSwapchainKHR());
         this.swapChainImageViews = StructureArray.newAllocated(swapChainImageCount, VkImageView.class, VkImageView::new);
-        this.allocator = new VulkanMemoryAllocator(vkInstance, device);
+        this.allocator = new OnDemandVulkanMemoryAllocator(device, "swap-chain-memory-allocator");
 
         /*
          * Information about this swap chain
@@ -139,6 +135,22 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         this.transform.set(transform);
         this.presentMode.set(presentMode);
         this.extend.xy(extend.x(), extend.y());
+    }
+
+    @Contract("_ -> this")
+    public @NotNull SwapChain create(@NotNull Stack stack) throws EngineException {
+        depthImage = allocator.createDeviceLocalVulkanImage(stack, "depth-image", extend,
+                depthFormat, //TODO: this must be selected
+                VkImageTiling.OPTIMAL,
+                new IntBitfieldImpl<>(VkImageUsageFlagBits.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT),
+                new IntBitfieldImpl<>(VkImageAspectFlagBits.VK_IMAGE_ASPECT_DEPTH_BIT)
+        );
+
+        allocator.allocate(stack);
+
+        recreate(false, stack, null, null, null, null, null);
+
+        return this;
     }
 
     public void recreate(
@@ -182,6 +194,9 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
 
         if(newExtend != null && !Vector.equals(extend, newExtend)) {
             extend.xy(newExtend.x(), newExtend.y());
+            // recreate Depth Image
+            depthImage.recreate(stack, -1, newExtend);
+            allocator.allocate(stack);
             isExtendTrulyNew = true;
         }
 
@@ -317,6 +332,14 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         return extend;
     }
 
+    public @NotNull VkFormat getDepthFormat() {
+        return depthFormat;
+    }
+
+    public VulkanImage getDepthImage() {
+        return depthImage;
+    }
+
     public void destroyForRecreation() {
         for (VkImageView view : swapChainImageViews) {
             vkInstance.vkDestroyImageView(device.getVkDevice(), view, ref(null));
@@ -326,6 +349,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     @Override
     public void close() {
         destroyForRecreation();
+        allocator.close();
         vkInstance.vkDestroySwapchainKHR(device.getVkDevice(), vkSwapChain, ref(null));
     }
 }

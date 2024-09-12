@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.allocator;
+package de.linusdev.cvg4j.engine.vk.memory.manager.allocator;
 
+import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import org.jetbrains.annotations.NotNull;
 
-import java.nio.ByteBuffer;
+public abstract class VulkanMemoryAllocator implements AutoCloseable {
 
-public interface MappingListener {
-    void vulkanBufferMapped(@NotNull ByteBuffer mapped);
+    protected final @NotNull VkInstance vkInstance;
+    protected final @NotNull Device device;
+    protected final @NotNull String debugName;
+
+    protected VulkanMemoryAllocator(@NotNull Device device, @NotNull String debugName) {
+        this.vkInstance = device.getVkInstance();
+        this.device = device;
+        this.debugName = debugName;
+    }
+
+    @Override
+    public abstract void close();
 }

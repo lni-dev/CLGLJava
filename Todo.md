@@ -35,3 +35,7 @@ It is bad to allocate memory for every buffer individually. Instead, allocate on
 buffers with the same memory type and use the offset when binding the memory to the buffers.
 Even use a single VkBuffer!
 https://developer.nvidia.com/vulkan-memory-management
+
+## Quality of life changes to generated code
+- VkBool should allow setting and getting a boolean.
+- FlagBits should not have the class name in the enum name and the BIT at the end should be removed.

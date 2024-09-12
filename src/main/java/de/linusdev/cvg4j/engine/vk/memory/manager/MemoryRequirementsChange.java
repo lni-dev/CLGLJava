@@ -16,10 +16,71 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.manager;
 
-public record MemoryRequirementsChange(
-        long oldOffset,
-        long oldRequiredSize,
-        long oldRequiredAlignment,
-        long newRequiredSize,
-        long newRequiredAlignment
-) { }
+import java.util.Objects;
+
+public final class MemoryRequirementsChange {
+    public long oldOffset;
+    public long oldRequiredSize;
+    public long oldRequiredAlignment;
+    public long newRequiredSize;
+    public long newRequiredAlignment;
+
+    public MemoryRequirementsChange(
+            long oldOffset,
+            long oldRequiredSize,
+            long oldRequiredAlignment
+    ) {
+        this.oldOffset = oldOffset;
+        this.oldRequiredSize = oldRequiredSize;
+        this.oldRequiredAlignment = oldRequiredAlignment;
+        this.newRequiredSize = newRequiredSize;
+        this.newRequiredAlignment = newRequiredAlignment;
+    }
+
+    public long oldOffset() {
+        return oldOffset;
+    }
+
+    public long oldRequiredSize() {
+        return oldRequiredSize;
+    }
+
+    public long oldRequiredAlignment() {
+        return oldRequiredAlignment;
+    }
+
+    public long newRequiredSize() {
+        return newRequiredSize;
+    }
+
+    public long newRequiredAlignment() {
+        return newRequiredAlignment;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) return true;
+        if (obj == null || obj.getClass() != this.getClass()) return false;
+        var that = (MemoryRequirementsChange) obj;
+        return this.oldOffset == that.oldOffset &&
+                this.oldRequiredSize == that.oldRequiredSize &&
+                this.oldRequiredAlignment == that.oldRequiredAlignment &&
+                this.newRequiredSize == that.newRequiredSize &&
+                this.newRequiredAlignment == that.newRequiredAlignment;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(oldOffset, oldRequiredSize, oldRequiredAlignment, newRequiredSize, newRequiredAlignment);
+    }
+
+    @Override
+    public String toString() {
+        return "MemoryRequirementsChange[" +
+                "oldOffset=" + oldOffset + ", " +
+                "oldRequiredSize=" + oldRequiredSize + ", " +
+                "oldRequiredAlignment=" + oldRequiredAlignment + ", " +
+                "newRequiredSize=" + newRequiredSize + ", " +
+                "newRequiredAlignment=" + newRequiredAlignment + ']';
+    }
+}

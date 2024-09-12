@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.memory.buffer;
 
-import de.linusdev.cvg4j.engine.vk.memory.allocator.MappingListener;
+import de.linusdev.cvg4j.engine.vk.memory.manager.MappingListener;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 

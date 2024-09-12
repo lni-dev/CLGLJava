@@ -80,11 +80,15 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
 
     @Override
     public void onChanged(@NotNull Stack stack, @NotNull VulkanMemoryBoundObject object, @Nullable MemoryRequirementsChange change) {
-        if(requiresAllocation)
+        LOG.debug("A child object changed. Manager: index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+        if(requiresAllocation) {
+            LOG.debug("Already requires reallocation.");
             return; // We have to reallocate anyway, return early.
+        }
 
         if(change == null) {
             // If nothing has changed, just rebind the memory.
+            LOG.debug("No change! rebinding...");
             bindTo(object, stack, vkDeviceMemory);
             if(canBeMapped())
                 map(object, mappedMemory);
@@ -94,6 +98,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
         long sizeChange = change.oldRequiredSize() - (change.newRequiredSize() + alignmentFix);
 
         if(sizeChange >= 0) { // It still fits :)
+            LOG.debug("Required memory is less than before! rebinding...");
             bindTo(object, stack, vkDeviceMemory);
             if(canBeMapped())
                 map(object, mappedMemory);
@@ -101,6 +106,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
         }
 
         // It doesn't fit anymore, we have to allocate everything again...
+        LOG.debug("Required memory is bigger than before. Manager must be reallocated.");
         requiresAllocation = true;
     }
 
@@ -108,11 +114,15 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
     public void addObject(@NotNull VulkanMemoryBoundObject object) {
         requiresAllocation = true;
         objects.add(object);
+        setMemoryTypeManagerOf(object, this);
     }
 
     public void allocate(@NotNull Stack stack) {
-        if(!requiresAllocation)
+        if(!requiresAllocation) {
+            LOG.debug("Manager does not require allocation. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
             return;
+        }
+
         requiresAllocation = false;
 
         if(!vkDeviceMemory.isNullHandle()) {

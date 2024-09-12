@@ -43,53 +43,80 @@ public class RenderPass implements AutoCloseable {
 
         RenderPass renderPass = new RenderPass(vkInstance, device);
 
-        // Description for the color attachment
-        VkAttachmentDescription attachmentDescription = stack.push(new VkAttachmentDescription());
-        attachmentDescription.format.set(swapChain.getFormat());
-        attachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
-        attachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
-        attachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
-        attachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
-        attachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
-        attachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
-        attachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
+        try(var ignored = stack.popPoint()) {
 
-        // Render Subpass for fragment shader
-        VkAttachmentReference vkAttachmentReference = stack.push(new VkAttachmentReference());
-        vkAttachmentReference.attachment.set(0);
-        vkAttachmentReference.layout.set(VkImageLayout.COLOR_ATTACHMENT_OPTIMAL);
+            var attachments = stack.pushArray(2, VkAttachmentDescription.class, VkAttachmentDescription::new);
 
-        VkSubpassDescription fragmentSubpassDescription = stack.push(new VkSubpassDescription());
-        fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.GRAPHICS);
-        fragmentSubpassDescription.colorAttachmentCount.set(1);
-        fragmentSubpassDescription.pColorAttachments.set(vkAttachmentReference);
+            // Description for the color attachment
+            VkAttachmentDescription attachmentDescription = attachments.get(0);
+            attachmentDescription.format.set(swapChain.getFormat());
+            attachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+            attachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
+            attachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
+            attachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
+            attachmentDescription.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
+            attachmentDescription.initialLayout.set(VkImageLayout.UNDEFINED);
+            attachmentDescription.finalLayout.set(VkImageLayout.PRESENT_SRC_KHR);
 
-        // Create the render pass
-        VkRenderPassCreateInfo renderPassCreateInfo = stack.push(new VkRenderPassCreateInfo());
-        renderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
-        renderPassCreateInfo.attachmentCount.set(1);
-        renderPassCreateInfo.pAttachments.set(attachmentDescription);
-        renderPassCreateInfo.subpassCount.set(1);
-        renderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
+            // Render Subpass for fragment shader
+            VkAttachmentReference vkAttachmentReference = stack.push(new VkAttachmentReference());
+            vkAttachmentReference.attachment.set(0);
+            vkAttachmentReference.layout.set(VkImageLayout.COLOR_ATTACHMENT_OPTIMAL);
 
-        VkSubpassDependency subpassDependency = stack.push(new VkSubpassDependency());
-        subpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
-        subpassDependency.dstSubpass.set(0);
-        subpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        subpassDependency.srcAccessMask.set(0);
-        subpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        subpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+            // Depth Attachment
+            VkAttachmentDescription depthAttDesc = attachments.get(1);
+            depthAttDesc.format.set(swapChain.getDepthFormat());
+            depthAttDesc.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+            depthAttDesc.loadOp.set(VkAttachmentLoadOp.CLEAR);
+            depthAttDesc.storeOp.set(VkAttachmentStoreOp.DONT_CARE);
+            depthAttDesc.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
+            depthAttDesc.stencilStoreOp.set(VkAttachmentStoreOp.DONT_CARE);
+            depthAttDesc.initialLayout.set(VkImageLayout.UNDEFINED);
+            depthAttDesc.finalLayout.set(VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-        renderPassCreateInfo.dependencyCount.set(1);
-        renderPassCreateInfo.pDependencies.set(subpassDependency);
+            VkAttachmentReference depthAttRef = stack.push(new VkAttachmentReference());
+            depthAttRef.attachment.set(1);
+            depthAttRef.layout.set(VkImageLayout.DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
-        vkInstance.vkCreateRenderPass(device.getVkDevice(), ref(renderPassCreateInfo), ref(null), ref(renderPass.vkRenderPass)).check();
 
-        stack.pop(); // subpassDependency
-        stack.pop(); // renderPassCreateInfo
-        stack.pop(); // fragmentSubpassDescription
-        stack.pop(); // vkAttachmentReference
-        stack.pop(); // attachmentDescription
+
+            // Fragment subpass
+            VkSubpassDescription fragmentSubpassDescription = stack.push(new VkSubpassDescription());
+            fragmentSubpassDescription.pipelineBindPoint.set(VkPipelineBindPoint.GRAPHICS);
+            fragmentSubpassDescription.colorAttachmentCount.set(1);
+            fragmentSubpassDescription.pColorAttachments.set(vkAttachmentReference);
+            fragmentSubpassDescription.pDepthStencilAttachment.set(depthAttRef);
+
+            // Create the render pass
+            VkRenderPassCreateInfo renderPassCreateInfo = stack.push(new VkRenderPassCreateInfo());
+            renderPassCreateInfo.sType.set(VkStructureType.RENDER_PASS_CREATE_INFO);
+            renderPassCreateInfo.attachmentCount.set(attachments.length());
+            renderPassCreateInfo.pAttachments.setOfArray(attachments);
+            renderPassCreateInfo.subpassCount.set(1);
+            renderPassCreateInfo.pSubpasses.set(fragmentSubpassDescription);
+
+            VkSubpassDependency subpassDependency = stack.push(new VkSubpassDependency());
+            subpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
+            subpassDependency.dstSubpass.set(0);
+            subpassDependency.srcStageMask.set(
+                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT // Depth testing
+            );
+            subpassDependency.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+            subpassDependency.dstStageMask.set(
+                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT // Depth testing
+            );
+            subpassDependency.dstAccessMask.set(
+                    VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                    VkAccessFlagBits.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+            );
+
+            renderPassCreateInfo.dependencyCount.set(1);
+            renderPassCreateInfo.pDependencies.set(subpassDependency);
+
+            vkInstance.vkCreateRenderPass(device.getVkDevice(), ref(renderPassCreateInfo), ref(null), ref(renderPass.vkRenderPass)).check();
+        }
 
         return renderPass;
     }

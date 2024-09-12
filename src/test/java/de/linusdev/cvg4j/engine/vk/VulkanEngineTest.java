@@ -23,13 +23,13 @@ import de.linusdev.cvg4j.engine.vk.descriptor.pool.DescriptorSet;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.VulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.SimpleVertex;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
+import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
@@ -110,7 +110,7 @@ class VulkanEngineTest {
 
         protected final long startTime = System.currentTimeMillis();
 
-        protected VulkanMemoryAllocator vulkanMemoryAllocator;
+        protected OnDemandVulkanMemoryAllocator vulkanMemoryAllocator;
         protected FixedSizeDescriptorPool descriptorPool;
         protected VertexBuffer<SimpleVertex> vertexBuffer;
         protected IndexBuffer<BBUShort1> indexBuffer;
@@ -119,7 +119,7 @@ class VulkanEngineTest {
         protected UniformBuffer<ModelViewProjection> uniformBuffer;
         protected Sampler2D<BBInt32Image> grassSideSampler;
 
-        private final Float3 cameraPosition = new ABFloat3(0, 0, 2);
+        private final Float3 cameraPosition = new ABFloat3(2, 2, -2);
 
         public TestScene(@NotNull VulkanEngine<TestGame> engine) {
             super(engine);
@@ -129,7 +129,7 @@ class VulkanEngineTest {
         public void onLoad(@NotNull Stack stack, @NotNull VulkanRasterizationWindow window) throws EngineException {
             window.setWindowAspectRatio(1, 1);
 
-            vulkanMemoryAllocator = new VulkanMemoryAllocator(engine.getVkInstance(), engine.getDevice());
+            vulkanMemoryAllocator = new OnDemandVulkanMemoryAllocator(engine.getDevice(), "test-scene-memory-allocator");
             vertexBuffer = vulkanMemoryAllocator.createStagedVertexBuffer(
                     stack, "vertex-buffer-1", SimpleVertex.class, SimpleVertex::new,
                     VertexElement.ofComplexInfo(new SimpleVertex().getInfo()),
@@ -176,62 +176,62 @@ class VulkanEngineTest {
             vertexBufferAsArray.get(6).color.xyz(0f, 0f,1f);
             vertexBufferAsArray.get(7).color.xyz(1f, 0f,0.6f);
 
-            vertexBufferAsArray.get(0).texCoord.xy(1, 1);
-            vertexBufferAsArray.get(1).texCoord.xy(0, 1);
-            vertexBufferAsArray.get(2).texCoord.xy(-.5f, -.5f);
-            vertexBufferAsArray.get(3).texCoord.xy(0.5f, -.5f);
+            vertexBufferAsArray.get(0).texCoord.xy(1, 1); // Done
+            vertexBufferAsArray.get(1).texCoord.xy(0, 1); // Done
+            vertexBufferAsArray.get(2).texCoord.xy(1, 1);
+            vertexBufferAsArray.get(3).texCoord.xy(0, 1);
 
-            vertexBufferAsArray.get(4).texCoord.xy(1, 0);
-            vertexBufferAsArray.get(5).texCoord.xy(0, 0);
-            vertexBufferAsArray.get(6).texCoord.xy(-.5f, 0.5f);
-            vertexBufferAsArray.get(7).texCoord.xy(0.5f, 0.5f);
+            vertexBufferAsArray.get(4).texCoord.xy(1, 0); // Done
+            vertexBufferAsArray.get(5).texCoord.xy(0, 0); // Done
+            vertexBufferAsArray.get(6).texCoord.xy(1, 0);
+            vertexBufferAsArray.get(7).texCoord.xy(0, 0);
 
             vertexBuffer.getInput().setCurrentCount(8);
 
             var indexBufferArray = indexBuffer.getInput().getBackedArray();
 
-            // Bottom
+            // Bottom: Done
             indexBufferArray.get(0).set((short) 0);
             indexBufferArray.get(1).set((short) 1);
             indexBufferArray.get(2).set((short) 2);
 
-            indexBufferArray.get(3).set((short) 0);
+            indexBufferArray.get(3).set((short) 2);
             indexBufferArray.get(4).set((short) 1);
             indexBufferArray.get(5).set((short) 3);
 
-            // Top
-            indexBufferArray.get(6).set((short) 4);
+            // Top: Done
+            indexBufferArray.get(6).set((short) 6);
             indexBufferArray.get(7).set((short) 5);
-            indexBufferArray.get(8).set((short) 6);
+            indexBufferArray.get(8).set((short) 4);
 
-            indexBufferArray.get(9).set((short) 4);
+            indexBufferArray.get(9).set((short) 7);
             indexBufferArray.get(10).set((short) 5);
-            indexBufferArray.get(11).set((short) 7);
+            indexBufferArray.get(11).set((short) 6);
 
-            // X
-            indexBufferArray.get(12).set((short) 1);
+            // X: Done
+            indexBufferArray.get(12).set((short) 5);
             indexBufferArray.get(13).set((short) 3);
-            indexBufferArray.get(14).set((short) 5);
+            indexBufferArray.get(14).set((short) 1);
 
-            indexBufferArray.get(15).set((short) 1);
+            indexBufferArray.get(15).set((short) 7);
             indexBufferArray.get(16).set((short) 3);
-            indexBufferArray.get(17).set((short) 7);
+            indexBufferArray.get(17).set((short) 5);
 
-            // -X
+            // -X: Done
             indexBufferArray.get(18).set((short) 0);
             indexBufferArray.get(19).set((short) 2);
             indexBufferArray.get(20).set((short) 4);
 
-            indexBufferArray.get(21).set((short) 0);
+            indexBufferArray.get(21).set((short) 4);
             indexBufferArray.get(22).set((short) 2);
             indexBufferArray.get(23).set((short) 6);
 
-            // Z
+            // Z: Done
             indexBufferArray.get(24).set((short) 2);
             indexBufferArray.get(25).set((short) 3);
             indexBufferArray.get(26).set((short) 6);
 
-            indexBufferArray.get(27).set((short) 2);
+            indexBufferArray.get(27).set((short) 6);
             indexBufferArray.get(28).set((short) 3);
             indexBufferArray.get(29).set((short) 7);
 
@@ -307,7 +307,7 @@ class VulkanEngineTest {
                 VMath.multiply(view, result, result);
                 VMath.multiply(proj, result, result);
 
-                System.out.println("verex[" + i++ +"]: " + result);
+                System.out.println("vertex[" + i++ +"]: " + result);
             }
         }
 
@@ -326,11 +326,19 @@ class VulkanEngineTest {
             VkCommandBufferBeginInfo commandBufferBeginInfo = stack.push(new VkCommandBufferBeginInfo());
             commandBufferBeginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
 
-            VkClearValue vkClearValue = stack.push(new VkClearValue());
+            var clearValueArray = stack.pushArray(2, VkClearValue.class, VkClearValue::new);
+
+            // Color attachment clear values
+            VkClearValue vkClearValue = clearValueArray.get(0);
             vkClearValue.color.float32.get(0).set(0f);
             vkClearValue.color.float32.get(1).set(0f);
             vkClearValue.color.float32.get(2).set(0f);
             vkClearValue.color.float32.get(3).set(1f);
+
+            // Depth and Stencil clear values
+            vkClearValue = clearValueArray.get(1);
+            vkClearValue.depthStencil.depth.set(1f);
+            vkClearValue.depthStencil.stencil.set(0);
 
             VkRenderPassBeginInfo renderPassBeginInfo = stack.push(new VkRenderPassBeginInfo());
             renderPassBeginInfo.sType.set(VkStructureType.RENDER_PASS_BEGIN_INFO);
@@ -339,8 +347,8 @@ class VulkanEngineTest {
             renderPassBeginInfo.renderArea.offset.y.set(0);
             renderPassBeginInfo.renderArea.extent.width.set(extend.width());
             renderPassBeginInfo.renderArea.extent.height.set(extend.height());
-            renderPassBeginInfo.clearValueCount.set(1);
-            renderPassBeginInfo.pClearValues.set(vkClearValue);
+            renderPassBeginInfo.clearValueCount.set(clearValueArray.length());
+            renderPassBeginInfo.pClearValues.setOfArray(clearValueArray);
             renderPassBeginInfo.framebuffer.set(frameBuffer);
 
             vkInstance.vkBeginCommandBuffer(commandBuffer, ref(commandBufferBeginInfo)).check();
@@ -360,7 +368,7 @@ class VulkanEngineTest {
             vkInstance.vkEndCommandBuffer(commandBuffer).check();
 
             stack.pop(); // renderPassBeginInfo
-            stack.pop(); // vkClearValue
+            stack.pop(); // clearValueArray
             stack.pop(); // commandBufferBeginInfo
         }
 

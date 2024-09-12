@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.memory.allocator;
+package de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.buffer.VulkanBuffer;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.image.VulkanImage;
-import de.linusdev.cvg4j.engine.vk.memory.allocator.image.VulkanSamplerImage;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferArrayInput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferOutput;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.BufferStructInput;
@@ -31,15 +28,21 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.engine.vk.memory.image.ImageOutput;
 import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.VulkanMemoryBoundObject;
+import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.VulkanMemoryAllocator;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.buffer.VulkanBuffer;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
+import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanSamplerImage;
 import de.linusdev.cvg4j.engine.vk.memory.manager.ondemand.OnDemandMemoryTypeManager;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageLayout;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageTiling;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkVertexInputRate;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.image.ImageSize;
@@ -54,18 +57,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class VulkanMemoryAllocator implements AutoCloseable {
+public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
-
-
-    private final @NotNull VkInstance vkInstance;
-    private final @NotNull Device device;
+    private final static @NotNull LogInstance LOG = LLog.getLogInstance();
 
     OnDemandMemoryTypeManager[] typeManagers = new OnDemandMemoryTypeManager[32];
 
-    public VulkanMemoryAllocator(@NotNull VkInstance vkInstance, @NotNull Device device) {
-        this.vkInstance = vkInstance;
-        this.device = device;
+    public OnDemandVulkanMemoryAllocator(@NotNull Device device, @NotNull String debugName) {
+        super(device, debugName);
     }
 
     public <V extends Structure> VertexBuffer<V> createVertexBuffer(
@@ -197,6 +196,7 @@ public class VulkanMemoryAllocator implements AutoCloseable {
                         VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSFER_DST_BIT,
                         VkImageUsageFlagBits.VK_IMAGE_USAGE_SAMPLED_BIT
                 ),
+                new IntBitfieldImpl<>(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT),
                 VkImageTiling.OPTIMAL,
                 VkFormat.R8G8B8A8_SRGB
         ).create(stack);
@@ -214,15 +214,16 @@ public class VulkanMemoryAllocator implements AutoCloseable {
             @NotNull ImageSize size,
             @NotNull VkFormat format,
             @NotNull VkImageTiling tiling,
-            @NotNull IntBitfield<VkImageUsageFlagBits> usage
+            @NotNull IntBitfield<VkImageUsageFlagBits> usage,
+            @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask
     ) throws EngineException {
-        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, tiling, format).create(stack);
+        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format).create(stack);
         add(stack, image, VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
         return image;
     }
 
-
     public void allocate(@NotNull Stack stack) {
+        LOG.debug("Start allocating memory for allocator '" + debugName + "'.");
         for (OnDemandMemoryTypeManager typeManager : typeManagers) {
             if(typeManager != null) typeManager.allocate(stack);
         }

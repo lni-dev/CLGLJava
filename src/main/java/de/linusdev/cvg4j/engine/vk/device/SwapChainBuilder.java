@@ -103,7 +103,7 @@ public class SwapChainBuilder {
             @NotNull VulkanRasterizationWindow window,
             @NotNull VkInstance vkInstance,
             @NotNull Device device
-    ) {
+    ) throws EngineException {
 
         if(swapChainImageCount == null)
             throw new Error("swapChainImageCount is null (call set...).");
