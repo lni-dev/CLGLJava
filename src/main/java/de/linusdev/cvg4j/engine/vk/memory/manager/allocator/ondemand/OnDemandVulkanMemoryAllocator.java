@@ -81,13 +81,13 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
         BufferArrayInput<V> vertexInput = new BufferArrayInput<>(vertexCount, elementClass, elementCreator);
         ArrayInfo info = vertexInput.getBackedArrayInfo();
         VulkanBuffer vulkanBuffer = new VulkanBuffer(device, debugName, info.getRequiredSize(),
-                new IntBitfieldImpl<>(VkBufferUsageFlagBits.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT)
+                new IntBitfieldImpl<>(VkBufferUsageFlagBits.VERTEX_BUFFER)
         ).create(stack);
         vertexInput.setVulkanBuffer(vulkanBuffer);
 
         add(stack, vulkanBuffer,
-                VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
-                VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                VkMemoryPropertyFlagBits.HOST_VISIBLE, // staging buffer must be mapped
+                VkMemoryPropertyFlagBits.HOST_COHERENT // automatically detect changes
         );
 
         BufferOutput vertexOutput = new BufferOutput(vulkanBuffer);
@@ -112,10 +112,10 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
         VulkanBuffer vertexBuffer = new VulkanBuffer(
                 device, debugName + "-out", info.getRequiredSize(), new IntBitfieldImpl<>(
-                VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                VkBufferUsageFlagBits.VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
+                VkBufferUsageFlagBits.TRANSFER_DST,
+                VkBufferUsageFlagBits.VERTEX_BUFFER
         )).create(stack);
-        add(stack, vertexBuffer, VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        add(stack, vertexBuffer, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         BufferOutput vertexOutput = new BufferOutput(vertexBuffer);
 
 
@@ -136,10 +136,10 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
 
         VulkanBuffer vertexBuffer = new VulkanBuffer(device, debugName + "-out", info.getRequiredSize(), new IntBitfieldImpl<>(
-                VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-                VkBufferUsageFlagBits.VK_BUFFER_USAGE_INDEX_BUFFER_BIT
+                VkBufferUsageFlagBits.TRANSFER_DST,
+                VkBufferUsageFlagBits.INDEX_BUFFER
         )).create(stack);
-        add(stack, vertexBuffer, VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        add(stack, vertexBuffer, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         BufferOutput vertexOutput = new BufferOutput(vertexBuffer);
 
 
@@ -162,14 +162,14 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
             inputs[i] = new BufferStructInput<>(struct);
             VulkanBuffer vulkanBuffer = new VulkanBuffer(device, debugName + "[" + i + "]", struct.getRequiredSize(), new IntBitfieldImpl<>(
-                    VkBufferUsageFlagBits.VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+                    VkBufferUsageFlagBits.UNIFORM_BUFFER
             )).create(stack);
             inputs[i].setVulkanBuffer(vulkanBuffer);
 
 
             add(stack, vulkanBuffer,
-                    VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
-                    VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT // automatically detect changes
+                    VkMemoryPropertyFlagBits.HOST_VISIBLE, // staging buffer must be mapped
+                    VkMemoryPropertyFlagBits.HOST_COHERENT // automatically detect changes
             );
             outputs[i] = new BufferOutput(vulkanBuffer);
         }
@@ -193,14 +193,14 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
         VulkanSamplerImage image = new VulkanSamplerImage(
                 device, debugName + "-out", info.getRequiredSize(), size,
                 new IntBitfieldImpl<>(
-                        VkImageUsageFlagBits.VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-                        VkImageUsageFlagBits.VK_IMAGE_USAGE_SAMPLED_BIT
+                        VkImageUsageFlagBits.TRANSFER_DST,
+                        VkImageUsageFlagBits.SAMPLED
                 ),
-                new IntBitfieldImpl<>(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT),
+                new IntBitfieldImpl<>(VkImageAspectFlagBits.COLOR),
                 VkImageTiling.OPTIMAL,
                 VkFormat.R8G8B8A8_SRGB
         ).create(stack);
-        add(stack, image, VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        add(stack, image, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         ImageOutput output = new ImageOutput(image);
 
 
@@ -218,7 +218,7 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
             @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask
     ) throws EngineException {
         VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format).create(stack);
-        add(stack, image, VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        add(stack, image, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         return image;
     }
 
@@ -239,12 +239,12 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
     private @NotNull VulkanBuffer addStagingBuffer(@NotNull Stack stack, @NotNull String debugName, int size) throws EngineException {
         VulkanBuffer stagingBuffer = new VulkanBuffer(device, debugName + "-in", size, new IntBitfieldImpl<>(
-                VkBufferUsageFlagBits.VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+                VkBufferUsageFlagBits.TRANSFER_SRC
         )).create(stack);
 
         add(stack, stagingBuffer,
-                VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, // staging buffer must be mapped
-                VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+                VkMemoryPropertyFlagBits.HOST_VISIBLE, // staging buffer must be mapped
+                VkMemoryPropertyFlagBits.HOST_COHERENT
         );
         return stagingBuffer;
     }

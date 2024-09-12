@@ -68,7 +68,7 @@ public class UniformBuffer<S extends Structure> implements ShaderBinding {
         binding.binding.set(this.binding);
         binding.descriptorType.set(VkDescriptorType.UNIFORM_BUFFER);
         binding.descriptorCount.set(1);
-        binding.stageFlags.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
+        binding.stageFlags.set(VkShaderStageFlagBits.VERTEX);
         binding.pImmutableSamplers.set(null);
     }
 

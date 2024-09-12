@@ -16,13 +16,6 @@
 
 package de.linusdev.cvg4j.engine.vk;
 
-import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkQueueFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkColorSpaceKHR;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.engine.info.Game;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.engine.vk.selector.gpu.VulkanGPUSelector;
@@ -31,6 +24,13 @@ import de.linusdev.cvg4j.engine.vk.selector.priority.Priorities;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilySelector;
 import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
+import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkQueueFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkColorSpaceKHR;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
@@ -92,7 +92,7 @@ public interface VulkanGame extends Game {
                 .setGraphicsQueueEvaluator(queueFamilyInfo -> {
                     // We need at least one graphics queue
                     // It's good if the graphics and present queue is the same
-                    if(queueFamilyInfo.props().queueFlags.isSet(VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT)) {
+                    if(queueFamilyInfo.props().queueFlags.isSet(VkQueueFlagBits.GRAPHICS)) {
                         if(queueFamilyInfo.supportsSurface()) return Priorities.LOW;
                         else return Priorities.VERY_LOW;
                     }
@@ -102,7 +102,7 @@ public interface VulkanGame extends Game {
                     // We need at least one present queue
                     // It's good if the graphics and present queue is the same
                     if(queueFamilyInfo.supportsSurface()) {
-                        if(queueFamilyInfo.props().queueFlags.isSet(VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT)) return Priorities.LOW;
+                        if(queueFamilyInfo.props().queueFlags.isSet(VkQueueFlagBits.GRAPHICS)) return Priorities.LOW;
                         else return Priorities.VERY_LOW;
                     }
                     return Priorities.UNSUPPORTED;
@@ -150,7 +150,7 @@ public interface VulkanGame extends Game {
 
                 // Ideally we find a single queue that supports both graphics and presentation
                 .custom(info -> info.queueFamilyInfoList().stream().anyMatch(fam ->
-                        fam.props().queueFlags.isSet(VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT) && fam.supportsSurface())
+                        fam.props().queueFlags.isSet(VkQueueFlagBits.GRAPHICS) && fam.supportsSurface())
                 ).thenAdd(Priorities.MEDIUM)
                 .build();
     }

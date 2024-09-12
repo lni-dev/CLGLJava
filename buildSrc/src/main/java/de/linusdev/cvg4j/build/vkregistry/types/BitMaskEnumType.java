@@ -30,7 +30,11 @@ import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.VULKAN_PACKAGE;
@@ -41,6 +45,8 @@ public class BitMaskEnumType implements Type {
     private final @NotNull String name;
     private final int bitWidth;
     private final @Nullable String comment;
+    private final @NotNull String namePrefixToIgnore;
+    private final @NotNull String namePrefixFix;
 
     private final @NotNull LinkedHashMap<String, Value> values = new LinkedHashMap<>();
 
@@ -52,6 +58,37 @@ public class BitMaskEnumType implements Type {
         this.name = name;
         this.bitWidth = bitWidth;
         this.comment = comment;
+
+        Pattern wordExtractor = Pattern.compile("^(?<word>[A-Z]+[a-z0-9]*)([A-Z]|$)");
+
+        List<String> nameWords = new ArrayList<>();
+
+        while (!name.isBlank()) {
+            Matcher matcher = wordExtractor.matcher(name);
+            if(!matcher.find()) break;
+            String word = matcher.group("word");
+
+            if(!word.equals("KHR") && !word.equals("Bits") && !word.equals("Flag"))
+                nameWords.add(word);
+            name = name.substring(word.length());
+        }
+
+        namePrefixToIgnore = nameWords.stream().reduce((cur, add) -> cur.toUpperCase(Locale.ROOT) + "_" + add.toUpperCase(Locale.ROOT)).orElse("") + "_";
+        namePrefixFix = nameWords.get(nameWords.size()-1).toUpperCase(Locale.ROOT) + "_";
+        LOG.debug("bitMaskEnumName: " + this.name + ", namePrefixToIgnore: " + namePrefixToIgnore + ", namePrefixFix: " + namePrefixFix);
+    }
+
+    public String getEnumValueName(String vkName) {
+        if(vkName.startsWith(namePrefixToIgnore))
+            vkName = vkName.substring(namePrefixToIgnore.length());
+
+        if(Pattern.compile("^\\d").matcher(vkName).find()) {
+            vkName = namePrefixFix + vkName;
+        }
+
+        if(vkName.contains("_BIT")) vkName = vkName.replaceFirst("_BIT(_|$)", "$1");
+
+        return vkName;
     }
 
     public void addValue(@NotNull Node enumNode) {
@@ -69,19 +106,21 @@ public class BitMaskEnumType implements Type {
         if(nameAttr == null || (valueAttr == null && aliasAttr == null && bitPostAttr == null))
             throw new IllegalStateException("<enum> node without name or value/alias/bitPos: " + enumNode.getTextContent());
 
-        Value v = new Value(
-                nameAttr.getNodeValue(),
+        addValue(new Value(
+                getEnumValueName(nameAttr.getNodeValue()),
                 bitPostAttr == null ? -1 : Integer.parseInt(bitPostAttr.getNodeValue()),
-                valueAttr == null ? (aliasAttr == null ? null : aliasAttr.getNodeValue() + ".getValue()") : valueAttr.getNodeValue(),
+                valueAttr == null ? (aliasAttr == null ? null : getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()") : valueAttr.getNodeValue(),
                 commentAttr == null ? null : commentAttr.getNodeValue(),
                 deprecatedAttr == null ? null : deprecatedAttr.getNodeValue(),
-                null);
-
-        values.put(v.name, v);
-
+                null));
     }
 
     public void addValue(@NotNull Value value) {
+        if(value.stringValue != null && value.stringValue.equals(value.name + ".getValue()")) {
+            // Some alias are the same name as the enum value bit without the "_BIT", we remove the _BIT anyway
+            // so we can discard these aliases.
+            return;
+        }
         values.put(value.name, value);
     }
 

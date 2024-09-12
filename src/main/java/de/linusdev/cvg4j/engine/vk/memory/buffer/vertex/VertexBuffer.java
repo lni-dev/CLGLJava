@@ -68,14 +68,14 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
         if(!input.getVulkanBuffer().isMapped()) return;
 
         VkPipelineStageFlags flags = stack.push(new VkPipelineStageFlags());
-        flags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+        flags.set(VkPipelineStageFlagBits.VERTEX_INPUT);
         VkPipelineStageFlags flags2 = stack.push(new VkPipelineStageFlags());
-        flags2.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TRANSFER_BIT);
+        flags2.set(VkPipelineStageFlagBits.TRANSFER);
         VkDependencyFlags flags3 = stack.push(new VkDependencyFlags());
         VkBufferMemoryBarrier vkBufferMemoryBarrier = stack.push(new VkBufferMemoryBarrier());
         vkBufferMemoryBarrier.sType.set(VkStructureType.BUFFER_MEMORY_BARRIER);
-        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
-        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
+        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VERTEX_ATTRIBUTE_READ);
+        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
         vkBufferMemoryBarrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.buffer.set(getVkBuffer());
@@ -95,11 +95,11 @@ public class VertexBuffer<V extends Structure> extends ArrayBuffer<V> {
                 ref(region)
         );
 
-        flags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TRANSFER_BIT);
-        flags2.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_VERTEX_INPUT_BIT);
+        flags.set(VkPipelineStageFlagBits.TRANSFER);
+        flags2.set(VkPipelineStageFlagBits.VERTEX_INPUT);
         vkBufferMemoryBarrier.sType.set(VkStructureType.BUFFER_MEMORY_BARRIER);
-        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
-        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT);
+        vkBufferMemoryBarrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
+        vkBufferMemoryBarrier.dstAccessMask.set(VkAccessFlagBits.VERTEX_ATTRIBUTE_READ);
         vkBufferMemoryBarrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         vkBufferMemoryBarrier.buffer.set(getVkBuffer());

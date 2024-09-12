@@ -28,7 +28,10 @@ import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDescriptorSet;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.structs.*;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkBufferImageCopy;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkDescriptorImageInfo;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkDescriptorSetLayoutBinding;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkWriteDescriptorSet;
 import de.linusdev.lutils.image.ImageSize;
 import de.linusdev.lutils.nat.array.NativeArray;
 import de.linusdev.lutils.nat.memory.stack.Stack;
@@ -78,7 +81,7 @@ public class Sampler2D<S extends Structure> implements ShaderBinding {
         region.bufferRowLength.set(0);
         region.bufferImageHeight.set(0);
 
-        region.imageSubresource.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
+        region.imageSubresource.aspectMask.set(VkImageAspectFlagBits.COLOR);
         region.imageSubresource.mipLevel.set(0);
         region.imageSubresource.baseArrayLayer.set(0);
         region.imageSubresource.layerCount.set(1);
@@ -128,7 +131,7 @@ public class Sampler2D<S extends Structure> implements ShaderBinding {
         binding.binding.set(this.binding);
         binding.descriptorType.set(VkDescriptorType.COMBINED_IMAGE_SAMPLER);
         binding.descriptorCount.set(1);
-        binding.stageFlags.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
+        binding.stageFlags.set(VkShaderStageFlagBits.FRAGMENT);
         binding.pImmutableSamplers.set(null);
     }
 

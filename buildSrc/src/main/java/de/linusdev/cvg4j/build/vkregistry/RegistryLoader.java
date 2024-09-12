@@ -700,7 +700,7 @@ public class RegistryLoader {
             } else if (type instanceof BitMaskEnumType bitMaskEnumToExtend) {
                 if(bitposAttr != null) {
                     bitMaskEnumToExtend.addValue(new BitMaskEnumType.Value(
-                            nameAttr.getNodeValue(),
+                            bitMaskEnumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             Integer.parseInt(bitposAttr.getNodeValue()),
                             null,
                             comment, null,
@@ -709,9 +709,9 @@ public class RegistryLoader {
                     return;
                 } else if(aliasAttr != null || valueAttr != null) {
                     bitMaskEnumToExtend.addValue(new BitMaskEnumType.Value(
-                            nameAttr.getNodeValue(),
+                            bitMaskEnumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             -1,
-                            valueAttr == null ? aliasAttr.getNodeValue() + ".getValue()" : valueAttr.getNodeValue(),
+                            valueAttr == null ? bitMaskEnumToExtend.getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()" : valueAttr.getNodeValue(),
                             comment, null,
                             javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
                     ));

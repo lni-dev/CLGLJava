@@ -66,13 +66,13 @@ public class RasterizationPipeline implements AutoCloseable {
             // Shader stages
             VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo = shaderStages.get(0);
             pipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
-            pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
+            pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VERTEX);
             pipelineShaderStageCreateInfo.module.set(vertexShader.getShaderModule().get());
             pipelineShaderStageCreateInfo.pName.set(stack.pushString(vertexShader.getMainMethodName()));
 
             pipelineShaderStageCreateInfo = shaderStages.get(1);
             pipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
-            pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
+            pipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.FRAGMENT);
             pipelineShaderStageCreateInfo.module.set(fragmentShader.getShaderModule().get());
             pipelineShaderStageCreateInfo.pName.set(stack.pushString(fragmentShader.getMainMethodName()));
 
@@ -119,7 +119,7 @@ public class RasterizationPipeline implements AutoCloseable {
             pipelineRasterizationStateCreateInfo.rasterizerDiscardEnable.set(VulkanUtils.booleanToVkBool32(false));
             pipelineRasterizationStateCreateInfo.polygonMode.set(VkPolygonMode.FILL);
             pipelineRasterizationStateCreateInfo.lineWidth.set(1.0f);
-            pipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT);
+            pipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.BACK);
             pipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.COUNTER_CLOCKWISE);
             pipelineRasterizationStateCreateInfo.depthBiasEnable.set(VulkanUtils.booleanToVkBool32(false));
 
@@ -127,16 +127,16 @@ public class RasterizationPipeline implements AutoCloseable {
             VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = stack.push(new VkPipelineMultisampleStateCreateInfo());
             pipelineMultisampleStateCreateInfo.sType.set(VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO);
             pipelineMultisampleStateCreateInfo.sampleShadingEnable.set(VulkanUtils.booleanToVkBool32(false));
-            pipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+            pipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.COUNT_1);
 
             // Color blending
             // more color blending options / explanations: https://vulkan-tutorial.com/en/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions
             VkPipelineColorBlendAttachmentState colorBlending = stack.push(new VkPipelineColorBlendAttachmentState());
             colorBlending.colorWriteMask.set(
-                    VkColorComponentFlagBits.VK_COLOR_COMPONENT_R_BIT,
-                    VkColorComponentFlagBits.VK_COLOR_COMPONENT_G_BIT,
-                    VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT,
-                    VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT
+                    VkColorComponentFlagBits.R,
+                    VkColorComponentFlagBits.G,
+                    VkColorComponentFlagBits.B,
+                    VkColorComponentFlagBits.A
             );
             colorBlending.blendEnable.set(VulkanUtils.booleanToVkBool32(false)); // currently disabled
             colorBlending.srcColorBlendFactor.set(VkBlendFactor.ONE);

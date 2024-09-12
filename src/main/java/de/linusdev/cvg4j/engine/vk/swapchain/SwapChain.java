@@ -142,8 +142,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         depthImage = allocator.createDeviceLocalVulkanImage(stack, "depth-image", extend,
                 depthFormat, //TODO: this must be selected
                 VkImageTiling.OPTIMAL,
-                new IntBitfieldImpl<>(VkImageUsageFlagBits.VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT),
-                new IntBitfieldImpl<>(VkImageAspectFlagBits.VK_IMAGE_ASPECT_DEPTH_BIT)
+                new IntBitfieldImpl<>(VkImageUsageFlagBits.DEPTH_STENCIL_ATTACHMENT),
+                new IntBitfieldImpl<>(VkImageAspectFlagBits.DEPTH)
         );
 
         allocator.allocate(stack);
@@ -232,7 +232,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         // TODO: make it possible to enable post processing
         // If we want to do postprocessing, we would need to write to a different image and then
         // transfer into this one. That would mean we would need to set this to VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        swapChainCreateInfo.imageUsage.set(VkImageUsageFlagBits.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+        swapChainCreateInfo.imageUsage.set(VkImageUsageFlagBits.COLOR_ATTACHMENT);
 
         if(sameQueueIndices) {
             swapChainCreateInfo.imageSharingMode.set(VkSharingMode.EXCLUSIVE);
@@ -243,7 +243,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         }
 
         swapChainCreateInfo.preTransform.set(transform);
-        swapChainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+        swapChainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.OPAQUE_KHR);
         swapChainCreateInfo.presentMode.set(presentMode);
         swapChainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
         swapChainCreateInfo.oldSwapchain.set(oldSwapChain); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
@@ -272,7 +272,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             imageViewCreateInfo.components.g.set(VkComponentSwizzle.IDENTITY);
             imageViewCreateInfo.components.b.set(VkComponentSwizzle.IDENTITY);
             imageViewCreateInfo.components.a.set(VkComponentSwizzle.IDENTITY);
-            imageViewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
+            imageViewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.COLOR);
             imageViewCreateInfo.subresourceRange.baseMipLevel.set(0);
             imageViewCreateInfo.subresourceRange.levelCount.set(1);
             imageViewCreateInfo.subresourceRange.baseArrayLayer.set(0);

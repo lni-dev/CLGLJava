@@ -43,7 +43,7 @@ public class GraphicsQueuePermanentCommandPool extends CommandPool {
 
         VkCommandPoolCreateInfo commandPoolCreateInfo = stack.push(new VkCommandPoolCreateInfo());
         commandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
-        commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.RESET_COMMAND_BUFFER);
         commandPoolCreateInfo.queueFamilyIndex.set(device.getGraphicsQueueIndex());
 
         vkInstance.vkCreateCommandPool(device.getVkDevice(), ref(commandPoolCreateInfo), ref(null), ref(commandPool.vkCommandPool)).check();

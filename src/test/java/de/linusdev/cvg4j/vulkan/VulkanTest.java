@@ -362,7 +362,7 @@ public class VulkanTest {
         int presentationQueueIndex = -1;
         for (int i = 0; i < vkQueueFamilyProperties.length(); i++) {
             VkQueueFamilyProperties vkQueueFamilyProperty = vkQueueFamilyProperties.get(i);
-            if(vkQueueFamilyProperty.queueFlags.isSet(VkQueueFlagBits.VK_QUEUE_GRAPHICS_BIT)) {
+            if(vkQueueFamilyProperty.queueFlags.isSet(VkQueueFlagBits.GRAPHICS)) {
                 graphicsQueueIndex = i;
             }
 
@@ -463,8 +463,8 @@ public class VulkanTest {
         swapchainCreateInfo.imageArrayLayers.set(1);
         // Write directly to this image
         // If we want to do postprocessing, we would need to write to a different image and then
-        // transfer into this one. That would mean we would need to set this to VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        swapchainCreateInfo.imageUsage.set(VkImageUsageFlagBits.VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+        // transfer into this one. That would mean we would need to set this to TRANSFER_DST
+        swapchainCreateInfo.imageUsage.set(VkImageUsageFlagBits.COLOR_ATTACHMENT);
 
         if(differentQueueIndices) {
             swapchainCreateInfo.imageSharingMode.set(VkSharingMode.CONCURRENT);
@@ -478,7 +478,7 @@ public class VulkanTest {
         }
 
         swapchainCreateInfo.preTransform.set(selectedTransform);
-        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+        swapchainCreateInfo.compositeAlpha.set(VkCompositeAlphaFlagBitsKHR.OPAQUE_KHR);
         swapchainCreateInfo.presentMode.set(selectedPresentMode);
         swapchainCreateInfo.clipped.set(VulkanUtils.booleanToVkBool32(true));
         swapchainCreateInfo.oldSwapchain.set(0L); // required when window was resized. see https://vulkan-tutorial.com/en/Drawing_a_triangle/Swap_chain_recreation
@@ -514,7 +514,7 @@ public class VulkanTest {
             vkImageViewCreateInfo.components.g.set(VkComponentSwizzle.IDENTITY);
             vkImageViewCreateInfo.components.b.set(VkComponentSwizzle.IDENTITY);
             vkImageViewCreateInfo.components.a.set(VkComponentSwizzle.IDENTITY);
-            vkImageViewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
+            vkImageViewCreateInfo.subresourceRange.aspectMask.set(VkImageAspectFlagBits.COLOR);
             vkImageViewCreateInfo.subresourceRange.baseMipLevel.set(0);
             vkImageViewCreateInfo.subresourceRange.levelCount.set(1);
             vkImageViewCreateInfo.subresourceRange.baseArrayLayer.set(0);
@@ -561,13 +561,13 @@ public class VulkanTest {
         );
         VkPipelineShaderStageCreateInfo vkPipelineShaderStageCreateInfo = shaderStages.get(0);
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
-        vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_VERTEX_BIT);
+        vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VERTEX);
         vkPipelineShaderStageCreateInfo.module.set(vertShader.get());
         vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main"));
 
         vkPipelineShaderStageCreateInfo = shaderStages.get(1);
         vkPipelineShaderStageCreateInfo.sType.set(VkStructureType.PIPELINE_SHADER_STAGE_CREATE_INFO);
-        vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.VK_SHADER_STAGE_FRAGMENT_BIT);
+        vkPipelineShaderStageCreateInfo.stage.set(VkShaderStageFlagBits.FRAGMENT);
         vkPipelineShaderStageCreateInfo.module.set(fragShader.get());
         vkPipelineShaderStageCreateInfo.pName.set(NullTerminatedUTF8String.newAllocated("main")); //TODO: This string "main" is unsafe. The JVM may garbage collect it at any time
 
@@ -614,7 +614,7 @@ public class VulkanTest {
         vkPipelineRasterizationStateCreateInfo.rasterizerDiscardEnable.set(VulkanUtils.booleanToVkBool32(false));
         vkPipelineRasterizationStateCreateInfo.polygonMode.set(VkPolygonMode.FILL);
         vkPipelineRasterizationStateCreateInfo.lineWidth.set(1.0f);
-        vkPipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.VK_CULL_MODE_BACK_BIT);
+        vkPipelineRasterizationStateCreateInfo.cullMode.set(VkCullModeFlagBits.BACK);
         vkPipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.CLOCKWISE);
         vkPipelineRasterizationStateCreateInfo.depthBiasEnable.set(VulkanUtils.booleanToVkBool32(false));
 
@@ -622,15 +622,15 @@ public class VulkanTest {
         vkPipelineMultisampleStateCreateInfo.allocate();
         vkPipelineMultisampleStateCreateInfo.sType.set(VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO);
         vkPipelineMultisampleStateCreateInfo.sampleShadingEnable.set(VulkanUtils.booleanToVkBool32(false));
-        vkPipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+        vkPipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.COUNT_1);
 
         VkPipelineColorBlendAttachmentState vkPipelineColorBlendAttachmentState = new VkPipelineColorBlendAttachmentState();
         vkPipelineColorBlendAttachmentState.allocate();
         vkPipelineColorBlendAttachmentState.colorWriteMask.set(
-                VkColorComponentFlagBits.VK_COLOR_COMPONENT_R_BIT,
-                VkColorComponentFlagBits.VK_COLOR_COMPONENT_G_BIT,
-                VkColorComponentFlagBits.VK_COLOR_COMPONENT_B_BIT,
-                VkColorComponentFlagBits.VK_COLOR_COMPONENT_A_BIT
+                VkColorComponentFlagBits.R,
+                VkColorComponentFlagBits.G,
+                VkColorComponentFlagBits.B,
+                VkColorComponentFlagBits.A
         );
         vkPipelineColorBlendAttachmentState.blendEnable.set(VulkanUtils.booleanToVkBool32(false));
         // more color blending options / explanations: https://vulkan-tutorial.com/en/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions
@@ -664,7 +664,7 @@ public class VulkanTest {
         VkAttachmentDescription vkAttachmentDescription = new VkAttachmentDescription();
         vkAttachmentDescription.allocate();
         vkAttachmentDescription.format.set(selectedSurfaceFormat.format.get());
-        vkAttachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+        vkAttachmentDescription.samples.set(VkSampleCountFlagBits.COUNT_1);
         vkAttachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
         vkAttachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
         vkAttachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
@@ -697,10 +697,10 @@ public class VulkanTest {
         vkSubpassDependency.allocate();
         vkSubpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
         vkSubpassDependency.dstSubpass.set(0);
-        vkSubpassDependency.srcStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        vkSubpassDependency.srcStageMask.set(VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT);
         vkSubpassDependency.srcAccessMask.set(0);
-        vkSubpassDependency.dstStageMask.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
-        vkSubpassDependency.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT);
+        vkSubpassDependency.dstStageMask.set(VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT);
+        vkSubpassDependency.dstAccessMask.set(VkAccessFlagBits.COLOR_ATTACHMENT_WRITE);
 
         vkRenderPassCreateInfo.dependencyCount.set(1);
         vkRenderPassCreateInfo.pDependencies.set(vkSubpassDependency);
@@ -780,7 +780,7 @@ public class VulkanTest {
         VkCommandPoolCreateInfo vkCommandPoolCreateInfo = new VkCommandPoolCreateInfo();
         vkCommandPoolCreateInfo.allocate();
         vkCommandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
-        vkCommandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT);
+        vkCommandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.RESET_COMMAND_BUFFER);
         vkCommandPoolCreateInfo.queueFamilyIndex.set(graphicsQueueIndex);
 
         VkCommandPool vkCommandPool = new VkCommandPool();
@@ -854,7 +854,7 @@ public class VulkanTest {
         VkFenceCreateInfo vkFenceCreateInfo = new VkFenceCreateInfo();
         vkFenceCreateInfo.allocate();
         vkFenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
-        vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
+        vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.SIGNALED);
 
         vkInstance.vkCreateSemaphore(
                 device,
@@ -891,7 +891,7 @@ public class VulkanTest {
         vkSubmitInfo.pWaitSemaphores.set(imageAvailableSemaphore);
         VkPipelineStageFlags vkPipelineStageFlags = new VkPipelineStageFlags();
         vkPipelineStageFlags.allocate();
-        vkPipelineStageFlags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        vkPipelineStageFlags.set(VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT);
         vkSubmitInfo.pWaitDstStageMask.set(vkPipelineStageFlags);
         vkSubmitInfo.commandBufferCount.set(1);
         vkSubmitInfo.pCommandBuffers.set(commandBuffer);

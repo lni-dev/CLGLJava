@@ -155,7 +155,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
 
         VkFenceCreateInfo vkFenceCreateInfo = stack.push(new VkFenceCreateInfo());
         vkFenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
-        vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.VK_FENCE_CREATE_SIGNALED_BIT);
+        vkFenceCreateInfo.flags.set(VkFenceCreateFlagBits.SIGNALED);
 
         for (int i = 0; i < maxFramesInFlight; i++) {
             vkInstance.vkCreateSemaphore(device.getVkDevice(), ref(vkSemaphoreCreateInfo), ref(null), ref(imageAvailableSemaphores.get(i))).check();
@@ -169,7 +169,7 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
         // Stuff required in the show loop
         fenceNullHandle.set(VulkanUtils.VK_NULL_HANDLE);
         commandBufferResetFlags.set(0);
-        pipelineStageFlags.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT);
+        pipelineStageFlags.set(VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT);
 
         submitInfo.sType.set(VkStructureType.SUBMIT_INFO);
         submitInfo.waitSemaphoreCount.set(1);

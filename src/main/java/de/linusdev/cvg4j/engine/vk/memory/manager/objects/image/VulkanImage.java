@@ -125,7 +125,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         imageCreateInfo.tiling.set(vkImageTiling);
         imageCreateInfo.initialLayout.set(VkImageLayout.UNDEFINED);
         imageCreateInfo.usage.replaceWith(usage);
-        imageCreateInfo.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+        imageCreateInfo.samples.set(VkSampleCountFlagBits.COUNT_1);
         imageCreateInfo.sharingMode.set(VkSharingMode.EXCLUSIVE);
 
         vkInstance.vkCreateImage(device.getVkDevice(), ref(imageCreateInfo), ref(null), ref(vkImage)).check();
@@ -207,7 +207,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         barrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         barrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
         barrier.image.set(vkImage);
-        barrier.subresourceRange.aspectMask.set(VkImageAspectFlagBits.VK_IMAGE_ASPECT_COLOR_BIT);
+        barrier.subresourceRange.aspectMask.set(VkImageAspectFlagBits.COLOR);
         barrier.subresourceRange.baseMipLevel.set(0);
         barrier.subresourceRange.levelCount.set(1);
         barrier.subresourceRange.baseArrayLayer.set(0);
@@ -219,17 +219,17 @@ public class VulkanImage extends VulkanMemoryBoundObject {
 
         if (currentLayout == VkImageLayout.UNDEFINED && layoutToTransitionTo == VkImageLayout.TRANSFER_DST_OPTIMAL) {
             barrier.srcAccessMask.set(0);
-            barrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
+            barrier.dstAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
 
-            sourceStage.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT);
-            destinationStage.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TRANSFER_BIT);
+            sourceStage.set(VkPipelineStageFlagBits.TOP_OF_PIPE);
+            destinationStage.set(VkPipelineStageFlagBits.TRANSFER);
 
         } else if (currentLayout == VkImageLayout.TRANSFER_DST_OPTIMAL && layoutToTransitionTo == VkImageLayout.SHADER_READ_ONLY_OPTIMAL) {
-            barrier.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_TRANSFER_WRITE_BIT);
-            barrier.dstAccessMask.set(VkAccessFlagBits.VK_ACCESS_SHADER_READ_BIT);
+            barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
+            barrier.dstAccessMask.set(VkAccessFlagBits.SHADER_READ);
 
-            sourceStage.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_TRANSFER_BIT);
-            destinationStage.set(VkPipelineStageFlagBits.VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT);
+            sourceStage.set(VkPipelineStageFlagBits.TRANSFER);
+            destinationStage.set(VkPipelineStageFlagBits.FRAGMENT_SHADER);
 
         } else {
             throw new IllegalArgumentException("Unsupported layout transition!");

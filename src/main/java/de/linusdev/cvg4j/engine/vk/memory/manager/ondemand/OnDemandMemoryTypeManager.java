@@ -191,7 +191,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
     }
 
     public boolean canBeMapped() {
-        return memoryTypeFlags.isSet(VkMemoryPropertyFlagBits.VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        return memoryTypeFlags.isSet(VkMemoryPropertyFlagBits.HOST_VISIBLE);
     }
 
     private void freeMemory() {

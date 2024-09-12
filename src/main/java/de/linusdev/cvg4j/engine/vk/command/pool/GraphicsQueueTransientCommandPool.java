@@ -50,7 +50,7 @@ public class GraphicsQueueTransientCommandPool extends CommandPool {
 
         VkCommandPoolCreateInfo commandPoolCreateInfo = stack.push(new VkCommandPoolCreateInfo());
         commandPoolCreateInfo.sType.set(VkStructureType.COMMAND_POOL_CREATE_INFO);
-        commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.VK_COMMAND_POOL_CREATE_TRANSIENT_BIT);
+        commandPoolCreateInfo.flags.set(VkCommandPoolCreateFlagBits.TRANSIENT);
         commandPoolCreateInfo.queueFamilyIndex.set(device.getGraphicsQueueIndex());
 
         vkInstance.vkCreateCommandPool(device.getVkDevice(), ref(commandPoolCreateInfo), ref(null), ref(commandPool.vkCommandPool)).check();
@@ -88,7 +88,7 @@ public class GraphicsQueueTransientCommandPool extends CommandPool {
         vkInstance.vkAllocateCommandBuffers(device.getVkDevice(), ref(allocateInfo), ref(vkCommandBuffer)).check();
 
         beginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
-        beginInfo.flags.set(VkCommandBufferUsageFlagBits.VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+        beginInfo.flags.set(VkCommandBufferUsageFlagBits.ONE_TIME_SUBMIT);
 
         vkInstance.vkBeginCommandBuffer(vkCommandBuffer, ref(beginInfo));
 

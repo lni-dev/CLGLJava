@@ -50,7 +50,7 @@ public class RenderPass implements AutoCloseable {
             // Description for the color attachment
             VkAttachmentDescription attachmentDescription = attachments.get(0);
             attachmentDescription.format.set(swapChain.getFormat());
-            attachmentDescription.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+            attachmentDescription.samples.set(VkSampleCountFlagBits.COUNT_1);
             attachmentDescription.loadOp.set(VkAttachmentLoadOp.CLEAR);
             attachmentDescription.storeOp.set(VkAttachmentStoreOp.STORE);
             attachmentDescription.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
@@ -66,7 +66,7 @@ public class RenderPass implements AutoCloseable {
             // Depth Attachment
             VkAttachmentDescription depthAttDesc = attachments.get(1);
             depthAttDesc.format.set(swapChain.getDepthFormat());
-            depthAttDesc.samples.set(VkSampleCountFlagBits.VK_SAMPLE_COUNT_1_BIT);
+            depthAttDesc.samples.set(VkSampleCountFlagBits.COUNT_1);
             depthAttDesc.loadOp.set(VkAttachmentLoadOp.CLEAR);
             depthAttDesc.storeOp.set(VkAttachmentStoreOp.DONT_CARE);
             depthAttDesc.stencilLoadOp.set(VkAttachmentLoadOp.DONT_CARE);
@@ -99,17 +99,17 @@ public class RenderPass implements AutoCloseable {
             subpassDependency.srcSubpass.set(APIConstants.VK_SUBPASS_EXTERNAL);
             subpassDependency.dstSubpass.set(0);
             subpassDependency.srcStageMask.set(
-                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT // Depth testing
+                    VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT,
+                    VkPipelineStageFlagBits.LATE_FRAGMENT_TESTS // Depth testing
             );
-            subpassDependency.srcAccessMask.set(VkAccessFlagBits.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT);
+            subpassDependency.srcAccessMask.set(VkAccessFlagBits.DEPTH_STENCIL_ATTACHMENT_WRITE);
             subpassDependency.dstStageMask.set(
-                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-                    VkPipelineStageFlagBits.VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT // Depth testing
+                    VkPipelineStageFlagBits.COLOR_ATTACHMENT_OUTPUT,
+                    VkPipelineStageFlagBits.EARLY_FRAGMENT_TESTS // Depth testing
             );
             subpassDependency.dstAccessMask.set(
-                    VkAccessFlagBits.VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-                    VkAccessFlagBits.VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT
+                    VkAccessFlagBits.COLOR_ATTACHMENT_WRITE,
+                    VkAccessFlagBits.DEPTH_STENCIL_ATTACHMENT_WRITE
             );
 
             renderPassCreateInfo.dependencyCount.set(1);
