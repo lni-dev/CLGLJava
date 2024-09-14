@@ -33,10 +33,7 @@ import de.linusdev.cvg4j.engine.vk.memory.manager.objects.buffer.VulkanBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
 import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanSamplerImage;
 import de.linusdev.cvg4j.engine.vk.memory.manager.ondemand.OnDemandMemoryTypeManager;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkBufferUsageFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageLayout;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageTiling;
@@ -49,6 +46,7 @@ import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.image.ImageSize;
 import de.linusdev.lutils.image.PixelFormat;
 import de.linusdev.lutils.image.buffer.BBInt32Image;
+import de.linusdev.lutils.nat.enums.EnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.UStructSupplier;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
@@ -228,9 +226,11 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
             @NotNull VkImageTiling tiling,
             @NotNull IntBitfield<VkImageUsageFlagBits> usage,
             @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask,
-            boolean generateMipLevels
+            boolean generateMipLevels,
+            @NotNull EnumValue32<VkSampleCountFlagBits> sampleCount
     ) throws EngineException {
-        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format, generateMipLevels).create(stack);
+        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format,
+                generateMipLevels,sampleCount).create(stack);
         add(stack, image, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         return image;
     }
@@ -244,8 +244,13 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
 
     private void add(@NotNull Stack stack, @NotNull VulkanMemoryBoundObject object, VkMemoryPropertyFlagBits... flags) throws EngineException {
         int memoryTypeIndex = object.calculateMemoryTypeIndex(stack, new IntBitfieldImpl<>(flags));
-        if(typeManagers[memoryTypeIndex] == null)
-            typeManagers[memoryTypeIndex] = new OnDemandMemoryTypeManager(stack, vkInstance, device, memoryTypeIndex);
+        if(typeManagers[memoryTypeIndex] == null) {
+            typeManagers[memoryTypeIndex] = new OnDemandMemoryTypeManager(
+                    stack, vkInstance, device,
+                    debugName + "[" + memoryTypeIndex + "]",
+                    memoryTypeIndex
+            );
+        }
 
         typeManagers[memoryTypeIndex].addObject(object);
     }

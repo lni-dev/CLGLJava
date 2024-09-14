@@ -82,15 +82,25 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
 
         // Create Framebuffers
         VkFramebufferCreateInfo frameBufferCreateInfo = stack.push(new VkFramebufferCreateInfo());
-        var attachmentImages = stack.pushArray(2, VkImageView.class, VkImageView::new);
+        var attachmentImages = stack.pushArray(3, VkImageView.class, VkImageView::new);
+        int attachmentImagesCount = 2;
         attachmentImages.get(1).set(swapChain.getDepthImage().getVkImageView()); // must be at index 1, like it was in the render pass.
+
+        int swapChainImageIndex = 0;
+
+        if(swapChain.isMultiSamplingEnabled()) {
+            swapChainImageIndex = 2;
+            attachmentImagesCount = 3;
+            attachmentImages.get(0).set(swapChain.getColorImage().getVkImageView());
+        }
+
         int i = 0;
         for (VkFramebuffer vkFramebuffer : frameBuffers) {
-            attachmentImages.get(0).set(swapChain.getSwapChainImageViews().get(i));
+            attachmentImages.get(swapChainImageIndex).set(swapChain.getSwapChainImageViews().get(i));
 
             frameBufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
             frameBufferCreateInfo.renderPass.set(vkRenderPass);
-            frameBufferCreateInfo.attachmentCount.set(attachmentImages.length());
+            frameBufferCreateInfo.attachmentCount.set(attachmentImagesCount);
             frameBufferCreateInfo.pAttachments.setOfArray(attachmentImages);
             frameBufferCreateInfo.width.set(swapChain.getExtend().width());
             frameBufferCreateInfo.height.set(swapChain.getExtend().height());

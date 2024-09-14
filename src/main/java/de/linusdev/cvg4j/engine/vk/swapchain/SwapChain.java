@@ -23,10 +23,7 @@ import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
 import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCompositeAlphaFlagBitsKHR;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSurfaceTransformFlagBitsKHR;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
@@ -36,6 +33,8 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkSwapchainCreateInfoKHR;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.Vector;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
@@ -55,6 +54,8 @@ import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class SwapChain extends HasRecreationListeners<SwapChainRecreationListener> implements AutoCloseable {
 
+    public static final @NotNull LogInstance LOG = LLog.getLogInstance();
+
     public static @NotNull SwapChain create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
@@ -70,7 +71,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         return new SwapChain(
                 vkInstance, device, window,
                 swapChainImageCount, format, colorSpace, swapChainExtend, surfaceTransform, presentMode,
-                VkFormat.D32_SFLOAT //TODO: must be selected/found
+                VkFormat.D32_SFLOAT, //TODO: must be selected/found,
+                device.getMaxSupportedSampleCount(true) // TODO: must be set by game
         ).create(stack);
     }
 
@@ -85,6 +87,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     private final @NotNull StructureArray<VkImageView> swapChainImageViews;
     private final @NotNull OnDemandVulkanMemoryAllocator allocator;
     private VulkanImage depthImage;
+    private VulkanImage colorImage;
 
     /*
      * Information stored in this class
@@ -96,6 +99,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     private final @NotNull EnumValue32<VkPresentModeKHR> presentMode;
     private final @NotNull Extend2D extend;
     private final @NotNull VkFormat depthFormat;
+    private final @NotNull EnumValue32<VkSampleCountFlagBits> sampleCount;
 
 
     public SwapChain(
@@ -108,12 +112,14 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             @NotNull Extend2D extend,
             @NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> transform,
             @NotNull EnumValue32<VkPresentModeKHR> presentMode,
-            @NotNull VkFormat depthFormat
+            @NotNull VkFormat depthFormat,
+            @NotNull EnumValue32<VkSampleCountFlagBits> sampleCount
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
         this.window = window;
         this.depthFormat = depthFormat;
+        this.sampleCount = sampleCount;
 
         this.vkSwapChain = allocate(new VkSwapchainKHR());
         this.swapChainImageViews = StructureArray.newAllocated(swapChainImageCount, VkImageView.class, VkImageView::new);
@@ -144,8 +150,22 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
                 VkImageTiling.OPTIMAL,
                 new IntBitfieldImpl<>(VkImageUsageFlagBits.DEPTH_STENCIL_ATTACHMENT),
                 new IntBitfieldImpl<>(VkImageAspectFlagBits.DEPTH),
-                false
+                false,
+                sampleCount
         );
+
+        if(isMultiSamplingEnabled()) {
+            colorImage = allocator.createDeviceLocalVulkanImage(stack, "ms-color-image",
+                    extend,
+                    format.get(VkFormat.class),
+                    VkImageTiling.OPTIMAL,
+                    new IntBitfieldImpl<>(VkImageUsageFlagBits.TRANSIENT_ATTACHMENT, VkImageUsageFlagBits.COLOR_ATTACHMENT),
+                    new IntBitfieldImpl<>(VkImageAspectFlagBits.COLOR),
+                    false,
+                    sampleCount
+            );
+        }
+
 
         allocator.allocate(stack);
 
@@ -174,6 +194,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             @Nullable EnumValue32<VkSurfaceTransformFlagBitsKHR> newTransform,
             @Nullable EnumValue32<VkPresentModeKHR> newPresentMode
     ) {
+        LOG.debug("(Re)creating SwapChain. Sampling=" + sampleCount.get(VkSampleCountFlagBits.class));
 
         if(destroy) destroyForRecreation();
 
@@ -197,6 +218,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
             extend.xy(newExtend.x(), newExtend.y());
             // recreate Depth Image
             depthImage.recreate(stack, -1, newExtend);
+            if(isMultiSamplingEnabled())
+                colorImage.recreate(stack, -1, newExtend);
             allocator.allocate(stack);
             isExtendTrulyNew = true;
         }
@@ -339,6 +362,18 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
 
     public VulkanImage getDepthImage() {
         return depthImage;
+    }
+
+    public VulkanImage getColorImage() {
+        return colorImage;
+    }
+
+    public @NotNull EnumValue32<VkSampleCountFlagBits> getSampleCount() {
+        return sampleCount;
+    }
+
+    public boolean isMultiSamplingEnabled() {
+        return sampleCount.get() != VkSampleCountFlagBits.COUNT_1.getValue();
     }
 
     public void destroyForRecreation() {

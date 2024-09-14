@@ -29,5 +29,8 @@ register a listener for validation layer messages and log these to the logger
 ## glslc gradle task
 Errors reported by glslc should be reported to gradle and fail the build.
 
+## Threading
+Make the glfw event thread and the render thread a different one. Dont do event polling and rendering on the same thread.
+
 ## TODO: Quality of life changes to generated code
 - none

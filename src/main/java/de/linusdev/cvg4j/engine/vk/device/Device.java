@@ -19,16 +19,18 @@ package de.linusdev.cvg4j.engine.vk.device;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkQueue;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
-import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.bitfield.IntBitfieldImpl;
 import de.linusdev.lutils.math.vector.buffer.floatn.BBFloat1;
+import de.linusdev.lutils.nat.enums.EnumValue32;
+import de.linusdev.lutils.nat.enums.JavaEnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
@@ -105,8 +107,9 @@ public class Device implements AutoCloseable {
         VkPhysicalDeviceFeatures features = stack.push(new VkPhysicalDeviceFeatures());
 
         //TODO: add this as game requirements and to the gpu selector!
-        features.geometryShader.set(VulkanUtils.booleanToVkBool32(true));
-        features.samplerAnisotropy.set(VulkanUtils.booleanToVkBool32(true));
+        features.geometryShader.set(true);
+        features.samplerAnisotropy.set(true);
+        features.sampleRateShading.set(true);
 
         // Device Create Info
         VkDeviceCreateInfo deviceCreateInfo = stack.push(new VkDeviceCreateInfo());
@@ -203,6 +206,32 @@ public class Device implements AutoCloseable {
      */
     public @NotNull VkPhysicalDeviceProperties getPhysicalDeviceProperties() {
         return deviceProperties;
+    }
+
+    /**
+     * Get all supported frame buffer color sample counts
+     * @param depthEnabled {@code true} will only return sample counts, that are also supported for the frame buffer depth image.
+     * @return supported sample counts as described above.
+     */
+    public @NotNull IntBitfield<VkSampleCountFlagBits> getSupportedSampleCounts(boolean depthEnabled) {
+        IntBitfield<VkSampleCountFlagBits> counts = IntBitfield.copy(deviceProperties.limits.framebufferColorSampleCounts);
+
+        if(depthEnabled)
+            counts.and(deviceProperties.limits.framebufferDepthSampleCounts);
+
+        return counts;
+    }
+
+    /**
+     * Get the highest frame buffer color sample count, that is supported.
+     * @param depthEnabled {@code true} will only return sample counts, that are also supported for the frame buffer depth image.
+     * @return max supported sample count as described above.
+     * @see EnumValue32#get(Class)
+     * @see EnumValue32#get()
+     */
+    public @NotNull EnumValue32<VkSampleCountFlagBits> getMaxSupportedSampleCount(boolean depthEnabled) {
+        IntBitfield<VkSampleCountFlagBits> counts = getSupportedSampleCounts(depthEnabled);
+        return new JavaEnumValue32<>(Integer.highestOneBit(counts.getValue()));
     }
 
     /**

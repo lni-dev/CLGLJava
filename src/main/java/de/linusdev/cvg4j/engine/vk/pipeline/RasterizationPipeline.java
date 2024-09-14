@@ -25,7 +25,6 @@ import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkColorComponentFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCullModeFlagBits;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkShaderStageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.*;
@@ -123,11 +122,12 @@ public class RasterizationPipeline implements AutoCloseable {
             pipelineRasterizationStateCreateInfo.frontFace.set(VkFrontFace.COUNTER_CLOCKWISE);
             pipelineRasterizationStateCreateInfo.depthBiasEnable.set(VulkanUtils.booleanToVkBool32(false));
 
-            // Multisampling currently disabled
+            // Multisampling
             VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo = stack.push(new VkPipelineMultisampleStateCreateInfo());
             pipelineMultisampleStateCreateInfo.sType.set(VkStructureType.PIPELINE_MULTISAMPLE_STATE_CREATE_INFO);
-            pipelineMultisampleStateCreateInfo.sampleShadingEnable.set(VulkanUtils.booleanToVkBool32(false));
-            pipelineMultisampleStateCreateInfo.rasterizationSamples.set(VkSampleCountFlagBits.COUNT_1);
+            pipelineMultisampleStateCreateInfo.sampleShadingEnable.set(true); // TODO: must be activated by the game
+            pipelineMultisampleStateCreateInfo.minSampleShading.set(0.5f); // TODO: must set by the game
+            pipelineMultisampleStateCreateInfo.rasterizationSamples.set(swapChain.getSampleCount());
 
             // Color blending
             // more color blending options / explanations: https://vulkan-tutorial.com/en/Drawing_a_triangle/Graphics_pipeline_basics/Fixed_functions

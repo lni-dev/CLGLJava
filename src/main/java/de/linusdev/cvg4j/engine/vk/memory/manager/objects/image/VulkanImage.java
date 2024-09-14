@@ -33,6 +33,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.image.ImageSize;
 import de.linusdev.lutils.math.LMath;
+import de.linusdev.lutils.nat.enums.EnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -59,6 +60,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
      */
     protected @NotNull VkImageLayout currentLayout;
     protected final int mipLevels;
+    protected final @NotNull EnumValue32<VkSampleCountFlagBits> sampleCount;
 
     /*
      * Managed by this class
@@ -70,7 +72,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
             @NotNull Device device, @NotNull String debugName, int size, @NotNull ImageSize imageSize,
             @NotNull IntBitfield<VkImageUsageFlagBits> usage,
             @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask, @NotNull VkImageTiling vkImageTiling,
-            @NotNull VkFormat vkFormat, boolean generateMipLevels
+            @NotNull VkFormat vkFormat, boolean generateMipLevels, @NotNull EnumValue32<VkSampleCountFlagBits> sampleCount
     ) {
         super(device, debugName, size);
         this.imageSize = imageSize;
@@ -80,6 +82,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         this.vkFormat = vkFormat;
         this.currentLayout = VkImageLayout.UNDEFINED;
         this.mipLevels = generateMipLevels ? (LMath.intLog2(Math.max(imageSize.getWidth(), imageSize.getHeight())) + 1) : 1;
+        this.sampleCount = sampleCount;
 
         this.vkImageView = allocate(new VkImageView());
         this.vkImage = allocate(new VkImage());
@@ -125,10 +128,12 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         imageCreateInfo.tiling.set(vkImageTiling);
         imageCreateInfo.initialLayout.set(VkImageLayout.UNDEFINED);
         imageCreateInfo.usage.replaceWith(usage);
-        imageCreateInfo.samples.set(VkSampleCountFlagBits.COUNT_1);
+        imageCreateInfo.samples.set(sampleCount);
         imageCreateInfo.sharingMode.set(VkSharingMode.EXCLUSIVE);
 
         vkInstance.vkCreateImage(device.getVkDevice(), ref(imageCreateInfo), ref(null), ref(vkImage)).check();
+
+        LOG.debug(() -> "Created VkImage for '" + debugName + "'. Handle: " + Long.toHexString(vkImage.get()));
 
         stack.pop(); // imageCreateInfo
 

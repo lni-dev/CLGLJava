@@ -47,7 +47,7 @@ public interface MemoryTypeManager extends AutoCloseable {
 
     /**
      * Allocate the required memory for all {@link #addObject(VulkanMemoryBoundObject) added} or
-     * {@link #onChanged(Stack, VulkanMemoryBoundObject) changed} objects.
+     * {@link #onChanged(Stack, VulkanMemoryBoundObject, MemoryRequirementsChange) changed} objects.
      * @param stack {@link Stack} used during allocation for short-lived structures.
      */
     void allocate(@NotNull Stack stack);

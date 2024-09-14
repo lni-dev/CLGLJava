@@ -52,6 +52,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
     private final @NotNull VkInstance vkInstance;
     private final @NotNull Device device;
 
+    private final @NotNull String debugName;
     private final int memoryTypeIndex;
     private final @NotNull IntBitfield<VkMemoryPropertyFlagBits> memoryTypeFlags;
 
@@ -69,10 +70,12 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
+            @NotNull String debugName,
             int memoryTypeIndex
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
+        this.debugName = debugName;
         this.memoryTypeIndex = memoryTypeIndex;
         this.vkDeviceMemory = Structure.allocate(new VkDeviceMemory());
         this.memoryTypeFlags = device.getMemoryPropFlagsOf(stack, memoryTypeIndex);
@@ -80,7 +83,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
 
     @Override
     public void onChanged(@NotNull Stack stack, @NotNull VulkanMemoryBoundObject object, @Nullable MemoryRequirementsChange change) {
-        LOG.debug("A child object changed. Manager: index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+        LOG.debug("A child object changed. Manager '" + debugName  + "': index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
         if(requiresAllocation) {
             LOG.debug("Already requires reallocation.");
             return; // We have to reallocate anyway, return early.
@@ -106,7 +109,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
         }
 
         // It doesn't fit anymore, we have to allocate everything again...
-        LOG.debug("Required memory is bigger than before. Manager must be reallocated.");
+        LOG.debug("Required memory is bigger than before. Manager '" + debugName  + "' must be reallocated.");
         requiresAllocation = true;
     }
 
@@ -119,7 +122,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
 
     public void allocate(@NotNull Stack stack) {
         if(!requiresAllocation) {
-            LOG.debug("Manager does not require allocation. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+            LOG.debug("Manager '" + debugName  + "' does not require allocation. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
             return;
         }
 
@@ -140,7 +143,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
             size += object.getActualSize().get();
         }
 
-        LOG.debug("Start Allocating " + size + " bytes memory. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+        LOG.debug("Manager '" + debugName  + "' starts allocating " + size + " bytes memory. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
 
         // Allocate the memory
         VkMemoryAllocateInfo allocInfo = stack.push(new VkMemoryAllocateInfo());
@@ -150,7 +153,7 @@ public class OnDemandMemoryTypeManager implements MemoryTypeManager {
         vkInstance.vkAllocateMemory(device.getVkDevice(), ref(allocInfo), ref(null), ref(vkDeviceMemory)).check();
         stack.pop(); // allocInfo
 
-        LOG.debug("Allocated " + size + " bytes memory. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
+        LOG.debug("Manager '" + debugName  + "' allocated " + size + " bytes memory. index=" + memoryTypeIndex + ", properties=" + memoryTypeFlags.toList(VkMemoryPropertyFlagBits.class) + "." );
 
         for (VulkanMemoryBoundObject object : objects) {
             if(object.getState().isPast(BOUND))

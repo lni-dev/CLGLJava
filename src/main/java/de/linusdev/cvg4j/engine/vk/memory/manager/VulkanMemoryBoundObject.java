@@ -23,6 +23,8 @@ import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkMemoryPropertyFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkMemoryRequirements;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.MustBeInvokedByOverriders;
@@ -34,6 +36,8 @@ import java.nio.ByteBuffer;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public abstract class VulkanMemoryBoundObject implements AutoCloseable {
+
+    public static final @NotNull LogInstance LOG = LLog.getLogInstance();
 
     public enum State {
         /**

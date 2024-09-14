@@ -19,6 +19,7 @@ package de.linusdev.cvg4j.engine.vk.memory.manager.objects.image;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageAspectFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkImageUsageFlagBits;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSampleCountFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkSampler;
@@ -26,6 +27,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkSamplerCreateInfo;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.image.ImageSize;
+import de.linusdev.lutils.nat.enums.JavaEnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,7 +47,8 @@ public class VulkanSamplerImage extends VulkanImage {
             @NotNull IntBitfield<VkImageUsageFlagBits> usage, @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask,
             @NotNull VkImageTiling vkImageTiling, @NotNull VkFormat vkFormat, boolean generateMipLevels
     ) {
-        super(device, debugName, sizeInBytes, imageSize, usage, viewAspectMask, vkImageTiling, vkFormat, generateMipLevels);
+        super(device, debugName, sizeInBytes, imageSize, usage, viewAspectMask, vkImageTiling, vkFormat, generateMipLevels,
+                new JavaEnumValue32<>(VkSampleCountFlagBits.COUNT_1));
 
         this.vkSampler = allocate(new VkSampler());
     }
