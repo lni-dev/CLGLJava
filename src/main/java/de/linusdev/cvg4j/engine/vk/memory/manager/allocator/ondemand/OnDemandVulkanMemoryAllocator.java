@@ -41,6 +41,7 @@ import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageLayout;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkImageTiling;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkVertexInputRate;
+import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.bitfield.IntBitfield;
@@ -177,26 +178,35 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
         return new UniformBuffer<>(vkInstance, device, binding, inputs, outputs);
     }
 
+    /**
+     *
+     * @param generateMipLevels whether to generate mip level images.
+     * @param autoGenerateMipLevels whether the generated mip level images are later going to be automatically filed using {@link VulkanImage#generateMipmaps(Stack, VkCommandBuffer, VkImageLayout)}.
+     */
     public Sampler2D<BBInt32Image> createStagedSampler(
             @NotNull Stack stack,
             @NotNull String debugName,
             int binding,
             @NotNull ImageSize size,
             @NotNull VkImageLayout layout,
-            boolean generateMipLevels
+            boolean generateMipLevels,
+            boolean autoGenerateMipLevels
     ) throws EngineException {
 
         BufferStructInput<BBInt32Image> input = new BufferStructInput<>(BBInt32Image.newAllocatable(size, PixelFormat.R8G8B8A8_SRGB));
         StructureInfo info = input.getBackedStruct().getInfo();
         input.setVulkanBuffer(addStagingBuffer(stack, debugName, info.getRequiredSize()));
 
+        IntBitfield<VkImageUsageFlagBits> usage = new IntBitfieldImpl<>(
+                VkImageUsageFlagBits.TRANSFER_DST,
+                VkImageUsageFlagBits.SAMPLED
+        );
+
+        if(generateMipLevels && autoGenerateMipLevels) usage.set(VkImageUsageFlagBits.TRANSFER_SRC);
 
         VulkanSamplerImage image = new VulkanSamplerImage(
                 device, debugName + "-out", info.getRequiredSize(), size,
-                new IntBitfieldImpl<>(
-                        VkImageUsageFlagBits.TRANSFER_DST,
-                        VkImageUsageFlagBits.SAMPLED
-                ),
+                usage,
                 new IntBitfieldImpl<>(VkImageAspectFlagBits.COLOR),
                 VkImageTiling.OPTIMAL,
                 VkFormat.R8G8B8A8_SRGB,

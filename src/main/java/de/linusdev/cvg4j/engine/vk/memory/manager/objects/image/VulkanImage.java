@@ -226,7 +226,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
             pipelineStageTransferFlag.set(VkPipelineStageFlagBits.TRANSFER);
 
             VkPipelineStageFlags pipelineStageFragShaderFlag = stack.push(new VkPipelineStageFlags());
-            pipelineStageTransferFlag.set(VkPipelineStageFlagBits.FRAGMENT_SHADER);
+            pipelineStageFragShaderFlag.set(VkPipelineStageFlagBits.FRAGMENT_SHADER);
 
             VkDependencyFlags dependencyFlags = stack.push(new VkDependencyFlags());
             dependencyFlags.set(0);
@@ -255,8 +255,8 @@ public class VulkanImage extends VulkanMemoryBoundObject {
                 barrier.subresourceRange.baseMipLevel.set(i - 1);
                 barrier.oldLayout.set(VkImageLayout.TRANSFER_DST_OPTIMAL);
                 barrier.newLayout.set(VkImageLayout.TRANSFER_SRC_OPTIMAL);
-                barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
-                barrier.dstAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
+                barrier.srcAccessMask.reset().set(VkAccessFlagBits.TRANSFER_WRITE);
+                barrier.dstAccessMask.reset().set(VkAccessFlagBits.TRANSFER_READ);
 
                 vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
                         pipelineStageTransferFlag,
@@ -294,8 +294,8 @@ public class VulkanImage extends VulkanMemoryBoundObject {
                 // Transfer mipLevel (i - 1) to layoutToTransitionTo
                 barrier.oldLayout.set(VkImageLayout.TRANSFER_SRC_OPTIMAL);
                 barrier.newLayout.set(layoutToTransitionTo);
-                barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
-                barrier.dstAccessMask.set(VkAccessFlagBits.SHADER_READ);
+                barrier.srcAccessMask.reset().set(VkAccessFlagBits.TRANSFER_READ);
+                barrier.dstAccessMask.reset().set(VkAccessFlagBits.SHADER_READ);
 
                 vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
                         pipelineStageTransferFlag, pipelineStageFragShaderFlag,
@@ -314,8 +314,8 @@ public class VulkanImage extends VulkanMemoryBoundObject {
             barrier.subresourceRange.baseMipLevel.set(mipLevels - 1);
             barrier.oldLayout.set(VkImageLayout.TRANSFER_DST_OPTIMAL);
             barrier.newLayout.set(layoutToTransitionTo);
-            barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
-            barrier.dstAccessMask.set(VkAccessFlagBits.SHADER_READ);
+            barrier.srcAccessMask.reset().set(VkAccessFlagBits.TRANSFER_WRITE);
+            barrier.dstAccessMask.reset().set(VkAccessFlagBits.SHADER_READ);
 
             vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
                     pipelineStageTransferFlag, pipelineStageFragShaderFlag,

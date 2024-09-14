@@ -146,7 +146,7 @@ class VulkanEngineTest {
 
             Image grassSide = loadGrassSide();
             grassSideSampler = vulkanMemoryAllocator.createStagedSampler(
-                    stack, "grass-texture",0, grassSide, VkImageLayout.SHADER_READ_ONLY_OPTIMAL, true
+                    stack, "grass-texture",0, grassSide, VkImageLayout.SHADER_READ_ONLY_OPTIMAL, true, true
             );
 
             vulkanMemoryAllocator.allocate(stack);
@@ -430,7 +430,7 @@ class VulkanEngineTest {
 
 
             if(true) return;
-            float factor = 0.61f;
+            float factor = 0.01f;
             for (SimpleVertex simpleVertex : vertexBufferAsArray) {
 //                VMath.add(
 //                        simpleVertex.color,

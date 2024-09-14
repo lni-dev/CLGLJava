@@ -11,20 +11,7 @@ like we are doing with the spir-v shader binary.
 Rename the cmake project to CVG4J.
 
 ## Native Objects
-Some native objects (for example NullTerminatedUtf8String) may be set as pointer in a buffer,
-but the JVM could garbage collect the string, which would invalidate the data the pointer
-is pointing to. this could happen to any struct :(
-<br><br>
-Another problem is, that the constant allocating and freeing of small heap memory is bad for the 
-performance.
-<br><br>
-A solution for both of these problems, would be a self-managed stack. Basically a pretty
-large bytebuffer, in which we store the different small structs and then release them from
-the stack once we don't need them anymore (e.g. at the end of a function call). This stack could
-be stored on a per-thread basis utilising a custom Thread subclass.
-
-## Proper Logging using llog
-Add Logging (DEBUG, WARN and ERROR)
+Allocate one big chunk of memory for permanent objects instead of using Structure.allocate().
 
 ## Structure
 enable closing of a struct e.g. setting its bytebuf to null
@@ -35,6 +22,12 @@ It is bad to allocate memory for every buffer individually. Instead, allocate on
 buffers with the same memory type and use the offset when binding the memory to the buffers.
 Even use a single VkBuffer!
 https://developer.nvidia.com/vulkan-memory-management
+
+## Log validation layer messages
+register a listener for validation layer messages and log these to the logger
+
+## glslc gradle task
+Errors reported by glslc should be reported to gradle and fail the build.
 
 ## TODO: Quality of life changes to generated code
 - none
