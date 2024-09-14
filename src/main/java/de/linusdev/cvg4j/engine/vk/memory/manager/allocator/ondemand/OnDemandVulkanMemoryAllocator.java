@@ -182,7 +182,8 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
             @NotNull String debugName,
             int binding,
             @NotNull ImageSize size,
-            @NotNull VkImageLayout layout
+            @NotNull VkImageLayout layout,
+            boolean generateMipLevels
     ) throws EngineException {
 
         BufferStructInput<BBInt32Image> input = new BufferStructInput<>(BBInt32Image.newAllocatable(size, PixelFormat.R8G8B8A8_SRGB));
@@ -198,7 +199,8 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
                 ),
                 new IntBitfieldImpl<>(VkImageAspectFlagBits.COLOR),
                 VkImageTiling.OPTIMAL,
-                VkFormat.R8G8B8A8_SRGB
+                VkFormat.R8G8B8A8_SRGB,
+                generateMipLevels
         ).create(stack);
         add(stack, image, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         ImageOutput output = new ImageOutput(image);
@@ -215,9 +217,10 @@ public class OnDemandVulkanMemoryAllocator extends VulkanMemoryAllocator {
             @NotNull VkFormat format,
             @NotNull VkImageTiling tiling,
             @NotNull IntBitfield<VkImageUsageFlagBits> usage,
-            @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask
+            @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask,
+            boolean generateMipLevels
     ) throws EngineException {
-        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format).create(stack);
+        VulkanImage image = new VulkanImage(device, debugName, -1, size, usage, viewAspectMask, tiling, format, generateMipLevels).create(stack);
         add(stack, image, VkMemoryPropertyFlagBits.DEVICE_LOCAL);
         return image;
     }

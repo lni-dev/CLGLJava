@@ -143,7 +143,8 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
                 depthFormat, //TODO: this must be selected
                 VkImageTiling.OPTIMAL,
                 new IntBitfieldImpl<>(VkImageUsageFlagBits.DEPTH_STENCIL_ATTACHMENT),
-                new IntBitfieldImpl<>(VkImageAspectFlagBits.DEPTH)
+                new IntBitfieldImpl<>(VkImageAspectFlagBits.DEPTH),
+                false
         );
 
         allocator.allocate(stack);

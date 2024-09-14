@@ -29,12 +29,10 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkDeviceMemory;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkImageCreateInfo;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkImageMemoryBarrier;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkImageViewCreateInfo;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkMemoryRequirements;
+import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.lutils.bitfield.IntBitfield;
 import de.linusdev.lutils.image.ImageSize;
+import de.linusdev.lutils.math.LMath;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -60,6 +58,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
      * The {@link VkImageLayout} {@link #vkImage} is currently in.
      */
     protected @NotNull VkImageLayout currentLayout;
+    protected final int mipLevels;
 
     /*
      * Managed by this class
@@ -71,7 +70,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
             @NotNull Device device, @NotNull String debugName, int size, @NotNull ImageSize imageSize,
             @NotNull IntBitfield<VkImageUsageFlagBits> usage,
             @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask, @NotNull VkImageTiling vkImageTiling,
-            @NotNull VkFormat vkFormat
+            @NotNull VkFormat vkFormat, boolean generateMipLevels
     ) {
         super(device, debugName, size);
         this.imageSize = imageSize;
@@ -80,6 +79,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         this.vkImageTiling = vkImageTiling;
         this.vkFormat = vkFormat;
         this.currentLayout = VkImageLayout.UNDEFINED;
+        this.mipLevels = generateMipLevels ? (LMath.intLog2(Math.max(imageSize.getWidth(), imageSize.getHeight())) + 1) : 1;
 
         this.vkImageView = allocate(new VkImageView());
         this.vkImage = allocate(new VkImage());
@@ -119,7 +119,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         imageCreateInfo.extent.width.set(imageSize.getWidth());
         imageCreateInfo.extent.height.set(imageSize.getHeight());
         imageCreateInfo.extent.depth.set(1);
-        imageCreateInfo.mipLevels.set(1);
+        imageCreateInfo.mipLevels.set(mipLevels);
         imageCreateInfo.arrayLayers.set(1);
         imageCreateInfo.format.set(vkFormat);
         imageCreateInfo.tiling.set(vkImageTiling);
@@ -184,7 +184,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         viewCreateInfo.format.set(vkFormat);
         viewCreateInfo.subresourceRange.aspectMask.replaceWith(viewAspectMask);
         viewCreateInfo.subresourceRange.baseMipLevel.set(0);
-        viewCreateInfo.subresourceRange.levelCount.set(1);
+        viewCreateInfo.subresourceRange.levelCount.set(mipLevels);
         viewCreateInfo.subresourceRange.baseArrayLayer.set(0);
         viewCreateInfo.subresourceRange.layerCount.set(1);
 
@@ -193,6 +193,145 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         stack.pop(); // viewCreateInfo
     }
 
+    /**
+     * Generates all mip levels from mip level {@code 0}. Mip level {@code 0} must already be present!
+     * Also transitions the layout of all mipLevels to {@code layoutToTransitionTo}
+     */
+    public void generateMipmaps(
+            @NotNull Stack stack,
+            @NotNull VkCommandBuffer vkCommandBuffer,
+            @NotNull VkImageLayout layoutToTransitionTo
+    ) {
+        assert assertStatePast(BOUND);
+
+        if(mipLevels <= 1)
+            throw new IllegalStateException("Cannot generate mip levels, because there are no mip levels.");
+
+        if(currentLayout != VkImageLayout.TRANSFER_DST_OPTIMAL){
+            transitionLayoutCommand(stack, vkCommandBuffer, VkImageLayout.TRANSFER_DST_OPTIMAL);
+        }
+
+        try(var ignored = stack.popPoint()) {
+            VkImageMemoryBarrier barrier = stack.push(new VkImageMemoryBarrier());
+            barrier.sType.set(VkStructureType.IMAGE_MEMORY_BARRIER);
+            barrier.srcQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
+            barrier.dstQueueFamilyIndex.set(APIConstants.VK_QUEUE_FAMILY_IGNORED);
+            barrier.image.set(vkImage);
+            barrier.subresourceRange.aspectMask.set(VkImageAspectFlagBits.COLOR);
+            barrier.subresourceRange.baseArrayLayer.set(0);
+            barrier.subresourceRange.layerCount.set(1);
+            barrier.subresourceRange.levelCount.set(1);
+
+            VkPipelineStageFlags pipelineStageTransferFlag = stack.push(new VkPipelineStageFlags());
+            pipelineStageTransferFlag.set(VkPipelineStageFlagBits.TRANSFER);
+
+            VkPipelineStageFlags pipelineStageFragShaderFlag = stack.push(new VkPipelineStageFlags());
+            pipelineStageTransferFlag.set(VkPipelineStageFlagBits.FRAGMENT_SHADER);
+
+            VkDependencyFlags dependencyFlags = stack.push(new VkDependencyFlags());
+            dependencyFlags.set(0);
+
+            VkImageBlit blit = stack.push(new VkImageBlit());
+            var offset = blit.srcOffsets.get(0);
+            offset.x.set(0);
+            offset.y.set(0);
+            offset.z.set(0);
+            offset = blit.dstOffsets.get(0);
+            offset.x.set(0);
+            offset.y.set(0);
+            offset.z.set(0);
+            blit.srcSubresource.aspectMask.set(VkImageAspectFlagBits.COLOR);
+            blit.srcSubresource.baseArrayLayer.set(0);
+            blit.srcSubresource.layerCount.set(1);
+            blit.dstSubresource.aspectMask.set(VkImageAspectFlagBits.COLOR);
+            blit.dstSubresource.baseArrayLayer.set(0);
+            blit.dstSubresource.layerCount.set(1);
+
+            int mipLevelWidth = imageSize.getWidth();
+            int mipLevelHeight = imageSize.getHeight();
+            for (int i = 1; i < mipLevels; i++) {
+
+                // Transfer mipLevel i-1 to TRANSFER_SRC_OPTIMAL
+                barrier.subresourceRange.baseMipLevel.set(i - 1);
+                barrier.oldLayout.set(VkImageLayout.TRANSFER_DST_OPTIMAL);
+                barrier.newLayout.set(VkImageLayout.TRANSFER_SRC_OPTIMAL);
+                barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_WRITE);
+                barrier.dstAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
+
+                vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
+                        pipelineStageTransferFlag,
+                        pipelineStageTransferFlag,
+                        dependencyFlags,
+                        0, ref(null),
+                        0, ref(null),
+                        1, ref(barrier)
+                );
+
+                // Transfer from mip level (i - 1) to i
+                offset = blit.srcOffsets.get(1);
+                offset.x.set(mipLevelWidth);
+                offset.y.set(mipLevelHeight);
+                offset.z.set(1);
+
+                offset = blit.dstOffsets.get(1);
+                offset.x.set(mipLevelWidth > 1 ? mipLevelWidth / 2 : 1);
+                offset.y.set(mipLevelHeight > 1 ? mipLevelHeight / 2 : 1);
+                offset.z.set(1);
+
+                blit.srcSubresource.mipLevel.set(i - 1);
+                blit.dstSubresource.mipLevel.set(i);
+
+                // TODO: VkFilter.LINEAR support must be checked in the physical device properties.
+                // More Info: https://vulkan-tutorial.com/Generating_Mipmaps
+                vkInstance.vkCmdBlitImage(vkCommandBuffer,
+                        vkImage, VkImageLayout.TRANSFER_SRC_OPTIMAL,
+                        vkImage, VkImageLayout.TRANSFER_DST_OPTIMAL,
+                        1, ref(blit),
+                        VkFilter.LINEAR
+                );
+
+                // mipLevel (i - 1) is not required any more for mip level generation.
+                // Transfer mipLevel (i - 1) to layoutToTransitionTo
+                barrier.oldLayout.set(VkImageLayout.TRANSFER_SRC_OPTIMAL);
+                barrier.newLayout.set(layoutToTransitionTo);
+                barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
+                barrier.dstAccessMask.set(VkAccessFlagBits.SHADER_READ);
+
+                vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
+                        pipelineStageTransferFlag, pipelineStageFragShaderFlag,
+                        dependencyFlags,
+                        0, ref(null),
+                        0, ref(null),
+                        1, ref(barrier)
+                );
+
+                // Divide width and height by 2
+                if (mipLevelWidth > 1) mipLevelWidth /= 2;
+                if (mipLevelHeight > 1) mipLevelHeight /= 2;
+            }
+
+            // Transition last mip level to layoutToTransitionTo
+            barrier.subresourceRange.baseMipLevel.set(mipLevels - 1);
+            barrier.oldLayout.set(VkImageLayout.TRANSFER_DST_OPTIMAL);
+            barrier.newLayout.set(layoutToTransitionTo);
+            barrier.srcAccessMask.set(VkAccessFlagBits.TRANSFER_READ);
+            barrier.dstAccessMask.set(VkAccessFlagBits.SHADER_READ);
+
+            vkInstance.vkCmdPipelineBarrier(vkCommandBuffer,
+                    pipelineStageTransferFlag, pipelineStageFragShaderFlag,
+                    dependencyFlags,
+                    0, ref(null),
+                    0, ref(null),
+                    1, ref(barrier)
+            );
+        }
+
+        currentLayout = layoutToTransitionTo;
+    }
+
+    /**
+     * Transitions the layout of all mipLevels to {@code layoutToTransitionTo}
+     */
     public void transitionLayoutCommand(
             @NotNull Stack stack,
             @NotNull VkCommandBuffer vkCommandBuffer,
@@ -209,7 +348,7 @@ public class VulkanImage extends VulkanMemoryBoundObject {
         barrier.image.set(vkImage);
         barrier.subresourceRange.aspectMask.set(VkImageAspectFlagBits.COLOR);
         barrier.subresourceRange.baseMipLevel.set(0);
-        barrier.subresourceRange.levelCount.set(1);
+        barrier.subresourceRange.levelCount.set(mipLevels);
         barrier.subresourceRange.baseArrayLayer.set(0);
         barrier.subresourceRange.layerCount.set(1);
 
@@ -272,6 +411,10 @@ public class VulkanImage extends VulkanMemoryBoundObject {
 
     public @NotNull VkFormat getFormat() {
         return vkFormat;
+    }
+
+    public int getMipLevels() {
+        return mipLevels;
     }
 
     public @NotNull VkImageTiling getImageTiling() {

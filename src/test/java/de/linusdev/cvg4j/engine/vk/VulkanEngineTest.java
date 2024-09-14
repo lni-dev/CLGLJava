@@ -146,7 +146,7 @@ class VulkanEngineTest {
 
             Image grassSide = loadGrassSide();
             grassSideSampler = vulkanMemoryAllocator.createStagedSampler(
-                    stack, "grass-texture",0, grassSide, VkImageLayout.SHADER_READ_ONLY_OPTIMAL
+                    stack, "grass-texture",0, grassSide, VkImageLayout.SHADER_READ_ONLY_OPTIMAL, true
             );
 
             vulkanMemoryAllocator.allocate(stack);
@@ -254,7 +254,7 @@ class VulkanEngineTest {
 
             Image.copy(grassSide, grassSideSampler.getInput().getBackedStruct());
             var samplerFuture = engine.getTransientCommandPool().submitSingleTimeCommand(stack, buf -> {
-                grassSideSampler.bufferCopyCommand(stack, buf);
+                grassSideSampler.bufferCopyCommand(stack, buf, true);
             });
 
             try {

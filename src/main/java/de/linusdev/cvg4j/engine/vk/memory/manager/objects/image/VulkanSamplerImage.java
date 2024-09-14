@@ -43,9 +43,9 @@ public class VulkanSamplerImage extends VulkanImage {
     public VulkanSamplerImage(
             @NotNull Device device, @NotNull String debugName, int sizeInBytes, @NotNull ImageSize imageSize,
             @NotNull IntBitfield<VkImageUsageFlagBits> usage, @NotNull IntBitfield<VkImageAspectFlagBits> viewAspectMask,
-            @NotNull VkImageTiling vkImageTiling, @NotNull VkFormat vkFormat
+            @NotNull VkImageTiling vkImageTiling, @NotNull VkFormat vkFormat, boolean generateMipLevels
     ) {
-        super(device, debugName, sizeInBytes, imageSize, usage, viewAspectMask, vkImageTiling, vkFormat);
+        super(device, debugName, sizeInBytes, imageSize, usage, viewAspectMask, vkImageTiling, vkFormat, generateMipLevels);
 
         this.vkSampler = allocate(new VkSampler());
     }
@@ -85,10 +85,11 @@ public class VulkanSamplerImage extends VulkanImage {
         samplerCreateInfo.compareEnable.set(VulkanUtils.booleanToVkBool32(false));
         samplerCreateInfo.compareOp.set(VkCompareOp.ALWAYS);
 
-        samplerCreateInfo.mipmapMode.set(VkSamplerMipmapMode.LINEAR);
-        samplerCreateInfo.mipLodBias.set(0f);
-        samplerCreateInfo.minLod.set(0f);
-        samplerCreateInfo.maxLod.set(0f);
+        //TODO: this must be settable when creating the sampler.
+        samplerCreateInfo.mipmapMode.set(VkSamplerMipmapMode.NEAREST);
+        samplerCreateInfo.mipLodBias.set(0);
+        samplerCreateInfo.minLod.set(0);
+        samplerCreateInfo.maxLod.set(mipLevels);
 
         vkInstance.vkCreateSampler(device.getVkDevice(), ref(samplerCreateInfo), ref(null), ref(vkSampler)).check();
 

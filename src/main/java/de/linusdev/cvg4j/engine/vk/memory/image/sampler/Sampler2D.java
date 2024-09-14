@@ -72,7 +72,15 @@ public class Sampler2D<S extends Structure> implements ShaderBinding {
         this.layout = layout;
     }
 
-    public void bufferCopyCommand(@NotNull Stack stack, @NotNull VkCommandBuffer vkCommandBuffer) {
+    /**
+     *
+     * @param generateMipLevels whether to generate mip levels. If this sampler has no mip levels (only 1 mip level), this is ignored.
+     */
+    public void bufferCopyCommand(
+            @NotNull Stack stack,
+            @NotNull VkCommandBuffer vkCommandBuffer,
+            boolean generateMipLevels
+    ) {
 
         output.getImage().transitionLayoutCommand(stack, vkCommandBuffer, VkImageLayout.TRANSFER_DST_OPTIMAL);
 
@@ -104,8 +112,12 @@ public class Sampler2D<S extends Structure> implements ShaderBinding {
 
         stack.pop(); // region
 
-        output.getImage().transitionLayoutCommand(stack, vkCommandBuffer, layout);
+        if(!generateMipLevels || output.getImage().getMipLevels() <= 1) {
+            output.getImage().transitionLayoutCommand(stack, vkCommandBuffer, layout);
+            return;
+        }
 
+        output.getImage().generateMipmaps(stack, vkCommandBuffer, layout);
     }
 
     public @NotNull BufferStructInput<S> getInput() {
