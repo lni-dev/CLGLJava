@@ -20,6 +20,7 @@ import de.linusdev.lutils.io.FileUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
+import org.gradle.api.internal.tasks.compile.CompilationFailedException;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.*;
@@ -73,7 +74,7 @@ public class GlslCTask extends DefaultTask {
             );
 
     @TaskAction
-    public void glslC() throws IOException {
+    public void glslC() throws IOException, InterruptedException {
 
         if(compiledShadersRootResourcesPackage.getOrNull() == null)
             throw new IllegalStateException("compileShadersRootResourcesPackage must be set.");
@@ -92,6 +93,7 @@ public class GlslCTask extends DefaultTask {
                         allowedFileEndings.get().contains(FileUtils.getFileEnding(path))
         );
 
+        boolean error = false;
         for (Path input : shaderFiles) {
             Path output = resources.resolve(compiledShadersRootResourcesPackage.get().replace(".", "/"));
             Files.createDirectories(output);
@@ -104,9 +106,14 @@ public class GlslCTask extends DefaultTask {
                     BufferedReader errReader = process.errorReader()
             ) {
                 inReader.lines().forEach(System.out::println);
-                errReader.lines().forEach(System.out::println);
+                errReader.lines().forEach(System.err::println);
             }
 
+            if(process.waitFor() != 0) error = true;
+        }
+
+        if(error) {
+            throw new CompilationFailedException();
         }
 
     }

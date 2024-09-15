@@ -40,8 +40,9 @@ import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.vulkan.VulkanNatDebugUtilsMessageCallback;
+import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkDebugUtilsMessageSeverityFlagBitsEXT;
 import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
+import de.linusdev.cvg4j.nat.vulkan.debug.callback.VulkanNatDebugUtilsMessageCallback;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
@@ -116,6 +117,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     private final @NotNull VkInstance vkInstance;
 
+    private @Nullable VulkanNatDebugUtilsMessageCallback debugMsgCallback;
     /**
      * Created in {@link #pickGPU(RenderThread, VulkanRasterizationWindow)}
      */
@@ -161,7 +163,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
                 this,
                 rt -> {
                     createVkInstance(rt);
-                    enableDebugVulkanValidationListener(rt.getStack());
+                    if(game.logValidationLayerMessages())
+                        enableDebugVulkanValidationListener(rt.getStack());
                     VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
                     win.setSize(500, 500);
                     pickGPU(rt, win);
@@ -191,6 +194,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             swapChain.close();
             win.close();
             device.close();
+            if(debugMsgCallback != null)
+                debugMsgCallback.close();
             vkInstance.vkDestroyInstance(ref(null));
         });
 
@@ -331,9 +336,19 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private void enableDebugVulkanValidationListener(
             @NotNull Stack stack
     ) {
-        VulkanNatDebugUtilsMessageCallback.addDebugListener(stack, vkInstance, (messageSeverity, messageType, callbackData) -> {
-            LOG.debug(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.getPointer()));
-
+        debugMsgCallback = new VulkanNatDebugUtilsMessageCallback(vkInstance);
+        LogInstance log = LLog.getLogInstance("VkValidation", null);
+        debugMsgCallback.addDebugListener(stack, (messageSeverity, messageType, callbackData) -> {
+            switch (messageSeverity.get(VkDebugUtilsMessageSeverityFlagBitsEXT.class)) {
+                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_EXT ->
+                        log.debug(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
+                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_EXT ->
+                        log.info(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
+                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_EXT ->
+                        log.warning(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
+                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_EXT ->
+                        log.throwable(new Exception(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get())));
+            }
         });
     }
 

@@ -21,17 +21,7 @@ import org.jetbrains.annotations.NotNull;
 public interface VulkanExtension {
 
     static @NotNull VulkanExtension of(@NotNull String name, int version) {
-        return new VulkanExtension() {
-            @Override
-            public @NotNull String extensionName() {
-                return name;
-            }
-
-            @Override
-            public int version() {
-                return version;
-            }
-        };
+        return new VkExtImpl(name, version);
     }
 
     static @NotNull VulkanExtension of(@NotNull String name) {
@@ -43,6 +33,10 @@ public interface VulkanExtension {
             return false;
 
         return available.version() >= required.version();
+    }
+
+    static @NotNull String toString(@NotNull VulkanExtension extension) {
+        return extension.extensionName() + (extension.version() > 0 ? " v. " + extension.version() : "");
     }
 
     @NotNull String extensionName();

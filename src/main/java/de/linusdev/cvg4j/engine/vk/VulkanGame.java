@@ -27,10 +27,14 @@ import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkQueueFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
+import de.linusdev.cvg4j.nat.vulkan.debug.callback.DebugListener;
+import de.linusdev.cvg4j.nat.vulkan.debug.callback.VulkanNatDebugUtilsMessageCallback;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkColorSpaceKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
+import de.linusdev.llog.base.LogLevel;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Range;
 
@@ -53,6 +57,13 @@ public interface VulkanGame extends Game {
      * using the vulkan configurator.
      */
     @NotNull List<String> activatedVulkanLayers();
+
+    /**
+     * If this returns {@code true}, a validation layer callback will be set,
+     * that {@link de.linusdev.llog.base.LogInstance#log(LogLevel, String) logs}  all validation messages.
+     * @see VulkanNatDebugUtilsMessageCallback#addDebugListener(Stack, DebugListener)
+     */
+    boolean logValidationLayerMessages();
 
     /**
      * How many images the swap chain should contain. By default, returns {@code min(min + 1, max)}, because

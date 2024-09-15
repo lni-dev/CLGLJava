@@ -16,12 +16,12 @@
 
 package de.linusdev.cvg4j.engine.vk.selector;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
+import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanApiVersionUtils;
-import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
@@ -109,19 +109,19 @@ public class VulkanEngineInfo {
     private final static @NotNull LogInstance LOG = LLog.getLogInstance();
 
     public void isVulkanApiVersionAvailable(@NotNull VulkanApiVersion version) throws EngineException {
-        LOG.logDebug("Checking vulkan api version: " + version + ", maxAvailableApiVersion: " + getMaxInstanceVulkanApiVersion());
+        LOG.debug("Checking vulkan api version: " + version + ", maxAvailableApiVersion: " + getMaxInstanceVulkanApiVersion());
         if(getMaxInstanceVulkanApiVersion().compareTo(version) < 0)
             throw new EngineException(version + " is not supported. Maximum supported is: " + getMaxInstanceVulkanApiVersion());
 
     }
 
     public void areInstanceExtensionsAvailable(@NotNull List<VulkanExtension> extensions) throws EngineException {
-        LOG.logDebug("Checking if the following instance extensions are available: " + extensions);
+        LOG.debug("Checking if the following instance extensions are available: " + extensions);
 
-        for (VulkanExtension reqExt : extensions) {
+        loop: for (VulkanExtension reqExt : extensions) {
             for (VulkanExtension availableExt : getAvailableInstanceExtensions()) {
                 if (VulkanExtension.isSufficient(reqExt, availableExt)) {
-                    break;
+                    continue loop;
                 }
             }
 

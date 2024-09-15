@@ -23,12 +23,6 @@ buffers with the same memory type and use the offset when binding the memory to 
 Even use a single VkBuffer!
 https://developer.nvidia.com/vulkan-memory-management
 
-## Log validation layer messages
-register a listener for validation layer messages and log these to the logger
-
-## glslc gradle task
-Errors reported by glslc should be reported to gradle and fail the build.
-
 ## Threading
 Make the glfw event thread and the render thread a different one. Dont do event polling and rendering on the same thread.
 

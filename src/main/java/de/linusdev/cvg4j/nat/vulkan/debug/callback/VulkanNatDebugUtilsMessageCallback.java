@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.vulkan;
+package de.linusdev.cvg4j.nat.vulkan.debug.callback;
 
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkDebugUtilsMessageSeverityFlagBitsEXT;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkDebugUtilsMessageTypeFlagBitsEXT;
@@ -23,36 +23,63 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkDebugUtilsMessengerEXT;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkDebugUtilsMessengerCallbackDataEXT;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkDebugUtilsMessengerCreateInfoEXT;
-import de.linusdev.lutils.bitfield.IntBitfield;
-import de.linusdev.lutils.nat.enums.EnumValue32;
+import de.linusdev.lutils.bitfield.IntBitfieldImpl;
+import de.linusdev.lutils.nat.enums.JavaEnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
+import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
-public class VulkanNatDebugUtilsMessageCallback {
+public class VulkanNatDebugUtilsMessageCallback implements AutoCloseable {
 
-    public interface DebugListener {
-        void debug(
-                @NotNull EnumValue32<VkDebugUtilsMessageSeverityFlagBitsEXT> messageSeverity,
-                @NotNull IntBitfield<VkDebugUtilsMessageTypeFlagBitsEXT> messageType,
-                @NotNull VkDebugUtilsMessengerCallbackDataEXT callbackData
-        );
+    public static final int DATA_SIZE = allocate(new VkDebugUtilsMessengerCallbackDataEXT()).getRequiredSize();
+    private final static @NotNull ArrayList<@NotNull DebugListener> LISTENERS = new ArrayList<>(1);
+
+    private static native void setCallbackClass(@NotNull Class<?> callbackClass);
+
+    private static native long getVulkanDebugCallbackFunPointer();
+
+    @SuppressWarnings("unused") // Called natively only
+    private static boolean callback(
+            int messageSeverity,
+            int messageType,
+            long pCallbackData,
+            long pUserData
+    ) {
+
+        var msgSeverity = new JavaEnumValue32<VkDebugUtilsMessageSeverityFlagBitsEXT>(messageSeverity);
+        var msgType = new IntBitfieldImpl<VkDebugUtilsMessageTypeFlagBitsEXT>(messageType);
+
+        VkDebugUtilsMessengerCallbackDataEXT data = new VkDebugUtilsMessengerCallbackDataEXT();
+        data.claimBuffer(BufferUtils.getByteBufferFromPointer(pCallbackData, DATA_SIZE));
+
+        LISTENERS.get((int) pUserData).debug(msgSeverity, msgType, data);
+
+        return false;
     }
 
-    public static final @NotNull ArrayList<@NotNull DebugListener> listeners = new ArrayList<>(1);
-    public static final @NotNull ArrayList<Long> messengers = new ArrayList<>(1);
+    static {
+        setCallbackClass(VulkanNatDebugUtilsMessageCallback.class);
+    }
 
-    public static void addDebugListener(
+    private final @NotNull VkInstance vkInstance;
+    private final @NotNull ArrayList<VkDebugUtilsMessengerEXT> messengers = new ArrayList<>(1);
+
+    public VulkanNatDebugUtilsMessageCallback(@NotNull VkInstance vkInstance) {
+        this.vkInstance = vkInstance;
+    }
+
+    public void addDebugListener(
             @NotNull Stack stack,
-            @NotNull VkInstance vkInstance,
             @NotNull DebugListener listener
     ) {
         try(var ignored = stack.popPoint()) {
-            int id = listeners.size();
-            listeners.add(listener);
+            int id = LISTENERS.size();
+            LISTENERS.add(listener);
 
             VkDebugUtilsMessengerCreateInfoEXT createInfo = stack.push(new VkDebugUtilsMessengerCreateInfoEXT());
             createInfo.sType.set(VkStructureType.DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT);
@@ -71,43 +98,18 @@ public class VulkanNatDebugUtilsMessageCallback {
             createInfo.pfnUserCallback.set(getVulkanDebugCallbackFunPointer());
             createInfo.pUserData.set(id);
 
-            VkDebugUtilsMessengerEXT messenger = stack.push(new VkDebugUtilsMessengerEXT());
+            VkDebugUtilsMessengerEXT messenger = allocate(new VkDebugUtilsMessengerEXT());
 
             vkInstance.vkCreateDebugUtilsMessengerEXT(ref(createInfo), ref(null), ref(messenger)).check();
 
-            messengers.add(messenger.get());
+            messengers.add(messenger);
         }
 
     }
 
-    public static void close(@NotNull Stack stack, @NotNull VkInstance vkInstance) {
-        VkDebugUtilsMessengerEXT messenger = stack.push(new VkDebugUtilsMessengerEXT());
-
-        for (Long handle : messengers) {
-            messenger.set(handle);
-            vkInstance.vkDestroyDebugUtilsMessengerEXT(messenger, ref(null));
-        }
-    }
-
-    static {
-        setCallbackClass(VulkanNatDebugUtilsMessageCallback.class);
-    }
-
-    private static native void setCallbackClass(@NotNull Class<?> callbackClass);
-
-    private static native long getVulkanDebugCallbackFunPointer();
-
-    private static boolean callback(
-            int messageSeverity,
-            int messageType,
-            long pCallbackData,
-            long pUserData
-    ) {
-        System.out.println("Callback!");
-
-        //listeners.get((int) pUserData).debug();
-
-        return false;
+    public void close() {
+        for (var handle : messengers)
+            vkInstance.vkDestroyDebugUtilsMessengerEXT(handle, ref(null));
     }
 
 }
