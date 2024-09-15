@@ -40,6 +40,7 @@ import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.cvg4j.nat.vulkan.VulkanNatDebugUtilsMessageCallback;
 import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
@@ -71,6 +72,7 @@ import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
 import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
 import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
+import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.thread.var.SyncVar;
 import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;
@@ -159,6 +161,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
                 this,
                 rt -> {
                     createVkInstance(rt);
+                    enableDebugVulkanValidationListener(rt.getStack());
                     VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
                     win.setSize(500, 500);
                     pickGPU(rt, win);
@@ -323,6 +326,15 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     public GraphicsQueueTransientCommandPool getTransientCommandPool() {
         return transientCommandPool;
+    }
+
+    private void enableDebugVulkanValidationListener(
+            @NotNull Stack stack
+    ) {
+        VulkanNatDebugUtilsMessageCallback.addDebugListener(stack, vkInstance, (messageSeverity, messageType, callbackData) -> {
+            LOG.debug(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.getPointer()));
+
+        });
     }
 
     private void createVkInstance(

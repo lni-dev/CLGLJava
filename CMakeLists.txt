@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME} STATIC MODULE
         src/main/cpp/WGL.cpp
         src/main/cpp/JniUtils.cpp
         build/generated/sources/vulkan/src/main/cpp/NativeFunctions.cpp
+        src/main/cpp/VulkanNatDebugUtilsMessageCallback.cpp
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

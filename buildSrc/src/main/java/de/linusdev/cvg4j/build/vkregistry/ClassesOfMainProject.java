@@ -17,10 +17,16 @@
 package de.linusdev.cvg4j.build.vkregistry;
 
 import de.linusdev.lutils.codegen.java.JavaClass;
+import de.linusdev.lutils.codegen.java.JavaMethod;
+import de.linusdev.lutils.nat.pointer.Pointer64;
 import org.jetbrains.annotations.NotNull;
 
 public interface ClassesOfMainProject {
 
     public static @NotNull JavaClass VULKAN_UTILS_CLASS = JavaClass.custom("de.linusdev.cvg4j.nat.vulkan.utils", "VulkanUtils");
+
+    @NotNull JavaClass POINTER64_CLASS = JavaClass.ofClass(Pointer64.class);
+    @NotNull JavaMethod POINTER64_METHOD_REQUIRE_NOT_NULL = JavaMethod.of(POINTER64_CLASS, JavaClass.ofClass(Boolean.class), "requireNotNull", true);
+
 
 }

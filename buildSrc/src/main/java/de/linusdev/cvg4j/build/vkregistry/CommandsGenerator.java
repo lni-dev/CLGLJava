@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import static de.linusdev.cvg4j.build.vkregistry.ClassesOfMainProject.POINTER64_METHOD_REQUIRE_NOT_NULL;
 import static de.linusdev.cvg4j.build.vkregistry.ClassesOfMainProject.VULKAN_UTILS_CLASS;
 import static de.linusdev.cvg4j.build.vkregistry.RegistryLoader.*;
 
@@ -120,6 +121,13 @@ public class CommandsGenerator {
         // Some stuff we may need later
         JavaMethod booleanToVkBool32Method = JavaMethod.of(VULKAN_UTILS_CLASS, JavaClass.ofClass(int.class), "booleanToVkBool32", true);
         JavaMethod vkBool32ToBooleanMethod = JavaMethod.of(VULKAN_UTILS_CLASS, JavaClass.ofClass(boolean.class), "vkBool32ToBoolean", true);
+
+        // Exception Message Variable
+        var nullPointerMsgVar = vkInstanceClassGenerator.addVariable(JavaClass.ofClass(String.class), "NULL_POINTER_MESSAGE");
+        nullPointerMsgVar.setFinal(true);
+        nullPointerMsgVar.setVisibility(JavaVisibility.PRIVATE);
+        nullPointerMsgVar.setStatic(true);
+        nullPointerMsgVar.setDefaultValue(JavaExpression.ofString("Whoopsie, this message pointer is null! Maybe you forgot to enable an extension or the extension of this method is not available?"));
 
         // code
         JavaClassGenerator vulkanMethodPointersClazz = generator.addJavaFile(VULKAN_PACKAGE + ".commands");
@@ -235,6 +243,10 @@ public class CommandsGenerator {
                     .getNativeFunction(returnType, paramTypes.toArray(new Type[0]));
 
             method.body(block -> {
+                var assertCall = JavaExpression.javaAssert(JavaExpression.callMethod(POINTER64_METHOD_REQUIRE_NOT_NULL, JavaExpression.ofCode("methodPointers." + cmd.name), nullPointerMsgVar));
+
+                block.addExpression(assertCall);
+
                 var methodCall = JavaExpression.callMethod(toCall.getNativeMethod(registry, generator), nativeMethodParams.toArray(new JavaExpression[0]));
 
                 if(returnType.getName().equals("VkResult")) {
