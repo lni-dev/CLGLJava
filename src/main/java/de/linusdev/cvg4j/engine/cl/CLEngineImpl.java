@@ -17,6 +17,8 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
+import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
+import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
@@ -29,8 +31,6 @@ import de.linusdev.cvg4j.window.Handler;
 import de.linusdev.cvg4j.window.args.KernelView;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
-import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
@@ -123,7 +123,7 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
                         return;
                     }
 
-                    var uiTaskFut = window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
+                    var uiTaskFut = window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, (stack) -> {
                         //switch scene and unload old scene
                         currentScene.doSynchronised(v -> {
                             var oldScene = v.get();

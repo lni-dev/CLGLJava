@@ -61,7 +61,9 @@ public interface VulkanGame extends Game {
     /**
      * If this returns {@code true}, a validation layer callback will be set,
      * that {@link de.linusdev.llog.base.LogInstance#log(LogLevel, String) logs}  all validation messages.
-     * @see VulkanNatDebugUtilsMessageCallback#addDebugListener(Stack, DebugListener)
+     * If this returns {@code true}, the vulkan extension 
+     * {@value  APIConstants.VK_EXT_debug_utils#VK_EXT_DEBUG_UTILS_EXTENSION_NAME} will be automatically enabled.
+     * @see VulkanNatDebugUtilsMessageCallback#addDebugListener(Stack, DebugListener) 
      */
     boolean logValidationLayerMessages();
 

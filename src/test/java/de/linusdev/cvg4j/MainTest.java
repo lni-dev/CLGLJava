@@ -16,14 +16,14 @@
 
 package de.linusdev.cvg4j;
 
+import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
 import de.linusdev.cvg4j.nat.cl.objects.Program;
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
-import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.cvg4j.nat.glfw3.objects.OpenGLWindow;
 import de.linusdev.cvg4j.window.CLGLWindow;
 import de.linusdev.cvg4j.window.Handler;
 import de.linusdev.cvg4j.window.args.KernelView;
@@ -122,11 +122,12 @@ public class MainTest {
 
     @Test
     void test() throws InterruptedException, GLFWException, GladInitException {
-        GLFWWindow window = new GLFWWindow(RenderAPI.OPENGL, null);
+        Engine.StaticSetup.setup();
+        OpenGLWindow window = new OpenGLWindow(null);
 
         window.setSize(800, 500);
         window.setTitle("Nice");
-        window.show((frameInfo) -> {
+        window.eventLoop((frameInfo) -> {
             glClear(GL_COLOR_BUFFER_BIT);
         });
         window.close();

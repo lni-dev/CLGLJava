@@ -16,8 +16,11 @@
 
 package de.linusdev.cvg4j.engine.queue;
 
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import org.jetbrains.annotations.NotNull;
+
 public interface ReturnRunnable<T> {
 
-    T run() throws Throwable;
+    T run(@NotNull Stack stack) throws Throwable;
 
 }

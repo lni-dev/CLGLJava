@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.glfw3.custom;
+package de.linusdev.cvg4j.engine.render;
 
-import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
-import org.jetbrains.annotations.Nullable;
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import org.jetbrains.annotations.NotNull;
 
-public enum RenderAPI {
-    OPENGL(GLFWValues.ClientApis.GLFW_OPENGL_API),
-    VULKAN(GLFWValues.ClientApis.GLFW_NO_API)
-    ;
+public interface Renderer {
 
-    private final @Nullable GLFWValues.ClientApis clientApi;
+    void render(@NotNull Stack stack);
 
-    RenderAPI(@Nullable GLFWValues.ClientApis clientApi) {
-        this.clientApi = clientApi;
-    }
-
-    public @Nullable GLFWValues.ClientApis getClientApi() {
-        return clientApi;
-    }
 }

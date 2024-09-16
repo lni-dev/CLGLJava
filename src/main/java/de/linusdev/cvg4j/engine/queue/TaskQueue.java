@@ -17,10 +17,10 @@
 package de.linusdev.cvg4j.engine.queue;
 
 import de.linusdev.cvg4j.api.misc.annos.CallFromAnyThread;
-import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.*;
 
 import java.util.Queue;
@@ -49,8 +49,8 @@ public class TaskQueue {
     }
     protected final @NotNull AsyncManager asyncManager;
 
-    protected final @NotNull AtomicReferenceArray<Wrapper<TQFuture<?>>> wrappers;
-    protected final @NotNull Queue<Wrapper<TQFuture<?>>> taskQueue;
+    protected final @NotNull AtomicReferenceArray<Wrapper<TQFutureImpl<?>>> wrappers;
+    protected final @NotNull Queue<Wrapper<TQFutureImpl<?>>> taskQueue;
     protected final long maxQueuedTaskMillisPerFrame;
 
 
@@ -71,7 +71,7 @@ public class TaskQueue {
     @CallFromAnyThread
     @NonBlocking
     @ApiStatus.Internal
-    private void queue(int id, @NotNull TQFuture<?> future) {
+    private void queue(int id, @NotNull TQFutureImpl<?> future) {
         if(id > 0 && id < wrappers.length()) {
             if(!wrappers.get(id).queueIfNull(future, taskQueue)) {
                 //the same task has already been queued. So cancel this future.
@@ -82,22 +82,21 @@ public class TaskQueue {
         }
     }
 
-    @CallOnlyFromUIThread("glfw")
     @Blocking
     @ApiStatus.Internal
-    public void runQueuedTasks() {
+    public void runQueuedTasks(@NotNull Stack stack) {
         final long startTime = System.currentTimeMillis();
         int taskCount = 0;
 
-        Wrapper<TQFuture<?>> wrapper;
-        TQFuture<?> future;
+        Wrapper<TQFutureImpl<?>> wrapper;
+        TQFutureImpl<?> future;
         while (
                 (System.currentTimeMillis() - startTime) < maxQueuedTaskMillisPerFrame &&
                         (wrapper = taskQueue.poll()) != null
         ) {
             future = wrapper.getItemAndSetToNull();
             if(future != null) {
-                future.run();
+                future.run(stack);
                 taskCount++;
             }
         }
@@ -107,10 +106,9 @@ public class TaskQueue {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    @CallFromAnyThread
     @NonBlocking
     public <T> @NotNull TQFuture<T> queueForExecution(int id, @NotNull ReturnRunnable<T> runnable) {
-        TQFuture<T> f = new TQFuture<>(asyncManager, runnable);
+        TQFutureImpl<T> f = new TQFutureImpl<>(asyncManager, runnable);
         queue(id, f);
         return f;
     }

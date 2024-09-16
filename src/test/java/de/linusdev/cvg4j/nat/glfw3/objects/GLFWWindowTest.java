@@ -59,7 +59,7 @@ class GLFWWindowTest {
         int vertexArrayId = Glad.glGenVertexArray();
         Glad.glBindVertexArray(vertexArrayId);
 
-        window.show((frameInfo) -> {
+        window.eventLoop((frameInfo) -> {
             glClear(GL_COLOR_BUFFER_BIT);
         });
         window.close();

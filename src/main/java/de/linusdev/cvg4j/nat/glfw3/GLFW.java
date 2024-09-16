@@ -57,7 +57,10 @@ public class GLFW {
             callback.onError(error);
     };
 
-    public synchronized static void glfwInit() throws GLFWException {
+    /**
+     * Called statically when this class is accessed.
+     */
+    private synchronized static void glfwInit() throws GLFWException {
         if(!init) {
             if(_glfwInit() == GLFWValues.GLFW_FALSE)
                 throw GLFWException.readFromGLFWGetError();
@@ -66,11 +69,19 @@ public class GLFW {
 
             setJavaGLFWWindowClass(GLFWNativeCallbacks.class);
 
-            //Callbacks
+            // Global Callbacks
             _glfwSetErrorCallback(staticErrorCallback);
             glfwSetJoystickCallback();
 
             init = true;
+        }
+    }
+
+    static {
+        try {
+            glfwInit();
+        } catch (GLFWException e) {
+            throw new Error("Cannot init glfw.", e);
         }
     }
 

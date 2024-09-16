@@ -63,7 +63,6 @@ public class VulkanTransparentWindowTest {
     void test() throws GLFWException, IOException {
         CLEngine.StaticSetup.setup();
 
-        GLFW.glfwInit();
         if(GLFW.glfwVulkanSupported() != GLFWValues.GLFW_TRUE) {
             System.err.println("Cannot run Vulkan test: Vulkan is not supported on this machine.");
             return;
@@ -862,7 +861,7 @@ public class VulkanTransparentWindowTest {
         vkSubmitInfo.signalSemaphoreCount.set(1);
         vkSubmitInfo.pSignalSemaphores.set(renderFinishedSemaphore);
 
-        window.show((frameInfo) -> {
+        window.eventLoop((frameInfo) -> {
             // wait for previous frame to be submitted
             vkInstance.vkWaitForFences(device, 1, TypedPointer64.of(frameSubmittedFence), true, Long.MAX_VALUE).check();
             vkInstance.vkResetFences(device, 1, TypedPointer64.of(frameSubmittedFence)).check();

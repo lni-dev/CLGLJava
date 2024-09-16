@@ -54,8 +54,6 @@ public class GLFWWindow implements
             @NotNull RenderAPI renderApi,
             @Nullable GLFWWindowHints hints
     ) throws GLFWException {
-        glfwInit();
-
         if(hints == null)
             hints = new GLFWWindowHints();
         if(hints.clientApi == null)
@@ -97,9 +95,7 @@ public class GLFWWindow implements
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     @Blocking
-    public void show(@NotNull UpdateListener updateListener) {
-        glfwShowWindow(pointer);
-
+    public void eventLoop(@NotNull UpdateListener updateListener) {
         long frameStartMillis = System.currentTimeMillis();
 
         while (!glfwWindowShouldClose(pointer)) {
@@ -127,6 +123,13 @@ public class GLFWWindow implements
     /*
      * Setter
      */
+
+    /**
+     * Makes windowed mode windows visible.
+     */
+    public void showWindow() {
+        glfwShowWindow(pointer);
+    }
 
     public void setSize(int width, int height) {
         glfwSetWindowSize(pointer, width, height);

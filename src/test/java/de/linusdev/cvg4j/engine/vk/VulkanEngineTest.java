@@ -35,7 +35,6 @@ import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
-import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
@@ -98,7 +97,7 @@ class VulkanEngineTest {
 
         @Override
         public @NotNull List<VulkanExtension> requiredInstanceExtensions() {
-            return List.of(VulkanExtension.of(APIConstants.VK_EXT_debug_utils.VK_EXT_DEBUG_UTILS_EXTENSION_NAME));
+            return List.of();
         }
 
         @Override

@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.window;
 
 import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
+import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.nat.cl.CL;
 import de.linusdev.cvg4j.nat.cl.objects.*;
 import de.linusdev.cvg4j.nat.cl.structs.CLImageDesc;
@@ -34,7 +35,6 @@ import de.linusdev.cvg4j.window.args.AutoUpdateArgManager;
 import de.linusdev.cvg4j.window.args.KernelView;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;
@@ -265,7 +265,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     @CallOnlyFromUIThread(value = "glfw", creates = true, claims = true)
     public void show() {
-        glfwWindow.show(this);
+        glfwWindow.eventLoop(this);
     }
 
     @CallOnlyFromUIThread("glfw")

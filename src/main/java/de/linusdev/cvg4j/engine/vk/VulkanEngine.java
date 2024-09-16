@@ -17,39 +17,37 @@
 package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.Engine;
-import de.linusdev.cvg4j.engine.RenderThread;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
-import de.linusdev.cvg4j.engine.queue.TQFuture;
+import de.linusdev.cvg4j.engine.queue.TQFutureImpl;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.engine.render.RenderThread;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.device.SwapChainBuilder;
-import de.linusdev.cvg4j.engine.vk.extension.VulkanExtensionList;
+import de.linusdev.cvg4j.engine.vk.engine.VulkanWindow;
 import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.infos.SurfaceInfo;
+import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
+import de.linusdev.cvg4j.engine.vk.renderer.rast.RasterizationRenderer;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.selector.VulkanEngineInfo;
 import de.linusdev.cvg4j.engine.vk.selector.gpu.GPUSelectionProgress;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
+import de.linusdev.cvg4j.engine.window.WindowThread;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
-import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkDebugUtilsMessageSeverityFlagBitsEXT;
 import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
-import de.linusdev.cvg4j.nat.vulkan.debug.callback.VulkanNatDebugUtilsMessageCallback;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
-import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
-import de.linusdev.cvg4j.nat.vulkan.utils.VulkanVersionUtils;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.llog.LLog;
@@ -70,10 +68,9 @@ import de.linusdev.lutils.math.vector.buffer.intn.BBUInt2;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
-import de.linusdev.lutils.nat.pointer.BBTypedPointer64;
-import de.linusdev.lutils.nat.string.NullTerminatedUTF8String;
+import de.linusdev.lutils.nat.size.ByteUnits;
+import de.linusdev.lutils.nat.size.Size;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
-import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.thread.var.SyncVar;
 import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;
@@ -83,11 +80,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_TRUE;
-import static de.linusdev.cvg4j.nat.vulkan.utils.VulkanNonInstanceMethods.vkCreateInstance;
-import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
-import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.unionWith;
 
 public class VulkanEngine<GAME extends VulkanGame> implements
@@ -98,7 +92,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         Tickable
 {
 
-    private final static @NotNull LogInstance LOG = LLog.getLogInstance();
+    public final static @NotNull LogInstance LOG = LLog.getLogInstance();
 
     private static final int LOAD_SCENE_TASK_ID = TaskQueue.getUniqueTaskId("LOAD_SCENE");
 
@@ -108,16 +102,15 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private final @NotNull Ticker ticker;
     private final @NotNull InputManger inputManger;
 
-    private final @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> renderThread;
-    private final @NotNull TaskQueue renderThreadTaskQueue;
 
-    private final @NotNull VulkanRasterizationWindow window;
+    private final @NotNull WindowThread<VulkanWindow> windowThread;
+    private final @NotNull VulkanWindow window;
+    private final @NotNull RasterizationRenderer renderer;
+    private final @NotNull RenderThread renderThread;
+
     private final @NotNull VulkanEngineInfo vulkanInfo;
-    private final @NotNull VulkanExtensionList vulkanExtensions = new VulkanExtensionList();
+    private final @NotNull Instance instance;
 
-    private final @NotNull VkInstance vkInstance;
-
-    private @Nullable VulkanNatDebugUtilsMessageCallback debugMsgCallback;
     /**
      * Created in {@link #pickGPU(RenderThread, VulkanRasterizationWindow)}
      */
@@ -135,49 +128,42 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     public VulkanEngine(
             @NotNull GAME game
-    ) throws EngineException {
+    ) throws EngineException, InterruptedException {
+        // Check if StaticSetup was called!
         StaticSetup.checkSetup();
-        this.vulkanInfo = new VulkanEngineInfo();
-
-        this.vkInstance = allocate(new VkInstance());
-
-        this.renderThreadTaskQueue = new TaskQueue(this, 100);
 
         // Check if Vulkan is supported
-        try {
-            GLFW.glfwInit();
-        } catch (GLFWException e) {
-            throw new EngineException(e);
-        }
         if(GLFW.glfwVulkanSupported() != GLFW_TRUE) {
             throw new EngineException("Vulkan is not supported!");
         }
 
+        // Init variables
+        this.vulkanInfo = new VulkanEngineInfo();
         this.game = game;
-
         this.ticker = new Ticker(this, game.getMillisPerTick());
+
+
+        // Create a small stack for short-lived structures
+        DirectMemoryStack64 stack = new DirectMemoryStack64(new Size(10, ByteUnits.KiB));
+
+        // Create Vulkan Instance
+        instance = new Instance(stack, game, vulkanInfo);
+
+        // Start ticker
         ticker.start();
 
-        LOG.debug("Creating render-thread");
-        this.renderThread = new RenderThread<>(
-                this,
-                rt -> {
-                    createVkInstance(rt);
-                    if(game.logValidationLayerMessages())
-                        enableDebugVulkanValidationListener(rt.getStack());
-                    VulkanRasterizationWindow win = new VulkanRasterizationWindow(null, vkInstance, rt.getStack());
-                    win.setSize(500, 500);
-                    pickGPU(rt, win);
-                    renderPass = RenderPass.create(rt.getStack(), vkInstance, device, swapChain);
-                    transientCommandPool = GraphicsQueueTransientCommandPool.create(this, rt.getStack(), vkInstance, device);
-                    return win;
-                },
-                (rt, win, fut) -> fut.complete(win, Nothing.INSTANCE, null),
-                (rt, win) -> {
-                    win.init(rt.getStack(), device, swapChain, 2, this);
-                    win.show(this);
-                }
-        );
+        // Create window and renderer
+        windowThread = new WindowThread<>(this, t -> new VulkanWindow(instance, null), stack);
+        window = windowThread.create().getResult();
+
+        renderer = new RasterizationRenderer(instance, window);
+        renderThread = new RenderThread(this, renderer);
+
+        //TODO: pickGPU(rt, win);
+        //                    renderPass = RenderPass.create(rt.getStack(), vkInstance, device, swapChain);
+        //                    transientCommandPool = GraphicsQueueTransientCommandPool.create(this, rt.getStack(), vkInstance, device);
+
+
 
         this.renderThread.getThreadDeathFuture().then((win, secondary, error) -> {
             if(error != null) {
@@ -194,9 +180,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             swapChain.close();
             win.close();
             device.close();
-            if(debugMsgCallback != null)
-                debugMsgCallback.close();
-            vkInstance.vkDestroyInstance(ref(null));
+            instance.close();
+
         });
 
         // Wait until the render thread is created
@@ -215,7 +200,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     }
 
     public @NotNull VkInstance getVkInstance() {
-        return vkInstance;
+        return instance.getVkInstance();
     }
 
     public Device getDevice() {
@@ -269,7 +254,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     ) {
         VkScene<?> scene = currentScene.get();
         if(scene != null) {
-            scene.render(renderThread.getStack(), vkInstance, swapChain.getExtend(), currentFrameBufferImageIndex, currentFrame, commandBuffer, window.getFrameBuffers().getFrameBuffer(currentFrameBufferImageIndex));
+            scene.render(renderThread.getStack(), instance.getVkInstance(), swapChain.getExtend(), currentFrameBufferImageIndex, currentFrame, commandBuffer, window.getFrameBuffers().getFrameBuffer(currentFrameBufferImageIndex));
         }
     }
 
@@ -291,12 +276,12 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         }
     }
 
-    public TQFuture<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
+    public TQFutureImpl<VkScene<GAME>> loadScene(@NotNull VkScene<GAME> scene) {
         var fut = renderThreadTaskQueue.queueForExecution(LOAD_SCENE_TASK_ID, () -> {
             DirectMemoryStack64 stack = renderThread.getStack();
             try(var ignored = stack.safePoint()) {
                 scene.onLoad0(stack, window, swapChain);
-                RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, scene.pipeline(stack));
+                RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, instance.getVkInstance(), device, swapChain, renderPass, scene.pipeline(stack));
                 window.createFrameBuffers(renderPass);
                 scene.setPipeLine(pipeLine);
             }
@@ -333,110 +318,13 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return transientCommandPool;
     }
 
-    private void enableDebugVulkanValidationListener(
-            @NotNull Stack stack
-    ) {
-        debugMsgCallback = new VulkanNatDebugUtilsMessageCallback(vkInstance);
-        LogInstance log = LLog.getLogInstance("VkValidation", null);
-        debugMsgCallback.addDebugListener(stack, (messageSeverity, messageType, callbackData) -> {
-            switch (messageSeverity.get(VkDebugUtilsMessageSeverityFlagBitsEXT.class)) {
-                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_EXT ->
-                        log.debug(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
-                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_EXT ->
-                        log.info(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
-                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_EXT ->
-                        log.warning(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get()));
-                case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_EXT ->
-                        log.throwable(new Exception(BufferUtils.readNullTerminatedUtf8String(callbackData.pMessage.get())));
-            }
-        });
-    }
 
-    private void createVkInstance(
-            @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt
-    ) throws EngineException {
-        LOG.debug("Start creating VkInstance.");
-
-        DirectMemoryStack64 stack = rt.getStack();
-        try (var ignored = stack.safePoint()){
-            vulkanInfo.load(stack);
-
-            // Check minRequiredInstanceVersion
-            vulkanInfo.isVulkanApiVersionAvailable(game.minRequiredInstanceVersion());
-            vulkanInfo.areInstanceExtensionsAvailable(game.requiredInstanceExtensions());
-
-            // add all required vulkan extensions
-            vulkanExtensions.addAll(game.requiredInstanceExtensions());
-            vulkanExtensions.addAll(vulkanInfo.getGlfwRequiredInstanceExtensions());
-
-            // VkApplicationInfo
-            NullTerminatedUTF8String appName = stack.pushString(game.name());
-            NullTerminatedUTF8String engineName = stack.pushString(Engine.name());
-
-            VkApplicationInfo vkApplicationInfo = stack.push(new VkApplicationInfo());
-            vkApplicationInfo.sType.set(VkStructureType.APPLICATION_INFO);
-            vkApplicationInfo.pNext.set(0);
-            vkApplicationInfo.pApplicationName.set(appName);
-            vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
-            vkApplicationInfo.pEngineName.set(engineName);
-            vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
-            vkApplicationInfo.apiVersion.set(game.minRequiredInstanceVersion().getAsInt());
-            LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
-
-            // VkInstanceCreateInfo
-            StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledExtensionsNatArray = vulkanExtensions.toNativeArray(stack::pushArray, stack::pushString);
-            @Nullable StructureArray<BBTypedPointer64<NullTerminatedUTF8String>> enabledLayersNatArray = null;
-
-            if(!game.activatedVulkanLayers().isEmpty()) {
-                enabledLayersNatArray = stack.pushArray(game.activatedVulkanLayers().size(), BBTypedPointer64.class, BBTypedPointer64::newUnallocated1);
-                int i = 0;
-                for (String ext : game.activatedVulkanLayers())
-                    enabledLayersNatArray.get(i++).set(stack.pushString(ext));
-            }
-
-
-            VkInstanceCreateInfo vkInstanceCreateInfo = stack.push(new VkInstanceCreateInfo());
-            vkInstanceCreateInfo.sType.set(VkStructureType.INSTANCE_CREATE_INFO);
-            vkInstanceCreateInfo.pNext.set(0);
-            vkInstanceCreateInfo.pApplicationInfo.set(vkApplicationInfo);
-            vkInstanceCreateInfo.enabledExtensionCount.set(enabledExtensionsNatArray.length());
-            vkInstanceCreateInfo.ppEnabledExtensionNames.set(enabledExtensionsNatArray.getPointer());
-            vkInstanceCreateInfo.enabledLayerCount.set(enabledLayersNatArray == null ? 0 : enabledLayersNatArray.length());
-            vkInstanceCreateInfo.ppEnabledLayerNames.set(refL(enabledLayersNatArray));
-            vkInstanceCreateInfo.flags.set(0);
-            LOG.log(StandardLogLevel.DATA, "VkInstanceCreateInfo: " + vkInstanceCreateInfo);
-
-            // Create VkInstance
-            vkCreateInstance(vkInstanceCreateInfo, null, vkInstance).check();
-            vkInstance.initMethodPointers();
-
-            if(enabledLayersNatArray != null) {
-                for (int i = 0; i < enabledLayersNatArray.length(); i++)
-                    stack.pop(); // string in enabledLayersNatArray
-                stack.pop(); // enabledLayersNatArray
-            }
-
-            for (int i = 0; i < enabledExtensionsNatArray.length(); i++)
-                stack.pop(); // string in enabledExtensionsNatArray
-            stack.pop(); // enabledExtensionsNatArray
-
-            stack.pop(); // vkInstanceCreateInfo
-            stack.pop(); // vkApplicationInfo
-            stack.pop(); // engineName
-            stack.pop(); // appName
-        }
-
-        LOG.debug("Finished creating VkInstance.");
-    }
-
-    /**
-     * requires {@link #createVkInstance(RenderThread)} to be called.
-     */
     private void pickGPU(
             @NotNull RenderThread<GAME, VulkanRasterizationWindow, VulkanRasterizationWindow> rt,
             @NotNull VulkanRasterizationWindow window
     ) throws EngineException {
         LOG.debug("Start picking gpu.");
+        VkInstance vkInstance = instance.getVkInstance();
         DirectMemoryStack64 stack = rt.getStack();
         // Pick GPU
         try(var ignored = stack.safePoint()) {
@@ -527,7 +415,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         // Create device
         device = Device.create(
                 stack,
-                vkInstance,
+                instance.getVkInstance(),
                 info.vkPhysicalDevice(),
                 game.queueFamilySelector().selectGraphicsQueue(info.queueFamilyInfoList()).result1().index(),
                 game.queueFamilySelector().selectPresentationQueue(info.queueFamilyInfoList()).result1().index(),
@@ -554,7 +442,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             StructureArray<VkSurfaceFormatKHR> surfaceFormats = stack.pushArray(100, VkSurfaceFormatKHR.class, VkSurfaceFormatKHR::new);
             StructureArray<NativeEnumValue32<VkPresentModeKHR>> presentModes = stack.pushArray(100, NativeEnumValue32.class, NativeEnumValue32::newUnallocatedT);
 
-            info = SurfaceInfo.ofVkSurface(vkInstance, window.getVkSurface(), device.getVkPhysicalDevice(),
+            info = SurfaceInfo.ofVkSurface(instance.getVkInstance(), window.getVkSurface(), device.getVkPhysicalDevice(),
                     integer, surfacesCaps, surfaceFormats, presentModes
             );
         }
@@ -601,7 +489,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             builder.recreateSwapChain(stack, swapChain);
             LOG.debug("SwapChain recreated");
         } else {
-            swapChain = builder.buildSwapChain(stack, window, vkInstance, device);
+            swapChain = builder.buildSwapChain(stack, window, instance.getVkInstance(), device);
             LOG.debug("SwapChain created");
         }
 

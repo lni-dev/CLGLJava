@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,8 @@
 
 package de.linusdev.cvg4j.engine.queue;
 
+import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
-import de.linusdev.lutils.async.completeable.CompletableFuture;
-import de.linusdev.lutils.async.completeable.CompletableTask;
-import de.linusdev.lutils.async.error.ThrowableAsyncError;
-import de.linusdev.lutils.async.manager.AsyncManager;
-import org.jetbrains.annotations.NotNull;
 
-public class TQFuture<T> extends CompletableFuture<T, Nothing, CompletableTask<T, Nothing>> {
-
-    protected final @NotNull ReturnRunnable<T> runnable;
-
-    public TQFuture(@NotNull AsyncManager asyncManager, @NotNull ReturnRunnable<T> runnable) {
-        super(asyncManager, false);
-        this.runnable = runnable;
-    }
-
-    public void run() {
-        try {
-            T ret = runnable.run();
-            complete(ret, Nothing.INSTANCE, null);
-        } catch (Throwable t) {
-            complete(null, Nothing.INSTANCE, new ThrowableAsyncError(t));
-        }
-    }
+public interface TQFuture<T> extends Future<T, Nothing> {
 }

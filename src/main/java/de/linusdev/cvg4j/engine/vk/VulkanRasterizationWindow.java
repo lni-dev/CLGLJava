@@ -183,9 +183,9 @@ public class VulkanRasterizationWindow extends GLFWWindow implements UpdateListe
     }
 
     @Override
-    public void show(@NotNull UpdateListener updateListener) {
+    public void eventLoop(@NotNull UpdateListener updateListener) {
         this.updateListener = updateListener;
-        super.show(this);
+        super.eventLoop(this);
     }
 
     @Override
