@@ -21,8 +21,6 @@ import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 public interface RenderCommandsFunction {
-    boolean available();
-
     void render(
             @NotNull Stack stack,
             int currentFrameBufferImageIndex,

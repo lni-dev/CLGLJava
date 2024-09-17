@@ -100,7 +100,13 @@ public class RenderThread extends Thread {
             });
         });
 
-        window.listeners().addFramebufferSizeListener((width, height) -> recreateSwapChain.set(true));
+        window.listeners().addFramebufferSizeListener((width, height) -> {
+            recreateSwapChain.set(true);
+            if(width != 0 && height != 0) {
+                minimized.set(false);
+                taskQueueWaiter.signal();
+            }
+        });
         window.listeners().addWindowIconificationListener(minimized::set);
     }
 

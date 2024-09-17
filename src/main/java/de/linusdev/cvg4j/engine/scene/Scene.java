@@ -17,9 +17,8 @@
 package de.linusdev.cvg4j.engine.scene;
 
 import de.linusdev.cvg4j.engine.ticker.Tickable;
-import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 
-public interface Scene extends Tickable, AutoCloseable, UpdateListener {
+public interface Scene extends Tickable, AutoCloseable {
 
     @Override
     void close();

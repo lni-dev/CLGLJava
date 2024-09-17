@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.info.Game;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
+import de.linusdev.cvg4j.engine.vk.scene.VkScene;
 import de.linusdev.cvg4j.engine.vk.selector.gpu.VulkanGPUSelector;
 import de.linusdev.cvg4j.engine.vk.selector.present.mode.PresentModeSelector;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priorities;
@@ -42,6 +43,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public interface VulkanGame extends Game, HasSwapChainSelectors {
+
+    @NotNull VkScene<?> startScene(@NotNull VulkanEngine<?> engine);
 
     /**
      * Minimum {@link VulkanApiVersion} this game requires.

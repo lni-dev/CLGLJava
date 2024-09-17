@@ -168,51 +168,47 @@ public class RasterizationRenderer implements Renderer {
 
     @Override
     public @NotNull RenderState render(@NotNull Stack stack) {
-        if(renderCommandsFunction.available()) {
 
-            // Get the swap chain
-            VkSwapchainKHR vkSwapChain = swapChain.getVkSwapChain();
+        // Get the swap chain
+        VkSwapchainKHR vkSwapChain = swapChain.getVkSwapChain();
 
-            // wait for previous frame to be submitted
-            vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame)), true, Long.MAX_VALUE).check();
+        // wait for previous frame to be submitted
+        vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame)), true, Long.MAX_VALUE).check();
 
+        // acquire Image from the swap chain
+        ReturnedVkResult result = vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
 
-            // acquire Image from the swap chain
-            ReturnedVkResult result = vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
+        // Check if we need to recreate the swap chain
+        if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
+        else result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
 
-            // Check if we need to recreate the swap chain
-            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
-            else result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
+        vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
 
-            vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
+        // reset command buffer
+        vkInstance.vkResetCommandBuffer(commandPool.getVkCommandBuffer(currentFrame), commandBufferResetFlags);
 
-            // reset command buffer
-            vkInstance.vkResetCommandBuffer(commandPool.getVkCommandBuffer(currentFrame), commandBufferResetFlags);
+        // fill command buffer
+        renderCommandsFunction.render(stack, currentImageIndex.get(), currentFrame, commandPool.getVkCommandBuffer(currentFrame));
 
-            // fill command buffer
-            renderCommandsFunction.render(stack, currentImageIndex.get(), currentFrame, commandPool.getVkCommandBuffer(currentFrame));
+        // submit
+        submitInfo.pCommandBuffers.set(commandPool.getVkCommandBuffer(currentFrame));
+        submitInfo.pWaitSemaphores.set(imageAvailableSemaphores.get(currentFrame));
+        submitInfo.pSignalSemaphores.set(renderFinishedSemaphores.get(currentFrame));
 
-            // submit
-            submitInfo.pCommandBuffers.set(commandPool.getVkCommandBuffer(currentFrame));
-            submitInfo.pWaitSemaphores.set(imageAvailableSemaphores.get(currentFrame));
-            submitInfo.pSignalSemaphores.set(renderFinishedSemaphores.get(currentFrame));
+        vkInstance.vkQueueSubmit(graphicsQueue, 1, ref(submitInfo), frameSubmittedFences.get(currentFrame)).check();
 
-            vkInstance.vkQueueSubmit(graphicsQueue, 1, ref(submitInfo), frameSubmittedFences.get(currentFrame)).check();
+        // present
+        presentInfo.pSwapchains.set(vkSwapChain);
+        presentInfo.pWaitSemaphores.set(renderFinishedSemaphores.get(currentFrame));
+        presentInfo.pImageIndices.set(currentImageIndex);
 
-            // present
-            presentInfo.pSwapchains.set(vkSwapChain);
-            presentInfo.pWaitSemaphores.set(renderFinishedSemaphores.get(currentFrame));
-            presentInfo.pImageIndices.set(currentImageIndex);
+        result = vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo));
+        currentFrame = (currentFrame + 1) % maxFramesInFlight;
 
-            result = vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo));
-            currentFrame = (currentFrame + 1) % maxFramesInFlight;
-
-            // Check if we need to recreate the swap chain
-            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
-            else if(result.is(VkResult.VK_SUBOPTIMAL_KHR)) return RenderState.SWAP_CHAIN_SUBOPTIMAL;
-            else result.check();
-
-        }
+        // Check if we need to recreate the swap chain
+        if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
+        else if(result.is(VkResult.VK_SUBOPTIMAL_KHR)) return RenderState.SWAP_CHAIN_SUBOPTIMAL;
+        else result.check();
 
         return RenderState.NONE;
     }

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk;
+package de.linusdev.cvg4j.engine.vk.scene;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.scene.Scene;
+import de.linusdev.cvg4j.engine.vk.VulkanEngine;
+import de.linusdev.cvg4j.engine.vk.VulkanGame;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
@@ -97,7 +99,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
         calcViewportAndScissors(swapChain);
     }
 
-    abstract void render(
+    protected abstract void render(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull Extend2D extend,
@@ -107,7 +109,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
             @NotNull VkFramebuffer frameBuffer
     ) ;
 
-    abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);
+    public abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);
 
     @ApiStatus.Internal
     public void setPipeLine(@Nullable RasterizationPipeline pipeLine) {

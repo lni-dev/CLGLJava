@@ -30,12 +30,12 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.engine.vk.scene.VkScene;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.engine.window.input.Key;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
-import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
@@ -89,6 +89,11 @@ class VulkanEngineTest {
         @Override
         public long getMillisPerTick() {
             return 20;
+        }
+
+        @Override
+        public @NotNull VkScene<?> startScene(@NotNull VulkanEngine<?> engine) {
+            return new TestScene((VulkanEngine<TestGame>) engine);
         }
 
         @Override
@@ -318,7 +323,7 @@ class VulkanEngineTest {
         }
 
         @Override
-        void render(
+        protected void render(
                 @NotNull Stack stack,
                 @NotNull VkInstance vkInstance,
                 @NotNull Extend2D extend,
@@ -379,7 +384,7 @@ class VulkanEngineTest {
         }
 
         @Override
-        @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack) {
+        public @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack) {
 
             return new RasterizationPipelineInfo() {
                 @Override
@@ -453,11 +458,6 @@ class VulkanEngineTest {
         }
 
         @Override
-        public void update(@NotNull FrameInfo frameInfo) {
-
-        }
-
-        @Override
         public void close() {
             descriptorPool.close();
             vulkanMemoryAllocator.close();
@@ -471,7 +471,7 @@ class VulkanEngineTest {
 
         VulkanEngine<TestGame> engine = new VulkanEngine<>(new TestGame());
 
-        engine.loadScene(new TestScene(engine)).getResult();
+        //engine.loadScene(new TestScene(engine)).getResult();
 
         engine.getEngineDeathFuture().getResult();
     }

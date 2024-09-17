@@ -22,13 +22,13 @@ import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.abi.ABISelector;
 import de.linusdev.lutils.async.Future;
-import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.async.manager.HasAsyncManager;
 import de.linusdev.lutils.interfaces.AdvTRunnable;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
 
-public interface Engine<GAME extends Game> {
+public interface Engine<GAME extends Game> extends HasAsyncManager {
 
     class StaticSetup {
 
@@ -62,8 +62,6 @@ public interface Engine<GAME extends Game> {
     }
 
     @NotNull GAME getGame();
-
-    @NotNull AsyncManager getAsyncManager();
 
     <R> @NotNull Future<R, ? extends Engine<GAME>> runSupervised(@NotNull AdvTRunnable<R, ?> runnable);
 }
