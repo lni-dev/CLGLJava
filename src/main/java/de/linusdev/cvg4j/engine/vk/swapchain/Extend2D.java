@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.device;
+package de.linusdev.cvg4j.engine.vk.swapchain;
 
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
 import de.linusdev.lutils.image.ImageSize;

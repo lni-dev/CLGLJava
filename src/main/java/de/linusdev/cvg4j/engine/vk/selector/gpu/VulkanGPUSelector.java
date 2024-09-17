@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.selector.gpu;
 
-import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
+import de.linusdev.cvg4j.engine.vk.device.GPUInfo;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifier;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifierType;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
@@ -42,7 +42,7 @@ public interface VulkanGPUSelector {
     }
 
     default int getPriority(
-            @NotNull GpuInfo info
+            @NotNull GPUInfo info
     ) {
         Map<PriorityModifierType, List<PriorityModifier>> modifiers = modifiers();
 

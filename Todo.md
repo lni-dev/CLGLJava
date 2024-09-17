@@ -26,5 +26,8 @@ https://developer.nvidia.com/vulkan-memory-management
 ## Threading
 Make the glfw event thread and the render thread a different one. Dont do event polling and rendering on the same thread.
 
+## Autocloseable fix 
+All objects implementing auto closable should check if they actually need closing and what has to be closed.
+
 ## TODO: Quality of life changes to generated code
 - none

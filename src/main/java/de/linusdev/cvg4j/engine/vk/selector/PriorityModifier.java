@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.selector;
 
-import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
+import de.linusdev.cvg4j.engine.vk.device.GPUInfo;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import org.jetbrains.annotations.NotNull;
 
@@ -28,18 +28,18 @@ public interface PriorityModifier {
 
     @NotNull PriorityModifierType type();
 
-    int apply(int current, @NotNull GpuInfo info);
+    int apply(int current, @NotNull GPUInfo info);
 
 
 
     record Impl(
             @NotNull PriorityModifierType type,
             @NotNull Priority modifier,
-            @NotNull Predicate<GpuInfo> tester
+            @NotNull Predicate<GPUInfo> tester
     ) implements PriorityModifier {
 
         @Override
-        public int apply(int current, @NotNull GpuInfo info) {
+        public int apply(int current, @NotNull GPUInfo info) {
             if(!tester.test(info))
                 return current;
 
@@ -50,9 +50,9 @@ public interface PriorityModifier {
 
     class VariableImpl implements PriorityModifier {
         private final @NotNull PriorityModifierType type;
-        private final @NotNull Function<GpuInfo, Priority> tester;
+        private final @NotNull Function<GPUInfo, Priority> tester;
 
-        public VariableImpl(@NotNull PriorityModifierType type, @NotNull Function<GpuInfo, Priority> tester) {
+        public VariableImpl(@NotNull PriorityModifierType type, @NotNull Function<GPUInfo, Priority> tester) {
             this.type = type;
             this.tester = tester;
         }
@@ -63,7 +63,7 @@ public interface PriorityModifier {
         }
 
         @Override
-        public int apply(int current, @NotNull GpuInfo info) {
+        public int apply(int current, @NotNull GPUInfo info) {
             return type.apply(current, tester.apply(info).priority());
         }
     }

@@ -664,3 +664,9 @@ JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwSetWindowAspect
     glfwSetWindowAspectRatio(reinterpret_cast<GLFWwindow*>(pWindow), numerator, denominator);
 }
 
+JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_glfw3_GLFW_glfwPostEmptyEvent(
+        JNIEnv *, jclass
+) {
+    glfwPostEmptyEvent();
+}
+

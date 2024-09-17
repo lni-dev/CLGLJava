@@ -19,11 +19,12 @@ package de.linusdev.cvg4j.engine.vk;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.scene.Scene;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
+import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
@@ -65,7 +66,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     public final void onLoad0(
             @NotNull Stack stack,
-            @NotNull VulkanRasterizationWindow window,
+            @NotNull VulkanWindow window,
             @NotNull SwapChain swapChain
     ) throws EngineException {
         this.swapChain = swapChain;
@@ -75,7 +76,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
         onLoad(stack, window);
     }
 
-    public abstract void onLoad(@NotNull Stack stack, @NotNull VulkanRasterizationWindow window) throws EngineException;
+    public abstract void onLoad(@NotNull Stack stack, @NotNull VulkanWindow window) throws EngineException;
 
     protected void calcViewportAndScissors(@NotNull SwapChain swapChain) {
         viewport.x.set(0f);

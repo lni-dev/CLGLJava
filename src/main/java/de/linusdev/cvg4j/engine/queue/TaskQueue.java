@@ -105,11 +105,17 @@ public class TaskQueue {
 
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     @NonBlocking
-    public <T> @NotNull TQFuture<T> queueForExecution(int id, @NotNull ReturnRunnable<T> runnable) {
+    public <T> @NotNull TQFuture<T> queueForExecution(@Range(from = 0, to = MAX_TASK_ID) int id, @NotNull TQRunnable<T> runnable) {
         TQFutureImpl<T> f = new TQFutureImpl<>(asyncManager, runnable);
         queue(id, f);
+        return f;
+    }
+
+    @NonBlocking
+    public <T> @NotNull TQFuture<T> queueForExecution(@NotNull TQRunnable<T> runnable) {
+        TQFutureImpl<T> f = new TQFutureImpl<>(asyncManager, runnable);
+        queue(NO_TASK_ID, f);
         return f;
     }
 

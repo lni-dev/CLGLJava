@@ -24,6 +24,7 @@ import de.linusdev.cvg4j.engine.vk.selector.priority.Priorities;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilySelector;
 import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
+import de.linusdev.cvg4j.engine.vk.selector.swapchain.SwapChainImageCountSelector;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkQueueFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.constants.APIConstants;
@@ -36,7 +37,6 @@ import de.linusdev.cvg4j.nat.vulkan.enums.VkPresentModeKHR;
 import de.linusdev.llog.base.LogLevel;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Range;
 
 import java.util.List;
 
@@ -67,16 +67,8 @@ public interface VulkanGame extends Game {
      */
     boolean logValidationLayerMessages();
 
-    /**
-     * How many images the swap chain should contain. By default, returns {@code min(min + 1, max)}, because
-     * it is good to require an additional image, so we can write to an image while the graphics card driver uses the other
-     * images.
-     * @param min min image count
-     * @param max max image count, may be very high
-     * @return value between min and max
-     */
-    default int swapChainImageCount(@Range(from = 1, to = Integer.MAX_VALUE) int min, @Range(from = 1, to = Integer.MAX_VALUE) int max) {
-        return Math.min(min + 1, max);
+    default @NotNull SwapChainImageCountSelector swapChainImageCountSelector() {
+        return SwapChainImageCountSelector.DEFAULT;
     }
 
     default @NotNull SurfaceFormatSelector surfaceFormatSelector() {
@@ -143,7 +135,7 @@ public interface VulkanGame extends Game {
                 .extensions().not().sufficesAll(requiredDeviceExtensions()).thenUnsupported()
 
                 // It's good to have at least two images available (for swapping them)
-                .custom(info -> info.surfaceInfo().surfacesCaps().maxImageCount.get() == 0 || info.surfaceInfo().surfacesCaps().maxImageCount.get() >= 2).thenAdd(Priorities.HIGH)
+                .custom(info -> info.surfaceInfo.surfacesCaps.maxImageCount.get() == 0 || info.surfaceInfo.surfacesCaps.maxImageCount.get() >= 2).thenAdd(Priorities.HIGH)
 
                 // use given surface format and present mode selectors
                 .surfaceFormat(surfaceFormatSelector()).thenUnsupportedIfNegativeAndAdd()
@@ -162,7 +154,7 @@ public interface VulkanGame extends Game {
                 ).thenUnsupportedIfNegativeAndAdd()
 
                 // Ideally we find a single queue that supports both graphics and presentation
-                .custom(info -> info.queueFamilyInfoList().stream().anyMatch(fam ->
+                .custom(info -> info.queueFamilyInfoList.stream().anyMatch(fam ->
                         fam.props().queueFlags.isSet(VkQueueFlagBits.GRAPHICS) && fam.supportsSurface())
                 ).thenAdd(Priorities.MEDIUM)
                 .build();

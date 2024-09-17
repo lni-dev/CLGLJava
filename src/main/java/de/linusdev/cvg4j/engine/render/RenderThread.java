@@ -62,6 +62,7 @@ public class RenderThread extends Thread {
     @Override
     public void run() {
         try {
+            renderer.onAttachedTo(this);
             creationFuture.complete(Nothing.INSTANCE, this, null);
         } catch (Throwable t) {
             threadDeathFuture.complete(null, this, new ThrowableAsyncError(t));
@@ -80,6 +81,10 @@ public class RenderThread extends Thread {
 
             threadDeathFuture.complete(null, this, new ThrowableAsyncError(t));
         }
+    }
+
+    public @NotNull TaskQueue getTaskQueue() {
+        return taskQueue;
     }
 
     public @NotNull Future<Nothing, RenderThread> getThreadDeathFuture() {

@@ -17,7 +17,6 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
-import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
@@ -38,6 +37,7 @@ import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.interfaces.AdvTRunnable;
 import de.linusdev.lutils.thread.var.SyncVar;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
@@ -165,7 +165,7 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
                                             return;
                                         }
 
-                                        window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, () -> {
+                                        window.getUiTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, (s) -> {
 
                                             //Set/Reset normal kernels
                                             window.clearKernels();
@@ -188,13 +188,13 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
     }
 
     @Override
-    public @NotNull <R> Future<R, CLEngine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable) {
+    public @NotNull <R> Future<R, CLEngine<G>> runSupervised(@NotNull AdvTRunnable<R, ?> runnable) {
         var future = CompletableFuture.<R, CLEngine<G>>create(getAsyncManager(), false);
         executor.execute(() -> {
             try {
                 future.complete(runnable.run(), this, null);
             } catch (Throwable t) {
-                log.logThrowable(t);
+                log.throwable(t);
                 future.complete(null, this, new ThrowableAsyncError(t));
             }
         });

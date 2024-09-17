@@ -345,4 +345,6 @@ public class GLFW {
 
     public static native void glfwSetWindowAspectRatio(long pointer, int numerator, int denominator);
 
+    public static native void glfwPostEmptyEvent();
+
 }

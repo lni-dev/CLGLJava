@@ -16,10 +16,8 @@
 
 package de.linusdev.cvg4j.engine.vk.selector.gpu;
 
-import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
-import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
+import de.linusdev.cvg4j.engine.vk.device.GPUInfo;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
-import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifier;
 import de.linusdev.cvg4j.engine.vk.selector.PriorityModifierType;
 import de.linusdev.cvg4j.engine.vk.selector.present.mode.PresentModeSelector;
@@ -27,6 +25,8 @@ import de.linusdev.cvg4j.engine.vk.selector.priority.Priorities;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilySelector;
 import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
+import de.linusdev.cvg4j.nat.vulkan.enums.VkPhysicalDeviceType;
+import de.linusdev.cvg4j.nat.vulkan.structs.VkExtensionProperties;
 import de.linusdev.lutils.nat.enums.NativeEnumMember32;
 import de.linusdev.lutils.nat.enums.NativeEnumValue32;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
@@ -57,7 +57,7 @@ public class VulkanGPUSelectorBuilder {
     }
 
     public PriorityApplicator deviceNameEquals(@NotNull String name) {
-        return new PriorityApplicator(false, this, info -> info.props().deviceName.get().equals(name));
+        return new PriorityApplicator(false, this, info -> info.props.deviceName.get().equals(name));
     }
 
     public VulkanGPUSelectorBuilder setMaxPriority(@NotNull Priority priority) {
@@ -71,14 +71,14 @@ public class VulkanGPUSelectorBuilder {
     }
 
     public EnumModBuilder<VkPhysicalDeviceType> deviceType() {
-        return new EnumModBuilder<>(this, info -> info.props().deviceType);
+        return new EnumModBuilder<>(this, info -> info.props.deviceType);
     }
 
     public StructArrayModBuilder<VkExtensionProperties, VulkanExtension> extensions() {
         return new StructArrayModBuilder<>(
                 this,
-                GpuInfo::extensionCount,
-                GpuInfo::extensions,
+                info -> info.extensionCount,
+                info -> info.extensions,
                 (availableExt, requiredExt) -> {
                     if(availableExt.extensionName.get().equals(requiredExt.extensionName())) {
                         if(availableExt.specVersion.get() > requiredExt.version()) return 1;
@@ -96,22 +96,22 @@ public class VulkanGPUSelectorBuilder {
     ) {
         return new VariablePriorityApplicator(this,
                 info -> combiner.apply(
-                        selector.selectGraphicsQueue(info.queueFamilyInfoList()).result2(),
-                        selector.selectPresentationQueue(info.queueFamilyInfoList()).result2()
+                        selector.selectGraphicsQueue(info.queueFamilyInfoList).result2(),
+                        selector.selectPresentationQueue(info.queueFamilyInfoList).result2()
                 )
         );
     }
 
     public VariablePriorityApplicator presentMode(@NotNull PresentModeSelector selector) {
-        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo().presentModeCount(), info.surfaceInfo().presentModes()).result2());
+        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo.presentModeCount, info.surfaceInfo.presentModes).result2());
     }
 
-    public PriorityApplicator custom(@NotNull Predicate<GpuInfo> tester) {
+    public PriorityApplicator custom(@NotNull Predicate<GPUInfo> tester) {
         return new PriorityApplicator(false, this, tester);
     }
 
     public VariablePriorityApplicator surfaceFormat(@NotNull SurfaceFormatSelector selector) {
-        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo().surfaceFormatCount(), info.surfaceInfo().surfaceFormats()).result2());
+        return new VariablePriorityApplicator(this, info -> selector.select(info.surfaceInfo.surfaceFormatCount, info.surfaceInfo.surfaceFormats).result2());
     }
 
     public static abstract class ModBuilderBase {
@@ -139,14 +139,14 @@ public class VulkanGPUSelectorBuilder {
 
     public static class StructArrayModBuilder<T extends Structure, I> extends NegatableModBuilderBase<StructArrayModBuilder<T, I>>{
 
-        private final @NotNull ToIntFunction<GpuInfo> getArrayLength;
-        private final @NotNull Function<GpuInfo, StructureArray<T>> getArray;
+        private final @NotNull ToIntFunction<GPUInfo> getArrayLength;
+        private final @NotNull Function<GPUInfo, StructureArray<T>> getArray;
         private final @NotNull ToIntBiFunction<T, I> comparer;
 
         protected StructArrayModBuilder(
                 @NotNull VulkanGPUSelectorBuilder builder,
-                @NotNull ToIntFunction<GpuInfo> getArrayLength,
-                @NotNull Function<GpuInfo, StructureArray<T>> getArray,
+                @NotNull ToIntFunction<GPUInfo> getArrayLength,
+                @NotNull Function<GPUInfo, StructureArray<T>> getArray,
                 @NotNull ToIntBiFunction<T, I> comparer
         ) {
             super(builder);
@@ -207,11 +207,11 @@ public class VulkanGPUSelectorBuilder {
 
     public static class EnumModBuilder<T extends NativeEnumMember32> extends NegatableModBuilderBase<EnumModBuilder<T>> {
 
-        private final @NotNull Function<GpuInfo, NativeEnumValue32<T>> member;
+        private final @NotNull Function<GPUInfo, NativeEnumValue32<T>> member;
 
         protected EnumModBuilder(
                 @NotNull VulkanGPUSelectorBuilder builder,
-                @NotNull Function<GpuInfo, NativeEnumValue32<T>> member
+                @NotNull Function<GPUInfo, NativeEnumValue32<T>> member
         ) {
             super(builder);
             this.member = member;
@@ -237,12 +237,12 @@ public class VulkanGPUSelectorBuilder {
 
     public static class PriorityApplicator extends ModBuilderBase {
 
-        private final @NotNull Predicate<GpuInfo> tester;
+        private final @NotNull Predicate<GPUInfo> tester;
 
         protected PriorityApplicator(
                 boolean negate,
                 @NotNull VulkanGPUSelectorBuilder builder,
-                @NotNull Predicate<GpuInfo> tester
+                @NotNull Predicate<GPUInfo> tester
         ) {
             super(builder);
             this.tester = negate ? tester.negate() : tester;
@@ -272,11 +272,11 @@ public class VulkanGPUSelectorBuilder {
 
     public static class VariablePriorityApplicator extends ModBuilderBase {
 
-        private final @NotNull Function<GpuInfo, Priority> tester;
+        private final @NotNull Function<GPUInfo, Priority> tester;
 
         protected VariablePriorityApplicator(
                 @NotNull VulkanGPUSelectorBuilder builder,
-                @NotNull Function<GpuInfo, Priority> tester
+                @NotNull Function<GPUInfo, Priority> tester
         ) {
             super(builder);
             this.tester = tester;

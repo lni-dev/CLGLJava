@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Linus Andera
+ * Copyright (c) 2023 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.render;
+package de.linusdev.cvg4j.engine.queue;
 
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
-public interface Renderer extends AutoCloseable {
+public interface TQRunnable<T> {
 
-    void onAttachedTo(@NotNull RenderThread thread);
+    T run(@NotNull Stack stack) throws Throwable;
 
-    void render(@NotNull Stack stack);
-
-    void waitIdle() throws InterruptedException;
-
-    @Override
-    void close();
 }

@@ -44,6 +44,8 @@ import de.linusdev.lutils.bitfield.LongBitfieldImpl;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.longn.BBLong2;
 import de.linusdev.lutils.nat.abi.DefaultABIOverwrites;
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
 import de.linusdev.lutils.nat.struct.annos.SVWrapper;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +72,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
     //Task queue
     protected final @NotNull TaskQueue uiTaskQueue;
+    protected final @NotNull Stack stack;
 
     //OpenCL
     protected final int openClVersion; //1,2 or 3
@@ -102,6 +105,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
 
         //Task queue
         this.uiTaskQueue = new TaskQueue(this, maxQueuedTaskMillisPerFrame);
+        this.stack = new DirectMemoryStack64(1024);
 
         //Input manager
         this.inputManger = new InputManagerImpl(glfwWindow);
@@ -175,7 +179,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         );
 
         glfwWindow.listeners().addFramebufferSizeListener((width, height) ->
-                uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, () ->
+                uiTaskQueue.queueForExecution(UPDATE_SHARED_FRAMEBUFFER_TASK_ID, (stack) ->
                         {
                             this.updateSharedFramebuffer();
                             return Nothing.INSTANCE;
@@ -190,7 +194,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         //clear screen
         glClear(GL_COLOR_BUFFER_BIT);
 
-        uiTaskQueue.runQueuedTasks();
+        uiTaskQueue.runQueuedTasks(stack);
 
         argumentManager.check();
 

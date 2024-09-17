@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.device;
+package de.linusdev.cvg4j.engine.vk.swapchain;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
-import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
+import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkSurfaceTransformFlagBitsKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkColorSpaceKHR;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkFormat;
@@ -100,7 +100,7 @@ public class SwapChainBuilder {
 
     public @NotNull SwapChain buildSwapChain(
             @NotNull Stack stack,
-            @NotNull VulkanRasterizationWindow window,
+            @NotNull VulkanWindow window,
             @NotNull VkInstance vkInstance,
             @NotNull Device device
     ) throws EngineException {

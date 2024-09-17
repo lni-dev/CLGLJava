@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.engine;
+package de.linusdev.cvg4j.engine.vk.window;
 
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
+import de.linusdev.cvg4j.engine.window.WindowThread;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
@@ -28,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwCreateWindowSurface;
+import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwWaitEvents;
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_DONT_CARE;
 import static de.linusdev.lutils.nat.pointer.Pointer64.refL;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
@@ -37,16 +39,29 @@ public class VulkanWindow extends GLFWWindow {
 
     private final @NotNull VkInstance vkInstance;
     private final @NotNull VkSurfaceKHR vkSurface;
+    private final @NotNull WindowThread<VulkanWindow> windowThread;
 
-    public VulkanWindow(@NotNull Instance instance, @Nullable GLFWWindowHints hints) throws GLFWException {
+    public VulkanWindow(
+            @NotNull Instance instance, @Nullable GLFWWindowHints hints,
+            @NotNull WindowThread<VulkanWindow> windowThread
+    ) throws GLFWException {
         super(RenderAPI.VULKAN, hints);
         this.vkInstance = instance.getVkInstance();
+        this.windowThread = windowThread;
 
         this.vkSurface = allocate(new VkSurfaceKHR());
         createVkWindowSurface().check();
 
         // Make sure, that the window always has a surface to present on, otherwise vulkan will throw a validation error
         setWindowSizeLimits(1, 1, GLFW_DONT_CARE, GLFW_DONT_CARE);
+    }
+
+    @Override
+    protected void perFrameOperations() {
+        // Wait events instead of just polling. This makes sure, that this thread isn't running all the time
+        // with nothing to do. A side effect of this is, that every time, this threads has to do something unrelated to
+        // window events glfwPostEmptyEvent() must be called to wake this thread.
+        glfwWaitEvents();
     }
 
     protected @NotNull ReturnedVkResult createVkWindowSurface() {
@@ -56,6 +71,10 @@ public class VulkanWindow extends GLFWWindow {
                 refL(null),
                 refL(vkSurface)
         ));
+    }
+
+    public @NotNull WindowThread<VulkanWindow> getWindowThread() {
+        return windowThread;
     }
 
     public @NotNull VkSurfaceKHR getVkSurface() {

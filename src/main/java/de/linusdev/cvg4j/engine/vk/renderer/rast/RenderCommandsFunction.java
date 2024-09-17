@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.queue;
+package de.linusdev.cvg4j.engine.vk.renderer.rast;
 
+import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
-public interface ReturnRunnable<T> {
+public interface RenderCommandsFunction {
+    boolean available();
 
-    T run(@NotNull Stack stack) throws Throwable;
+    void render(
+            @NotNull Stack stack,
+            int currentFrameBufferImageIndex,
+            int currentFrame,
+            @NotNull VkCommandBuffer commandBuffer
+    );
 
+    void recreateSwapChain(@NotNull Stack stack);
 }

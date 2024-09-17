@@ -17,12 +17,11 @@
 package de.linusdev.cvg4j.engine.vk.swapchain;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.vk.VulkanRasterizationWindow;
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
 import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
+import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImage;
@@ -59,7 +58,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     public static @NotNull SwapChain create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
-            @NotNull VulkanRasterizationWindow window,
+            @NotNull VulkanWindow window,
             @NotNull Device device,
             int swapChainImageCount,
             @NotNull EnumValue32<VkFormat> format,
@@ -78,7 +77,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
 
     private final @NotNull VkInstance vkInstance;
     private final @NotNull Device device;
-    private final @NotNull VulkanRasterizationWindow window;
+    private final @NotNull VulkanWindow window;
 
     /*
      * Managed by this class
@@ -105,7 +104,7 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
     public SwapChain(
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
-            @NotNull VulkanRasterizationWindow window,
+            @NotNull VulkanWindow window,
             int swapChainImageCount,
             @NotNull EnumValue32<VkFormat> format,
             @NotNull EnumValue32<VkColorSpaceKHR> colorSpace,

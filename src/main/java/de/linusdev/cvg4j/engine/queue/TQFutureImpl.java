@@ -26,9 +26,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class TQFutureImpl<T> extends CompletableFuture<T, Nothing, CompletableTask<T, Nothing>> implements TQFuture<T> {
 
-    protected final @NotNull ReturnRunnable<T> runnable;
+    protected final @NotNull TQRunnable<T> runnable;
 
-    public TQFutureImpl(@NotNull AsyncManager asyncManager, @NotNull ReturnRunnable<T> runnable) {
+    public TQFutureImpl(@NotNull AsyncManager asyncManager, @NotNull TQRunnable<T> runnable) {
         super(asyncManager, false);
         this.runnable = runnable;
     }

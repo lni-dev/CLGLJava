@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.vk.command.pool;
 
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.vk.device.Device;
+import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCommandBufferUsageFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCommandPoolCreateFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkCommandBufferLevel;
@@ -43,9 +44,10 @@ public class GraphicsQueueTransientCommandPool extends CommandPool {
     public static @NotNull GraphicsQueueTransientCommandPool create(
             @NotNull Engine<?> engine,
             @NotNull Stack stack,
-            @NotNull VkInstance vkInstance,
+            @NotNull Instance instance,
             @NotNull Device device
     ) {
+        @NotNull VkInstance vkInstance = instance.getVkInstance();
         GraphicsQueueTransientCommandPool commandPool = new GraphicsQueueTransientCommandPool(engine, vkInstance, device);
 
         VkCommandPoolCreateInfo commandPoolCreateInfo = stack.push(new VkCommandPoolCreateInfo());

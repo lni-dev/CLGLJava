@@ -16,8 +16,8 @@
 
 package de.linusdev.cvg4j.engine.vk.selector.gpu;
 
+import de.linusdev.cvg4j.engine.vk.device.GPUInfo;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
-import de.linusdev.cvg4j.engine.vk.infos.GpuInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,7 +34,7 @@ public class GPUSelectionProgress {
 
     public int addGpu(
             @NotNull VkPhysicalDevice handle,
-            @NotNull GpuInfo info
+            @NotNull GPUInfo info
     ) {
         int p = selector.getPriority(info);
         if(p > bestValue) {

@@ -17,18 +17,18 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
-import de.linusdev.cvg4j.nat.abi.ABISelector;
+import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
+import de.linusdev.cvg4j.nat.abi.ABISelector;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
-import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.window.CLGLWindow;
 import de.linusdev.cvg4j.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.engine.queue.ReturnRunnable;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;
+import de.linusdev.lutils.interfaces.AdvTRunnable;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
@@ -93,7 +93,8 @@ public interface CLEngine<G extends CLGame> extends Engine<G> {
     @NotNull
     UIThread<G> getUIThread();
 
-    <R> @NotNull Future<R, CLEngine<G>> runSupervised(@NotNull ReturnRunnable<R> runnable);
+    @Override
+    <R> @NotNull Future<R, CLEngine<G>> runSupervised(@NotNull AdvTRunnable<R,?> runnable);
 
     void runSupervised(@NotNull TRunnable runnable);
 

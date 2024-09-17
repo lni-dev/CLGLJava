@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.infos;
+package de.linusdev.cvg4j.engine.vk.device;
 
 import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilyInfo;
 import de.linusdev.cvg4j.nat.vulkan.bool.VkBool32;
@@ -26,6 +26,7 @@ import de.linusdev.cvg4j.nat.vulkan.structs.VkPhysicalDeviceProperties;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkQueueFamilyProperties;
 import de.linusdev.cvg4j.nat.vulkan.utils.VulkanUtils;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.pointer.TypedPointer64;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import org.jetbrains.annotations.NotNull;
@@ -36,67 +37,68 @@ import java.util.List;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ofArray;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 
-public record GpuInfo(
-        @NotNull VkPhysicalDevice vkPhysicalDevice,
-        @NotNull VkPhysicalDeviceProperties props,
-        int extensionCount,
-        @NotNull StructureArray<VkExtensionProperties> extensions,
-        int queueFamilyCount,
-        @NotNull StructureArray<VkQueueFamilyProperties> queueFamilies,
-        @NotNull List<QueueFamilyInfo> queueFamilyInfoList,
-        @NotNull SurfaceInfo surfaceInfo
-) {
+/**
+ * This class can only be used with {@link Stack#popPoint()}, as it will push stuff onto the stack,
+ * which it won't pop again.
+ */
+public class GPUInfo {
+    public final @NotNull VkBool32 bool = new VkBool32();
+    public final @NotNull BBUInt1 integer = BBUInt1.newUnallocated();
 
-    public static @NotNull GpuInfo ofPhysicalDevice(
+    public VkPhysicalDevice vkPhysicalDevice;
+    public final @NotNull VkPhysicalDeviceProperties props = new VkPhysicalDeviceProperties();
+
+
+    public StructureArray<VkExtensionProperties> extensions;
+    public int extensionCount;
+    public StructureArray<VkQueueFamilyProperties> queueFamilies;
+    public int queueFamilyCount;
+
+
+    public List<QueueFamilyInfo> queueFamilyInfoList;
+    public final SurfaceInfo surfaceInfo;
+
+    public GPUInfo(@NotNull Stack stack) {
+        this.surfaceInfo = new SurfaceInfo(stack);
+        stack.push(bool);
+        stack.push(integer);
+        stack.push(props);
+    }
+
+    public void fillOfDevice(
+            @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
-            @NotNull VkSurfaceKHR vkSurface,
             @NotNull VkPhysicalDevice dev,
-            @NotNull BBUInt1 integer,
-            @NotNull VkPhysicalDeviceProperties props,
-            @NotNull StructureArray<VkExtensionProperties> extensions,
-            @NotNull StructureArray<VkQueueFamilyProperties> queueFamilies,
-            @NotNull VkBool32 queueFamilySupportsSurface,
-            @NotNull SurfaceInfo surfaceInfo
+            @NotNull VkSurfaceKHR vkSurface
     ) {
+        vkPhysicalDevice = dev;
+
         // Props
         vkInstance.vkGetPhysicalDeviceProperties(dev, TypedPointer64.of(props));
 
         // Extensions
         vkInstance.vkEnumerateDeviceExtensionProperties(dev, ref(null), ref(integer), ref(null));
-        int extensionCount = integer.get();
-        if(extensionCount > extensions.length()) {
-            // unlikely, if this happens just allocate one outside the stack
-            extensions = StructureArray.newAllocated(extensionCount, VkExtensionProperties.class, VkExtensionProperties::new);
+        extensionCount = integer.get();
+        if(extensions == null || extensionCount > extensions.length()) {
+            extensions = stack.pushArray(extensionCount, VkExtensionProperties.class, VkExtensionProperties::new);
         }
         vkInstance.vkEnumerateDeviceExtensionProperties(dev, ref(null), ref(integer), ofArray(extensions));
 
         // Queue Family properties
         vkInstance.vkGetPhysicalDeviceQueueFamilyProperties(dev, ref(integer), ref(null));
-        int queueFamilyCount = integer.get();
-        if(queueFamilyCount > queueFamilies.length()) {
-            // unlikely, if this happens just allocate one outside the stack
-            queueFamilies = StructureArray.newAllocated(queueFamilyCount, VkQueueFamilyProperties.class, VkQueueFamilyProperties::new);
+        queueFamilyCount = integer.get();
+        if(queueFamilies == null || queueFamilyCount > queueFamilies.length()) {
+            queueFamilies = stack.pushArray(queueFamilyCount, VkQueueFamilyProperties.class, VkQueueFamilyProperties::new);
         }
         vkInstance.vkGetPhysicalDeviceQueueFamilyProperties(dev, ref(integer), ofArray(queueFamilies));
 
-        List<QueueFamilyInfo> queueFamilyInfoList = new ArrayList<>(queueFamilyCount);
+        queueFamilyInfoList = new ArrayList<>(queueFamilyCount);
         // Check which queue families support the surface
         for (int i = 0; i < queueFamilyCount; i++) {
-            vkInstance.vkGetPhysicalDeviceSurfaceSupportKHR(dev, i, vkSurface, ref(queueFamilySupportsSurface)).check();
-            queueFamilyInfoList.add(new QueueFamilyInfo(i, queueFamilies.get(i), VulkanUtils.vkBool32ToBoolean(queueFamilySupportsSurface.get())));
+            vkInstance.vkGetPhysicalDeviceSurfaceSupportKHR(dev, i, vkSurface, ref(bool)).check();
+            queueFamilyInfoList.add(new QueueFamilyInfo(i, queueFamilies.get(i), VulkanUtils.vkBool32ToBoolean(bool.get())));
         }
 
-        // Fill GpuInfo
-        return new GpuInfo(
-                dev,
-                props,
-                extensionCount,
-                extensions,
-                queueFamilyCount,
-                queueFamilies,
-                queueFamilyInfoList,
-                surfaceInfo
-        );
+        surfaceInfo.fillOfDevice(stack, vkInstance, dev, vkSurface);
     }
-    
 }

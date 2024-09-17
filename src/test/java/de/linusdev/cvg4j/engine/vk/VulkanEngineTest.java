@@ -21,7 +21,6 @@ import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.obj.ModelViewProjection;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.DescriptorSet;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
-import de.linusdev.cvg4j.engine.vk.device.Extend2D;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.index.IndexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.uniform.UniformBuffer;
@@ -32,6 +31,8 @@ import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
+import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
+import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
@@ -131,7 +132,7 @@ class VulkanEngineTest {
         }
 
         @Override
-        public void onLoad(@NotNull Stack stack, @NotNull VulkanRasterizationWindow window) throws EngineException {
+        public void onLoad(@NotNull Stack stack, @NotNull VulkanWindow window) throws EngineException {
             window.setWindowAspectRatio(1, 1);
 
             vulkanMemoryAllocator = new OnDemandVulkanMemoryAllocator(engine.getDevice(), "test-scene-memory-allocator");
