@@ -26,5 +26,8 @@ https://developer.nvidia.com/vulkan-memory-management
 ## Autocloseable fix 
 All objects implementing auto closable should check if they actually need closing and what has to be closed.
 
+## Scene loading
+Allow loading of a new scene after the first has been loaded.
+
 ## TODO: Quality of life changes to generated code
 - none
