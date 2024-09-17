@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.args.impl;
+package de.linusdev.cvg4j.engine.cl.window.args.impl;
 
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
+import de.linusdev.cvg4j.engine.cl.window.args.ArgumentInfo;
+import de.linusdev.cvg4j.engine.cl.window.args.AutoUpdateArgument;
 import de.linusdev.cvg4j.nat.cl.objects.Buffer;
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.args.ArgumentInfo;
-import de.linusdev.cvg4j.window.args.AutoUpdateArgument;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.nat.struct.mod.ModTrackingStructure;

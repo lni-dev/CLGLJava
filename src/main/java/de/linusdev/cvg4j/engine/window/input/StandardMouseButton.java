@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.input;
+package de.linusdev.cvg4j.engine.window.input;
 
 import de.linusdev.lutils.bitfield.IntBitFieldValue;
 import org.jetbrains.annotations.NotNull;

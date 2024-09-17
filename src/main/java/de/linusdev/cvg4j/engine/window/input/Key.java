@@ -14,36 +14,40 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.input;
+package de.linusdev.cvg4j.engine.window.input;
 
+import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class MouseButton extends PressableImpl {
+import static de.linusdev.cvg4j.nat.glfw3.GLFW._glfwGetKeyName;
 
-    final int button;
-    final @Nullable StandardMouseButton name;
+@SuppressWarnings("unused")
+public class Key extends PressableImpl {
 
-    public MouseButton(@NotNull InputManger manger, int button) {
-        super(manger, InputType.MOUSE_BUTTON);
-        this.button = button;
-        this.name = StandardMouseButton.translate(button);
+    final int scancode;
+    final String name;
+
+    Key(
+            @NotNull InputManger manger,
+            int scancode
+    ) {
+        super(manger, InputType.KEYBOARD_KEY);
+        this.scancode = scancode;
+        this.name = _glfwGetKeyName(GLFWValues.Keys_US.GLFW_KEY_UNKNOWN, scancode);
     }
 
-    @SuppressWarnings("unused")
-    public MouseButton(@NotNull InputManger manger, StandardMouseButton button) {
-        super(manger, InputType.MOUSE_BUTTON);
-        this.button = button.getValue();
-        this.name = button;
+    @Override
+    public String toString() {
+        return name + "(" + scancode + ")";
     }
 
     @Override
     public boolean isPressed() {
-        return manager.isMouseButtonPressed(this);
+        return manager.isKeyPressed(scancode);
     }
 
     @Override
     public @NotNull Serializable toSerializable() {
-        return new Serializable(button, getType());
+        return new Serializable(scancode, getType());
     }
 }

@@ -16,8 +16,8 @@
 
 package de.linusdev.cvg4j.engine.cl;
 
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
-import de.linusdev.cvg4j.window.args.KernelView;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 

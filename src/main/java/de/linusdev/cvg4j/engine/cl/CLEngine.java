@@ -18,13 +18,13 @@ package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
 import de.linusdev.cvg4j.engine.Engine;
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
+import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
+import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.abi.ABISelector;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.input.InputManagerImpl;
-import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;

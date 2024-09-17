@@ -16,8 +16,8 @@
 
 package de.linusdev.cvg4j.engine.cl;
 
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.Handler;
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
+import de.linusdev.cvg4j.engine.cl.window.Handler;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;

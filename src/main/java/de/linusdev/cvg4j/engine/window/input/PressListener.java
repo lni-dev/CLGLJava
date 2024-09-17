@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.args;
+package de.linusdev.cvg4j.engine.window.input;
 
-import de.linusdev.cvg4j.nat.cl.objects.Kernel;
-import org.jetbrains.annotations.NonBlocking;
-import org.jetbrains.annotations.NotNull;
+public interface PressListener {
 
-public interface AutoUpdateArgument {
-
-    @NonBlocking
-    void check();
-
-    void setArgumentInfo(@NotNull ArgumentInfo info);
-
-    void applyToKernel(@NotNull Kernel kernel, int index);
+    void onPress();
 
 }

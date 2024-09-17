@@ -17,19 +17,19 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.api.misc.interfaces.TRunnable;
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
+import de.linusdev.cvg4j.engine.cl.window.Handler;
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
+import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
+import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.KeyListener;
 import de.linusdev.cvg4j.nat.glfw3.custom.MouseButtonListener;
 import de.linusdev.cvg4j.nat.glfw3.custom.TextInputListener;
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.Handler;
-import de.linusdev.cvg4j.window.args.KernelView;
-import de.linusdev.cvg4j.window.input.InputManagerImpl;
-import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;

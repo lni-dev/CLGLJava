@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.args;
+package de.linusdev.cvg4j.engine.cl.window.args;
 
 import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
 import org.jetbrains.annotations.NotNull;

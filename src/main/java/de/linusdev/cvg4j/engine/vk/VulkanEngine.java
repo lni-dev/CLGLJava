@@ -35,13 +35,14 @@ import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.utils.VkEngineUtils;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.engine.window.WindowThread;
+import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
+import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
+import de.linusdev.cvg4j.nat.glfw3.custom.WindowCloseListener;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.window.input.InputManagerImpl;
-import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
 import de.linusdev.llog.base.impl.StandardLogLevel;
@@ -67,6 +68,20 @@ import java.util.concurrent.Executors;
 
 import static de.linusdev.cvg4j.nat.glfw3.GLFWValues.GLFW_TRUE;
 
+/**
+ * <h1>Implementation</h1>
+ * <h2>Threads</h2>
+ * <p>The engine has two main threads, an {@link #windowThread} for glfw related event polling
+ * and an {@link #renderThread} for the actual rendering.</p>
+ * <h2>Engine Death</h2>
+ * <p>When the engine is supposed to die (e.g. user quits), the {@link #windowThread} will transmit
+ * a {@link WindowCloseListener#onClose() close} event. The {@link #renderThread} will listen to this
+ * event and delay the window close, until the already submitted render operations are completed
+ * and the {@link #renderer} has successfully closed. The engine will wait until the render thread
+ * has died and then close it's resources. During this close operation, the engine will also wait the render
+ * thread until the window thread has died, if it did not already die. Thus the engine death is the same
+ * as the death of the render thread.</p>
+ */
 public class VulkanEngine<GAME extends VulkanGame> implements
         Engine<GAME>,
         AsyncManager,
@@ -135,7 +150,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         inputManger = new InputManagerImpl(window);
 
         renderer = new RasterizationRenderer(instance, window);
-        renderThread = new RenderThread(this, renderer);
+        renderThread = new RenderThread(this, renderer, window);
 
         device = VkEngineUtils.selectAndCreateDevice(stack, game, instance, window);
         swapChain = VkEngineUtils.createSwapChain(stack,
@@ -145,13 +160,12 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         renderPass = RenderPass.create(stack, instance, device, swapChain);
         transientCommandPool = GraphicsQueueTransientCommandPool.create(this, stack, instance, device);
 
+        renderThread.getThreadDeathFuture().then((win, secondary, error) -> {
+            LOG.log(StandardLogLevel.DEBUG, "Render thread died.");
 
-        this.renderThread.getThreadDeathFuture().then((win, secondary, error) -> {
             if(error != null) {
                 LOG.log(StandardLogLevel.ERROR, "Render thread died due to an error: ");
                 LOG.throwable(error.asThrowable());
-            } else {
-                LOG.log(StandardLogLevel.DEBUG, "Render thread died.");
             }
 
             // cleanup
@@ -159,6 +173,20 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             transientCommandPool.close();
             renderPass.close();
             swapChain.close();
+
+            // Wait for the window thread to die before closing the window.
+            try {
+                var res = windowThread.getThreadDeathFuture().get();
+                LOG.log(StandardLogLevel.DEBUG, "Window thread died.");
+                if(res.hasError()) {
+                    LOG.log(StandardLogLevel.ERROR, "Render thread died due to an error: ");
+                    LOG.throwable(res.getError().asThrowable());
+                }
+            } catch (InterruptedException e) {
+                LOG.throwable(e);
+            }
+            // TODO: window.close() will call glfwDestroyWindow(), which should only be called on the window thread.
+            // If this makes problems move it to the window thread.
             window.close();
             device.close();
             instance.close();
@@ -215,7 +243,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     @Override
     public void onExceptionInListener(@NotNull Future<?, ?> future, @Nullable Task<?, ?> task, @NotNull Throwable throwable) {
-
+        LOG.error("Exception in async listener:");
+        LOG.throwable(throwable);
     }
 
     @Override

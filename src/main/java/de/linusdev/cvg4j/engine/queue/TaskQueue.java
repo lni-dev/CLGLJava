@@ -19,6 +19,7 @@ package de.linusdev.cvg4j.engine.queue;
 import de.linusdev.cvg4j.api.misc.annos.CallFromAnyThread;
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.*;
@@ -115,6 +116,16 @@ public class TaskQueue {
     @NonBlocking
     public <T> @NotNull TQFuture<T> queueForExecution(@NotNull TQRunnable<T> runnable) {
         TQFutureImpl<T> f = new TQFutureImpl<>(asyncManager, runnable);
+        queue(NO_TASK_ID, f);
+        return f;
+    }
+
+    @NonBlocking
+    public @NotNull TQFuture<Nothing> queueForExecution(@NotNull TQVoidRunnable runnable) {
+        TQFutureImpl<Nothing> f = new TQFutureImpl<>(asyncManager, s -> {
+            runnable.run(s);
+            return Nothing.INSTANCE;
+        });
         queue(NO_TASK_ID, f);
         return f;
     }

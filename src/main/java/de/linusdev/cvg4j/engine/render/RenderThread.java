@@ -18,6 +18,9 @@ package de.linusdev.cvg4j.engine.render;
 
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
@@ -28,6 +31,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class RenderThread extends Thread {
 
+    public final @NotNull LogInstance LOG = LLog.getLogInstance();
+
     private final @NotNull CompletableFuture<Nothing, RenderThread, CompletableTask<Nothing, RenderThread>> creationFuture;
     private final @NotNull CompletableFuture<Nothing, RenderThread, CompletableTask<Nothing, RenderThread>> threadDeathFuture;
 
@@ -35,12 +40,13 @@ public class RenderThread extends Thread {
     private final @NotNull TaskQueue taskQueue;
     private final @NotNull Renderer renderer;
 
-    private boolean running = true;
+    private boolean shouldStop = false;
 
     public RenderThread(
             @NotNull Engine<?> engine,
-            @NotNull Renderer renderer
-    ) {
+            @NotNull Renderer renderer,
+            @NotNull GLFWWindow window
+            ) {
         super("render-thread");
 
         this.creationFuture = CompletableFuture.create(engine.getAsyncManager(), false);
@@ -52,6 +58,18 @@ public class RenderThread extends Thread {
 
         // Don't let the jvm shutdown
         setDaemon(false);
+
+        window.listeners().addWindowCloseListener(() -> {
+            try {
+                taskQueue.queueForExecution(stack -> {
+                    shouldStop = true;
+                    renderer.waitIdle();
+                    renderer.close();
+                }).getResult();
+            } catch (InterruptedException e) {
+                LOG.throwable(e);
+            }
+        });
     }
 
     public @NotNull Future<Nothing, RenderThread> create() {
@@ -71,7 +89,7 @@ public class RenderThread extends Thread {
 
 
         try {
-            while (running) {
+            while (!shouldStop) {
                 renderer.render(stack);
                 taskQueue.runQueuedTasks(stack);
             }

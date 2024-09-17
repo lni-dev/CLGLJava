@@ -119,5 +119,12 @@ public interface AbstractGLFWWindowListeners {
     @NonBlocking
     void removeWindowIconificationListener(@NotNull WindowIconificationListener listener);
 
+    @CallFromAnyThread
+    @NonBlocking
+    void addWindowCloseListener(@NotNull WindowCloseListener listener);
+
+    @CallFromAnyThread
+    @NonBlocking
+    void removeWindowCloseListener(@NotNull WindowCloseListener listener);
 
 }

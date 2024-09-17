@@ -17,18 +17,18 @@
 package de.linusdev.cvg4j;
 
 import de.linusdev.cvg4j.engine.Engine;
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
+import de.linusdev.cvg4j.engine.cl.window.Handler;
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
+import de.linusdev.cvg4j.engine.gl.OpenGLWindow;
+import de.linusdev.cvg4j.engine.window.input.InputManger;
+import de.linusdev.cvg4j.engine.window.input.Key;
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
 import de.linusdev.cvg4j.nat.cl.objects.Program;
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
-import de.linusdev.cvg4j.nat.glfw3.objects.OpenGLWindow;
-import de.linusdev.cvg4j.window.CLGLWindow;
-import de.linusdev.cvg4j.window.Handler;
-import de.linusdev.cvg4j.window.args.KernelView;
-import de.linusdev.cvg4j.window.input.InputManger;
-import de.linusdev.cvg4j.window.input.Key;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 

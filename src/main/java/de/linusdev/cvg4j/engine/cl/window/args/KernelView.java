@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.args;
+package de.linusdev.cvg4j.engine.cl.window.args;
 
+import de.linusdev.cvg4j.engine.cl.window.CLGLWindow;
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
 import de.linusdev.cvg4j.nat.cl.objects.MemoryObject;
-import de.linusdev.cvg4j.window.CLGLWindow;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import org.jetbrains.annotations.NotNull;
 

@@ -17,13 +17,13 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.engine.cl.structs.WorldStruct;
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
+import de.linusdev.cvg4j.engine.cl.window.args.impl.AutoUpdateBuffer;
+import de.linusdev.cvg4j.engine.window.input.TextInput;
 import de.linusdev.cvg4j.nat.cl.CL;
 import de.linusdev.cvg4j.nat.cl.objects.Buffer;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
-import de.linusdev.cvg4j.window.args.KernelView;
-import de.linusdev.cvg4j.window.args.impl.AutoUpdateBuffer;
-import de.linusdev.cvg4j.window.input.TextInput;
 import de.linusdev.lutils.bitfield.LongBitfieldImpl;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

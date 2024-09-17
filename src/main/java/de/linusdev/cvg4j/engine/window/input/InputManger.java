@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.input;
+package de.linusdev.cvg4j.engine.window.input;
 
 import de.linusdev.cvg4j.api.misc.annos.CallFromAnyThread;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;

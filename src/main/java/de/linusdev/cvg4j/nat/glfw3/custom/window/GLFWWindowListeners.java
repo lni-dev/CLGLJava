@@ -41,7 +41,8 @@ public class GLFWWindowListeners implements
         MouseButtonListener,
         JoystickListener,
         WindowRefreshListener,
-        WindowIconificationListener
+        WindowIconificationListener,
+        WindowCloseListener
 {
 
     private final @NotNull GLFWWindow window;
@@ -64,6 +65,7 @@ public class GLFWWindowListeners implements
     protected final @NotNull List<MouseButtonListener> mouseButtonListeners;
     protected final @NotNull List<WindowRefreshListener> windowRefreshListeners;
     protected final @NotNull List<WindowIconificationListener> windowIconificationListeners;
+    protected final @NotNull List<WindowCloseListener> windowCloseListeners;
 
     public GLFWWindowListeners(@NotNull GLFWWindow window) {
         this.window = window;
@@ -82,6 +84,7 @@ public class GLFWWindowListeners implements
         this.mouseButtonListeners = listenerListSupplier.supply();
         this.windowRefreshListeners = listenerListSupplier.supply();
         this.windowIconificationListeners = listenerListSupplier.supply();
+        this.windowCloseListeners = listenerListSupplier.supply();
     }
 
     @Override
@@ -151,6 +154,11 @@ public class GLFWWindowListeners implements
     @Override
     public void onWindowIconification(boolean iconified) {
         windowIconificationListeners.forEach(windowIconificationListener -> windowIconificationListener.onWindowIconification(iconified));
+    }
+
+    @Override
+    public void onClose() {
+        windowCloseListeners.forEach(WindowCloseListener::onClose);
     }
 
     @CallFromAnyThread
@@ -293,5 +301,15 @@ public class GLFWWindowListeners implements
     @Override
     public void removeWindowIconificationListener(@NotNull WindowIconificationListener listener) {
         windowIconificationListeners.remove(listener);
+    }
+
+    @Override
+    public void addWindowCloseListener(@NotNull WindowCloseListener listener) {
+        windowCloseListeners.add(listener);
+    }
+
+    @Override
+    public void removeWindowCloseListener(@NotNull WindowCloseListener listener) {
+        windowCloseListeners.remove(listener);
     }
 }

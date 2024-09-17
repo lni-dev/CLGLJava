@@ -117,7 +117,7 @@ public class GLFWWindow implements
     }
 
     protected void windowCloseOperations() {
-
+        listeners.onClose();
     }
 
     /*

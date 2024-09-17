@@ -61,6 +61,10 @@ public class WindowThread<W extends GLFWWindow> extends Thread {
         return creationFuture;
     }
 
+    public @NotNull Future<W, WindowThread<W>> getThreadDeathFuture() {
+        return threadDeathFuture;
+    }
+
     @NonBlocking
     public <T> @NotNull TQFuture<T> queueTask(int id, @NotNull TQRunnable<T> runnable) {
         var fut = taskQueue.queueForExecution(id, runnable);
@@ -87,7 +91,6 @@ public class WindowThread<W extends GLFWWindow> extends Thread {
 
             window.listeners().addWindowRefreshListener(() -> taskQueue.runQueuedTasks(stack));
             window.eventLoop(frameInfo -> taskQueue.runQueuedTasks(stack));
-
             threadDeathFuture.complete(window, this, null);
         } catch (Throwable t) {
             creationFuture.complete(null, this, new ThrowableAsyncError(t));

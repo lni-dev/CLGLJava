@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.input;
+package de.linusdev.cvg4j.engine.window.input;
 
-public interface PressListener {
+public interface ReleaseListener {
 
-    void onPress();
+    void onRelease();
 
 }

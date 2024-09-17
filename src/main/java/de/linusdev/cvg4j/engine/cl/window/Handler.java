@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window;
+package de.linusdev.cvg4j.engine.cl.window;
 
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
-import de.linusdev.cvg4j.window.args.KernelView;
 import org.jetbrains.annotations.NotNull;
 
 public interface Handler extends UpdateListener {

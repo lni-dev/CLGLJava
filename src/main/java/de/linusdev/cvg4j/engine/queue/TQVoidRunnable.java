@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Linus Andera
+ * Copyright (c) 2024 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.input;
+package de.linusdev.cvg4j.engine.queue;
 
-public interface ReleaseListener {
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import org.jetbrains.annotations.NotNull;
 
-    void onRelease();
-
+public interface TQVoidRunnable {
+    void run(@NotNull Stack stack) throws Throwable;
 }

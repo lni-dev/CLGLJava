@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.nat.glfw3.objects;
+package de.linusdev.cvg4j.engine.gl;
 
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glad.custom.DebugMessageCallback;
@@ -22,6 +22,7 @@ import de.linusdev.cvg4j.nat.glad.custom.DebugMessageListener;
 import de.linusdev.cvg4j.nat.glfw3.custom.GLFWWindowHints;
 import de.linusdev.cvg4j.nat.glfw3.custom.RenderAPI;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
+import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

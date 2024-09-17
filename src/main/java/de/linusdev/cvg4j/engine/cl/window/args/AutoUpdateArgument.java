@@ -14,33 +14,19 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window.args;
+package de.linusdev.cvg4j.engine.cl.window.args;
 
 import de.linusdev.cvg4j.nat.cl.objects.Kernel;
-import de.linusdev.cvg4j.window.CLGLWindow;
+import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
-public class ArgumentInfo {
+public interface AutoUpdateArgument {
 
-    private final int index;
-    private final @NotNull Kernel kernel;
-    private final @NotNull CLGLWindow window;
+    @NonBlocking
+    void check();
 
-    protected ArgumentInfo(int index, @NotNull Kernel kernel, @NotNull CLGLWindow window) {
-        this.index = index;
-        this.kernel = kernel;
-        this.window = window;
-    }
+    void setArgumentInfo(@NotNull ArgumentInfo info);
 
-    public int getIndex() {
-        return index;
-    }
+    void applyToKernel(@NotNull Kernel kernel, int index);
 
-    public @NotNull Kernel getKernel() {
-        return kernel;
-    }
-
-    public @NotNull CLGLWindow getWindow() {
-        return window;
-    }
 }

@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.window;
+package de.linusdev.cvg4j.engine.cl.window;
 
 import de.linusdev.cvg4j.api.misc.annos.CallOnlyFromUIThread;
+import de.linusdev.cvg4j.engine.cl.window.args.AutoUpdateArgManager;
+import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
+import de.linusdev.cvg4j.engine.gl.OpenGLWindow;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
+import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.cl.CL;
 import de.linusdev.cvg4j.nat.cl.objects.*;
 import de.linusdev.cvg4j.nat.cl.structs.CLImageDesc;
@@ -30,11 +35,6 @@ import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.cvg4j.nat.glfw3.objects.OpenGLWindow;
-import de.linusdev.cvg4j.window.args.AutoUpdateArgManager;
-import de.linusdev.cvg4j.window.args.KernelView;
-import de.linusdev.cvg4j.window.input.InputManagerImpl;
-import de.linusdev.cvg4j.window.input.InputManger;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.Task;

@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.nat.glfw3.objects;
 
 import de.linusdev.cvg4j.engine.cl.CLEngine;
+import de.linusdev.cvg4j.engine.gl.OpenGLWindow;
 import de.linusdev.cvg4j.nat.glad.Glad;
 import de.linusdev.cvg4j.nat.glad.GladInitException;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
