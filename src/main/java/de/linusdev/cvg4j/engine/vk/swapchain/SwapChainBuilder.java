@@ -98,6 +98,16 @@ public class SwapChainBuilder {
         return this;
     }
 
+    /**
+     *
+     * @return {@code true} if the area represented by {@link #swapExtend} is zero.
+     */
+    public boolean isExtendAreaZero() {
+        if(swapExtend == null)
+            throw new Error("swapExtend is null (call set...).");
+        return swapExtend.width() == 0 || swapExtend.height() == 0;
+    }
+
     public @NotNull SwapChain buildSwapChain(
             @NotNull Stack stack,
             @NotNull VulkanWindow window,

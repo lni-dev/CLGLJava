@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.renderer.rast;
+package de.linusdev.cvg4j.engine.vk.swapchain;
 
-import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
-import de.linusdev.lutils.nat.memory.stack.Stack;
-import org.jetbrains.annotations.NotNull;
-
-public interface RenderCommandsFunction {
-    boolean available();
-
-    void render(
-            @NotNull Stack stack,
-            int currentFrameBufferImageIndex,
-            int currentFrame,
-            @NotNull VkCommandBuffer commandBuffer
-    );
+public enum SwapChainRecreationReturn {
+    /**
+     * Recreation was successful
+     */
+    SUCCESS,
+    /**
+     * Error. Swap chain cannot be recreated, as it's image area would be zero. Maybe the window is minimized?
+     */
+    ERROR_ZERO_AREA
 }

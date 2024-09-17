@@ -20,17 +20,18 @@ import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
-import de.linusdev.cvg4j.engine.render.RenderThread;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
+import de.linusdev.cvg4j.engine.vk.render.RenderThread;
 import de.linusdev.cvg4j.engine.vk.renderer.rast.RasterizationRenderer;
 import de.linusdev.cvg4j.engine.vk.renderer.rast.RenderCommandsFunction;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.selector.VulkanEngineInfo;
+import de.linusdev.cvg4j.engine.vk.selector.swapchain.HasSwapChainSelectors;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.utils.VkEngineUtils;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
@@ -149,14 +150,12 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
         inputManger = new InputManagerImpl(window);
 
-        renderer = new RasterizationRenderer(instance, window);
-        renderThread = new RenderThread(this, renderer, window);
-
         device = VkEngineUtils.selectAndCreateDevice(stack, game, instance, window);
-        swapChain = VkEngineUtils.createSwapChain(stack,
-                game.surfaceFormatSelector(), game.presentModeSelector(), game.swapChainImageCountSelector(),
-                instance, window, device, null
-        );
+        swapChain = VkEngineUtils.createSwapChain(stack, game, instance, window, device);
+
+        renderer = new RasterizationRenderer(instance, window);
+        renderThread = new RenderThread(this, swapChain, renderer, window);
+
         renderPass = RenderPass.create(stack, instance, device, swapChain);
         transientCommandPool = GraphicsQueueTransientCommandPool.create(this, stack, instance, device);
 
@@ -267,18 +266,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     }
 
     @Override
-    public void recreateSwapChain(@NotNull Stack stack) {
-        try {
-            VkEngineUtils.createSwapChain(stack,
-                    game.surfaceFormatSelector(), game.presentModeSelector(), game.swapChainImageCountSelector(),
-                    instance, window, device, swapChain
-            );
-        } catch (EngineException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
     public void update(@NotNull FrameInfo frameInfo) {
         VkScene<?> scene = currentScene.get();
         if(scene != null) {
@@ -324,6 +311,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
     public @NotNull GraphicsQueueTransientCommandPool getTransientCommandPool() {
         return transientCommandPool;
+    }
+
+    public @NotNull HasSwapChainSelectors getCurrentSwapChainSelectors() {
+        return game;
     }
 
     @Override

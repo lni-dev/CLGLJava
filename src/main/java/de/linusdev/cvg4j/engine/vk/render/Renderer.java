@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.render;
+package de.linusdev.cvg4j.engine.vk.render;
 
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 public interface Renderer extends AutoCloseable {
 
-    void onAttachedTo(@NotNull RenderThread thread);
-
-    void render(@NotNull Stack stack);
+    @NotNull RenderState render(@NotNull Stack stack);
 
     void waitIdle() throws InterruptedException;
 

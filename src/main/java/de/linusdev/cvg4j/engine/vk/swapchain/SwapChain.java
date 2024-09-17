@@ -21,6 +21,8 @@ import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
 import de.linusdev.cvg4j.engine.vk.memory.manager.objects.image.VulkanImage;
 import de.linusdev.cvg4j.engine.vk.objects.HasRecreationListeners;
+import de.linusdev.cvg4j.engine.vk.selector.swapchain.HasSwapChainSelectors;
+import de.linusdev.cvg4j.engine.vk.utils.VkEngineUtils;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.*;
 import de.linusdev.cvg4j.nat.vulkan.enums.*;
@@ -171,6 +173,21 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         recreate(false, stack, null, null, null, null, null);
 
         return this;
+    }
+
+    public @NotNull SwapChainRecreationReturn recreate(
+            @NotNull Stack stack,
+            @NotNull HasSwapChainSelectors selectors
+    ) throws EngineException {
+        try (var ignored = stack.popPoint()) {
+            SwapChainBuilder builder = VkEngineUtils.fillSwapChainBuilder(stack, vkInstance, device, window, selectors);
+            if(builder.isExtendAreaZero()) {
+                return SwapChainRecreationReturn.ERROR_ZERO_AREA;
+            }
+
+            builder.recreateSwapChain(stack, this);
+            return SwapChainRecreationReturn.SUCCESS;
+        }
     }
 
     public void recreate(

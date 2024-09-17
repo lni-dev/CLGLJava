@@ -14,19 +14,10 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.renderer.rast;
+package de.linusdev.cvg4j.engine.vk.render;
 
-import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
-import de.linusdev.lutils.nat.memory.stack.Stack;
-import org.jetbrains.annotations.NotNull;
-
-public interface RenderCommandsFunction {
-    boolean available();
-
-    void render(
-            @NotNull Stack stack,
-            int currentFrameBufferImageIndex,
-            int currentFrame,
-            @NotNull VkCommandBuffer commandBuffer
-    );
+public enum RenderState {
+    NONE,
+    SWAP_CHAIN_SUBOPTIMAL,
+    SWAP_CHAIN_OUT_OF_DATE,
 }

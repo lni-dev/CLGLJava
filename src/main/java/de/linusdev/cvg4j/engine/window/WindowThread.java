@@ -17,8 +17,6 @@
 package de.linusdev.cvg4j.engine.window;
 
 import de.linusdev.cvg4j.engine.Engine;
-import de.linusdev.cvg4j.engine.queue.TQFuture;
-import de.linusdev.cvg4j.engine.queue.TQRunnable;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.nat.glfw3.GLFW;
 import de.linusdev.cvg4j.nat.glfw3.objects.GLFWWindow;
@@ -29,7 +27,6 @@ import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.interfaces.TFunction;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
-import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
 public class WindowThread<W extends GLFWWindow> extends Thread {
@@ -53,7 +50,7 @@ public class WindowThread<W extends GLFWWindow> extends Thread {
         this.creationFuture = CompletableFuture.create(engine.getAsyncManager(), false);
         this.threadDeathFuture = CompletableFuture.create(engine.getAsyncManager(), false);
 
-        this.taskQueue = new TaskQueue(engine.getAsyncManager(), 20);
+        this.taskQueue = new TaskQueue(engine.getAsyncManager(), fut -> GLFW.glfwPostEmptyEvent(), 20);
     }
 
     public @NotNull Future<W, WindowThread<W>> create() {
@@ -65,22 +62,12 @@ public class WindowThread<W extends GLFWWindow> extends Thread {
         return threadDeathFuture;
     }
 
-    @NonBlocking
-    public <T> @NotNull TQFuture<T> queueTask(int id, @NotNull TQRunnable<T> runnable) {
-        var fut = taskQueue.queueForExecution(id, runnable);
-        GLFW.glfwPostEmptyEvent();
-        return fut;
-    }
-
-    @NonBlocking
-    public <T> @NotNull TQFuture<T> queueTask(@NotNull TQRunnable<T> runnable) {
-        var fut = taskQueue.queueForExecution(runnable);
-        GLFW.glfwPostEmptyEvent();
-        return fut;
-    }
-
     public @NotNull Stack getStack() {
         return stack;
+    }
+
+    public @NotNull TaskQueue getTaskQueue() {
+        return taskQueue;
     }
 
     @Override

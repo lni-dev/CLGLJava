@@ -23,9 +23,7 @@ import de.linusdev.cvg4j.engine.vk.device.GPUInfo;
 import de.linusdev.cvg4j.engine.vk.device.SurfaceInfo;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.selector.gpu.GPUSelectionProgress;
-import de.linusdev.cvg4j.engine.vk.selector.present.mode.PresentModeSelector;
-import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
-import de.linusdev.cvg4j.engine.vk.selector.swapchain.SwapChainImageCountSelector;
+import de.linusdev.cvg4j.engine.vk.selector.swapchain.HasSwapChainSelectors;
 import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainBuilder;
@@ -33,6 +31,9 @@ import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkPhysicalDevice;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkExtent2D;
+import de.linusdev.llog.base.impl.StandardLogLevel;
+import de.linusdev.llog.base.impl.data.ThrowableLogData;
+import de.linusdev.lutils.interfaces.TRunnable;
 import de.linusdev.lutils.math.VMath;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
@@ -112,68 +113,84 @@ public class VkEngineUtils {
 
     public static @NotNull SwapChain createSwapChain(
             @NotNull Stack stack,
-            @NotNull SurfaceFormatSelector surfaceFormatSelector,
-            @NotNull PresentModeSelector presentModeSelector,
-            @NotNull SwapChainImageCountSelector swapChainImageCountSelector,
+            @NotNull HasSwapChainSelectors selectors,
             @NotNull Instance instance,
             @NotNull VulkanWindow window,
-            @NotNull Device device,
-            @Nullable SwapChain swapChain
+            @NotNull Device device
     ) throws EngineException {
-        @NotNull VkInstance vkInstance = instance.getVkInstance();
-
         try (var ignored = stack.popPoint()) {
-            SurfaceInfo surfaceInfo = new SurfaceInfo(stack);
-            surfaceInfo.fillOfDevice(stack, vkInstance, device.getVkPhysicalDevice(), window.getVkSurface());
-
-            SwapChainBuilder builder = new SwapChainBuilder()
-                    .setSurfaceFormat(
-                            surfaceFormatSelector.select(surfaceInfo.surfaceFormatCount, surfaceInfo.surfaceFormats).result1()
-                    ).setPresentMode(
-                            presentModeSelector.select(surfaceInfo.presentModeCount, surfaceInfo.presentModes).result1()
-                    );
-
-
-            // Calculate swap extend
-            LOG.debug("Calculate swap extend");
-            Extend2D swapChainExtend = new Extend2D(stack.push(new VkExtent2D()));
-            if(surfaceInfo.surfacesCaps.currentExtent.width.get() != 0xFFFFFFFF) {
-                LOG.debug("Swap extend is fixed");
-                swapChainExtend.xy(
-                        surfaceInfo.surfacesCaps.currentExtent.width.get(),
-                        surfaceInfo.surfacesCaps.currentExtent.height.get()
-                );
-            } else {
-                LOG.debug("Swap extend is not fixed, select it based on frame buffer size.");
-                BBInt2 size = unionWith(BBInt2.newAllocatable(null), swapChainExtend);
-                window.getFrameBufferSize(size);
-
-                BBUInt2 maxImageExtend = unionWith(BBUInt2.newAllocatable(null), surfaceInfo.surfacesCaps.maxImageExtent);
-                BBUInt2 minImageExtend = unionWith(BBUInt2.newAllocatable(null), surfaceInfo.surfacesCaps.minImageExtent);
-
-                VMath.clamp(size, minImageExtend, maxImageExtend, size);
-            }
-
-            builder.setSwapExtend(swapChainExtend);
-
-            // Swap chain image count
-            int max = surfaceInfo.surfacesCaps.maxImageCount.get();
-            int min = surfaceInfo.surfacesCaps.minImageCount.get();
-            builder.setSwapChainImageCount(swapChainImageCountSelector.select(min, max == 0 ? Integer.MAX_VALUE : max));
-
-            // Set surface transform (current is fine)
-            builder.setSurfaceTransform(surfaceInfo.surfacesCaps.currentTransform);
-
-            if(swapChain != null) {
-                builder.recreateSwapChain(stack, swapChain);
-                LOG.debug("SwapChain recreated");
-                return swapChain;
-            } else {
-                swapChain = builder.buildSwapChain(stack, window, instance.getVkInstance(), device);
-                LOG.debug("SwapChain created");
-            }
-
+            SwapChainBuilder builder = fillSwapChainBuilder(stack, instance.getVkInstance(), device, window, selectors);
+            SwapChain swapChain = builder.buildSwapChain(stack, window, instance.getVkInstance(), device);
+            LOG.debug("SwapChain created");
             return swapChain;
+        }
+    }
+
+    /**
+     * Must be used in combination with {@link Stack#popPoint()}!
+     */
+    public static @NotNull SwapChainBuilder fillSwapChainBuilder(
+            @NotNull Stack stack,
+            @NotNull VkInstance vkInstance,
+            @NotNull Device device,
+            @NotNull VulkanWindow window,
+            @NotNull HasSwapChainSelectors selectors
+    ) throws EngineException {
+        SurfaceInfo surfaceInfo = new SurfaceInfo(stack);
+        surfaceInfo.fillOfDevice(stack, vkInstance, device.getVkPhysicalDevice(), window.getVkSurface());
+
+        SwapChainBuilder builder = new SwapChainBuilder()
+                .setSurfaceFormat(
+                        selectors.surfaceFormatSelector().select(surfaceInfo.surfaceFormatCount, surfaceInfo.surfaceFormats).result1()
+                ).setPresentMode(
+                        selectors.presentModeSelector().select(surfaceInfo.presentModeCount, surfaceInfo.presentModes).result1()
+                );
+
+
+        // Calculate swap extend
+        LOG.debug("Calculate swap extend");
+        Extend2D swapChainExtend = new Extend2D(stack.push(new VkExtent2D()));
+        if(surfaceInfo.surfacesCaps.currentExtent.width.get() != 0xFFFFFFFF) {
+            LOG.debug("Swap extend is fixed");
+            swapChainExtend.xy(
+                    surfaceInfo.surfacesCaps.currentExtent.width.get(),
+                    surfaceInfo.surfacesCaps.currentExtent.height.get()
+            );
+        } else {
+            LOG.debug("Swap extend is not fixed, select it based on frame buffer size.");
+            BBInt2 size = unionWith(BBInt2.newAllocatable(null), swapChainExtend);
+            window.getFrameBufferSize(size);
+
+            BBUInt2 maxImageExtend = unionWith(BBUInt2.newAllocatable(null), surfaceInfo.surfacesCaps.maxImageExtent);
+            BBUInt2 minImageExtend = unionWith(BBUInt2.newAllocatable(null), surfaceInfo.surfacesCaps.minImageExtent);
+
+            VMath.clamp(size, minImageExtend, maxImageExtend, size);
+        }
+
+        builder.setSwapExtend(swapChainExtend);
+
+        // Swap chain image count
+        int max = surfaceInfo.surfacesCaps.maxImageCount.get();
+        int min = surfaceInfo.surfacesCaps.minImageCount.get();
+        builder.setSwapChainImageCount(selectors.swapChainImageCountSelector().select(min, max == 0 ? Integer.MAX_VALUE : max));
+
+        // Set surface transform (current is fine)
+        builder.setSurfaceTransform(surfaceInfo.surfacesCaps.currentTransform);
+
+        return builder;
+    }
+
+    /**
+     * Runs given {@code runnable}. If the runnable throws an {@link InterruptedException},
+     * the exception will be logged and the method returns early.
+     * @param runnable runnable to run.
+     */
+    public static void ignoreInterrupts(TRunnable<InterruptedException> runnable) {
+        try {
+            runnable.run();
+        } catch (InterruptedException e) {
+            LOG.warning("InterruptedException in ignoreInterrupts:");
+            LOG.log(StandardLogLevel.WARNING, new ThrowableLogData(e));
         }
     }
 

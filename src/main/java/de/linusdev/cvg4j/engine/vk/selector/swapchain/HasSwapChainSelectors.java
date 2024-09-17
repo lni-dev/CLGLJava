@@ -14,19 +14,18 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.renderer.rast;
+package de.linusdev.cvg4j.engine.vk.selector.swapchain;
 
-import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
-import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.cvg4j.engine.vk.selector.present.mode.PresentModeSelector;
+import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
 import org.jetbrains.annotations.NotNull;
 
-public interface RenderCommandsFunction {
-    boolean available();
+public interface HasSwapChainSelectors {
 
-    void render(
-            @NotNull Stack stack,
-            int currentFrameBufferImageIndex,
-            int currentFrame,
-            @NotNull VkCommandBuffer commandBuffer
-    );
+    @NotNull SwapChainImageCountSelector swapChainImageCountSelector();
+
+    @NotNull SurfaceFormatSelector surfaceFormatSelector();
+
+    @NotNull PresentModeSelector presentModeSelector();
+
 }

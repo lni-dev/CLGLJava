@@ -27,6 +27,7 @@ import org.jetbrains.annotations.*;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.function.Consumer;
 
 public class TaskQueue {
 
@@ -48,7 +49,14 @@ public class TaskQueue {
             return nextId++;
         }
     }
+
+
     protected final @NotNull AsyncManager asyncManager;
+    /**
+     * Consumer, which will be called after a future has been {@link #queue(int, TQFutureImpl) submitted} to the queue.
+     * Note, that the future might already be handled when the consumer is called, as it is not synchronized.
+     */
+    protected final @Nullable Consumer<TQFuture<?>> queuedFutureConsumer;
 
     protected final @NotNull AtomicReferenceArray<Wrapper<TQFutureImpl<?>>> wrappers;
     protected final @NotNull Queue<Wrapper<TQFutureImpl<?>>> taskQueue;
@@ -58,9 +66,11 @@ public class TaskQueue {
 
     public TaskQueue(
             @NotNull AsyncManager asyncManager,
+            @Nullable Consumer<TQFuture<?>> queuedFutureConsumer,
             long maxQueuedTaskMillisPerFrame
     ) {
         this.asyncManager = asyncManager;
+        this.queuedFutureConsumer = queuedFutureConsumer;
         this.taskQueue = new ConcurrentLinkedQueue<>();
         this.wrappers = new AtomicReferenceArray<>(MAX_TASK_ID + 1);
         this.maxQueuedTaskMillisPerFrame = maxQueuedTaskMillisPerFrame;
@@ -81,6 +91,8 @@ public class TaskQueue {
         } else {
             taskQueue.offer(new Wrapper<>(id, future));
         }
+        if(queuedFutureConsumer != null)
+            queuedFutureConsumer.accept(future);
     }
 
     @Blocking

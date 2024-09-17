@@ -16,16 +16,15 @@
 
 package de.linusdev.cvg4j.engine.vk.renderer.rast;
 
-import de.linusdev.cvg4j.engine.render.RenderThread;
-import de.linusdev.cvg4j.engine.render.Renderer;
 import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueuePermanentCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.frame.buffer.FrameBuffers;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
+import de.linusdev.cvg4j.engine.vk.render.RenderState;
+import de.linusdev.cvg4j.engine.vk.render.Renderer;
 import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
-import de.linusdev.cvg4j.nat.glfw3.custom.UpdateListener;
 import de.linusdev.cvg4j.nat.vulkan.ReturnedVkResult;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkCommandBufferResetFlags;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.VkPipelineStageFlags;
@@ -44,11 +43,8 @@ import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.math.vector.buffer.intn.BBUInt1;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
-import de.linusdev.lutils.thread.var.SyncVar;
-import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;
 
-import static de.linusdev.cvg4j.nat.glfw3.GLFW.glfwWaitEvents;
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
@@ -96,13 +92,6 @@ public class RasterizationRenderer implements Renderer {
      * Other stuff
      */
     private RenderCommandsFunction renderCommandsFunction;
-    private UpdateListener updateListener;
-
-    /*
-     * Event related booleans
-     */
-    private final @NotNull SyncVar<@NotNull Boolean> recreateSwapChain = new SyncVarImpl<>(false);
-    private final @NotNull SyncVar<@NotNull Boolean> minimized = new SyncVarImpl<>(false);
 
     public RasterizationRenderer(
             @NotNull Instance instance,
@@ -119,9 +108,6 @@ public class RasterizationRenderer implements Renderer {
         this.presentInfo = allocate(new VkPresentInfoKHR());
 
         this.fenceNullHandle = allocate(new VkFence());
-
-        window.listeners().addFramebufferSizeListener((width, height) -> recreateSwapChain.set(true));
-        window.listeners().addWindowIconificationListener(minimized::set);
     }
 
     public void init(
@@ -181,42 +167,8 @@ public class RasterizationRenderer implements Renderer {
     }
 
     @Override
-    public void onAttachedTo(@NotNull RenderThread thread) {
-        window.listeners().addWindowRefreshListener(() -> {
-            // This is called during event polling on the window thread, if the window is currently resized
-            // In order to avoid stuttering we have to wait the event polling until the next frame, with
-            // the resized swap chain, is submitted
-            try {
-                thread.getTaskQueue().queueForExecution(stack -> {
-                        render(stack);
-                        return null;
-                }).get();
-            } catch (InterruptedException e) {
-                LOG.throwable(e);
-            }
-        });
-    }
-
-    @Override
-    public void render(@NotNull Stack stack) {
+    public @NotNull RenderState render(@NotNull Stack stack) {
         if(renderCommandsFunction.available()) {
-
-            // Check if window is minimized or the swapChain needs to be recreated ...
-            if(minimized.computeSynchronised(ignored -> {
-                recreateSwapChain.doSynchronised(ignored2 -> {
-                    if(recreateSwapChain.get() && !minimized.get()) {
-                        recreateSwapChain.set(false);
-                        vkInstance.vkDeviceWaitIdle(device.getVkDevice());
-                        renderCommandsFunction.recreateSwapChain(stack);
-                    }
-                });
-
-                return minimized.get();
-            })) {
-                glfwWaitEvents();
-                return;
-            }
-
 
             // Get the swap chain
             VkSwapchainKHR vkSwapChain = swapChain.getVkSwapChain();
@@ -229,12 +181,8 @@ public class RasterizationRenderer implements Renderer {
             ReturnedVkResult result = vkInstance.vkAcquireNextImageKHR(device.getVkDevice(), vkSwapChain, Long.MAX_VALUE, imageAvailableSemaphores.get(currentFrame), fenceNullHandle, ref(currentImageIndex));
 
             // Check if we need to recreate the swap chain
-            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) {
-                recreateSwapChain.set(true);
-                return;
-            } else {
-                result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
-            }
+            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
+            else result.checkButAllow(VkResult.VK_SUBOPTIMAL_KHR);
 
             vkInstance.vkResetFences(device.getVkDevice(), 1, ref(frameSubmittedFences.get(currentFrame))).check();
 
@@ -257,17 +205,16 @@ public class RasterizationRenderer implements Renderer {
             presentInfo.pImageIndices.set(currentImageIndex);
 
             result = vkInstance.vkQueuePresentKHR(presentationQueue, ref(presentInfo));
+            currentFrame = (currentFrame + 1) % maxFramesInFlight;
 
             // Check if we need to recreate the swap chain
-            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR) || result.is(VkResult.VK_SUBOPTIMAL_KHR)) {
-                recreateSwapChain.set(true);
-                return;
-            } else {
-                result.check();
-            }
+            if(result.is(VkResult.VK_ERROR_OUT_OF_DATE_KHR)) return RenderState.SWAP_CHAIN_OUT_OF_DATE;
+            else if(result.is(VkResult.VK_SUBOPTIMAL_KHR)) return RenderState.SWAP_CHAIN_SUBOPTIMAL;
+            else result.check();
 
-            currentFrame = (currentFrame + 1) % maxFramesInFlight;
         }
+
+        return RenderState.NONE;
     }
 
     @Override

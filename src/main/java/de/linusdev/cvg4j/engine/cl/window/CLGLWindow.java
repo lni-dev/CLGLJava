@@ -104,7 +104,7 @@ public class CLGLWindow implements UpdateListener, AsyncManager, AutoCloseable {
         this.handler = handler;
 
         //Task queue
-        this.uiTaskQueue = new TaskQueue(this, maxQueuedTaskMillisPerFrame);
+        this.uiTaskQueue = new TaskQueue(this, null, maxQueuedTaskMillisPerFrame);
         this.stack = new DirectMemoryStack64(1024);
 
         //Input manager

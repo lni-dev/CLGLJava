@@ -14,19 +14,36 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.vk.renderer.rast;
+package de.linusdev.cvg4j.engine.vk.render;
 
-import de.linusdev.cvg4j.nat.vulkan.handles.VkCommandBuffer;
-import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
-public interface RenderCommandsFunction {
-    boolean available();
+import java.util.function.Supplier;
 
-    void render(
-            @NotNull Stack stack,
-            int currentFrameBufferImageIndex,
-            int currentFrame,
-            @NotNull VkCommandBuffer commandBuffer
-    );
+public class Waiter {
+
+    private final @NotNull Object lock = new Object();
+
+    public Waiter() {
+
+    }
+
+    public void awaitIf(@NotNull Supplier<Boolean> condition) throws InterruptedException {
+        synchronized (lock) {
+            if(condition.get())
+                await();
+        }
+    }
+
+    public void await() throws InterruptedException {
+        synchronized (lock) {
+            lock.wait();
+        }
+    }
+
+    public void signal() {
+        synchronized (lock) {
+            lock.notifyAll();
+        }
+    }
 }

@@ -24,6 +24,7 @@ import de.linusdev.cvg4j.engine.vk.selector.priority.Priorities;
 import de.linusdev.cvg4j.engine.vk.selector.priority.Priority;
 import de.linusdev.cvg4j.engine.vk.selector.queue.family.QueueFamilySelector;
 import de.linusdev.cvg4j.engine.vk.selector.surface.format.SurfaceFormatSelector;
+import de.linusdev.cvg4j.engine.vk.selector.swapchain.HasSwapChainSelectors;
 import de.linusdev.cvg4j.engine.vk.selector.swapchain.SwapChainImageCountSelector;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkQueueFlagBits;
@@ -40,7 +41,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public interface VulkanGame extends Game {
+public interface VulkanGame extends Game, HasSwapChainSelectors {
 
     /**
      * Minimum {@link VulkanApiVersion} this game requires.
