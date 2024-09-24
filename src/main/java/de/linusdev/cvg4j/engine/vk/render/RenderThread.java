@@ -43,6 +43,7 @@ public class RenderThread extends Thread {
     public final @NotNull LogInstance LOG = LLog.getLogInstance();
 
     private final @NotNull CompletableFuture<Nothing, RenderThread, CompletableTask<Nothing, RenderThread>> creationFuture;
+    private final @NotNull CompletableFuture<Nothing, RenderThread, CompletableTask<Nothing, RenderThread>> warmUpEndedFuture;
     private final @NotNull CompletableFuture<Nothing, RenderThread, CompletableTask<Nothing, RenderThread>> threadDeathFuture;
 
     private final @NotNull VulkanEngine<?> engine;
@@ -53,6 +54,7 @@ public class RenderThread extends Thread {
     private final @NotNull SwapChain swapChain;
     private final @NotNull Renderer renderer;
 
+    private volatile boolean warmUp = true;
     private final @NotNull Waiter taskQueueWaiter = new Waiter();
     private boolean shouldStop = false;
 
@@ -71,6 +73,7 @@ public class RenderThread extends Thread {
 
         this.creationFuture = CompletableFuture.create(engine.getAsyncManager(), false);
         this.threadDeathFuture = CompletableFuture.create(engine.getAsyncManager(), false);
+        this.warmUpEndedFuture = CompletableFuture.create(engine.getAsyncManager(), false);
 
         this.taskQueue = new TaskQueue(engine.getAsyncManager(), fut -> taskQueueWaiter.signal(),20);
 
@@ -115,6 +118,12 @@ public class RenderThread extends Thread {
         return creationFuture;
     }
 
+    public @NotNull Future<Nothing, RenderThread> endWarmUp() {
+        warmUp = false;
+        taskQueueWaiter.signal();
+        return warmUpEndedFuture;
+    }
+
     /*
      * Event related booleans
      */
@@ -126,6 +135,18 @@ public class RenderThread extends Thread {
         try {
             creationFuture.complete(Nothing.INSTANCE, this, null);
         } catch (Throwable t) {
+            threadDeathFuture.complete(null, this, new ThrowableAsyncError(t));
+            return;
+        }
+
+        try {
+            while (warmUp) {
+                taskQueue.runQueuedTasks(stack);
+                taskQueueWaiter.await();
+            }
+            warmUpEndedFuture.complete(Nothing.INSTANCE, this, null);
+        }  catch (Throwable t) {
+            warmUpEndedFuture.complete(null, this, new ThrowableAsyncError(t));
             threadDeathFuture.complete(null, this, new ThrowableAsyncError(t));
             return;
         }

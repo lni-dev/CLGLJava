@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.scene;
+package de.linusdev.cvg4j.engine.vk.renderpass;
 
-import de.linusdev.cvg4j.engine.ticker.Tickable;
-import de.linusdev.lutils.thread.var.SyncVar;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
-public interface Scene extends Tickable, AutoCloseable {
+public interface RenderPassChangedListener {
 
-    @Override
-    void close();
+    void renderPassChanged(@NotNull Stack stack);
 
-    @NotNull Loader loader();
-
-    @NotNull Loader releaser();
-
-    @NotNull SyncVar<@NotNull State> currentState();
 }

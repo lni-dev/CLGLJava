@@ -19,6 +19,7 @@ package de.linusdev.cvg4j.engine.vk;
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.obj.ModelViewProjection;
+import de.linusdev.cvg4j.engine.scene.Loader;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.DescriptorSet;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
@@ -29,11 +30,12 @@ import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexBuffer;
 import de.linusdev.cvg4j.engine.vk.memory.buffer.vertex.VertexElement;
 import de.linusdev.cvg4j.engine.vk.memory.image.sampler.Sampler2D;
 import de.linusdev.cvg4j.engine.vk.memory.manager.allocator.ondemand.OnDemandVulkanMemoryAllocator;
+import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.scene.VkScene;
 import de.linusdev.cvg4j.engine.vk.shader.VulkanShader;
 import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
-import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.engine.window.input.Key;
 import de.linusdev.cvg4j.nat.glfw3.GLFWValues;
 import de.linusdev.cvg4j.nat.vulkan.VulkanApiVersion;
@@ -58,6 +60,9 @@ import de.linusdev.lutils.math.vector.array.floatn.ABFloat3;
 import de.linusdev.lutils.math.vector.array.floatn.ABFloat4;
 import de.linusdev.lutils.math.vector.buffer.shortn.BBUShort1;
 import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
+import de.linusdev.lutils.nat.size.ByteUnits;
+import de.linusdev.lutils.nat.size.Size;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.result.BiResult;
@@ -93,7 +98,7 @@ class VulkanEngineTest {
 
         @Override
         public @NotNull VkScene<?> startScene(@NotNull VulkanEngine<?> engine) {
-            return new TestScene((VulkanEngine<TestGame>) engine);
+            return new TestScene((VulkanEngine<TestGame>) engine, 1.5f);
         }
 
         @Override
@@ -119,6 +124,8 @@ class VulkanEngineTest {
 
     static class TestScene extends VkScene<TestGame> {
 
+        private final float rotationFactor;
+
         protected final long startTime = System.currentTimeMillis();
 
         protected OnDemandVulkanMemoryAllocator vulkanMemoryAllocator;
@@ -132,12 +139,12 @@ class VulkanEngineTest {
 
         private final Float3 cameraPosition = new ABFloat3(2, 2, -2);
 
-        public TestScene(@NotNull VulkanEngine<TestGame> engine) {
+        public TestScene(@NotNull VulkanEngine<TestGame> engine, float rotationFactor) {
             super(engine);
+            this.rotationFactor = rotationFactor;
         }
 
-        @Override
-        public void onLoad(@NotNull Stack stack, @NotNull VulkanWindow window) throws EngineException {
+        private void load(@NotNull Stack stack) throws EngineException, IOException, InterruptedException {
             window.setWindowAspectRatio(1, 1);
 
             vulkanMemoryAllocator = new OnDemandVulkanMemoryAllocator(engine.getDevice(), "test-scene-memory-allocator");
@@ -264,15 +271,15 @@ class VulkanEngineTest {
             descriptorPool.create(stack);
 
             Image.copy(grassSide, grassSideSampler.getInput().getBackedStruct());
-            var samplerFuture = engine.getTransientCommandPool().submitSingleTimeCommand(stack, buf -> {
+            var samplerFuture = engine.getTransientCommandPool().submitSingleTimeCommand(buf -> {
                 grassSideSampler.bufferCopyCommand(stack, buf, true);
             });
 
-            try {
-                samplerFuture.getResult();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            samplerFuture.getResult();
+
+
+            renderPass = RenderPass.create(stack, vkInstance, device, swapChain);
+            pipeLine = RasterizationPipeline.create(stack, vkInstance, device, swapChain, renderPass, pipeline(stack));
         }
 
         public @NotNull Image loadGrassSide() {
@@ -289,7 +296,7 @@ class VulkanEngineTest {
             double secondsPast = (System.currentTimeMillis() - startTime) / 1000d;
             mvp.model.put(3,3, 1f);
             VMath.diagonalMatrix(1f, true, mvp.model);
-            VMath.rotationMatrix((float) (secondsPast * 1.57f), VMath.normalize(new ABFloat3(0f,0,1), new ABFloat3()),mvp.model);
+            VMath.rotationMatrix((float) (secondsPast * rotationFactor), VMath.normalize(new ABFloat3(0f,0,1), new ABFloat3()),mvp.model);
 
             CameraMatrix cam = new CameraMatrix(new ABFloat4x4(), mvp.view);
             cam.position().xyz(cameraPosition);
@@ -383,8 +390,7 @@ class VulkanEngineTest {
             stack.pop(); // commandBufferBeginInfo
         }
 
-        @Override
-        public @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack) {
+        private @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack) {
 
             return new RasterizationPipelineInfo() {
                 @Override
@@ -463,6 +469,46 @@ class VulkanEngineTest {
             vulkanMemoryAllocator.close();
             super.close();
         }
+
+        @Override
+        public @NotNull Loader loader() {
+            return new Loader() {
+                @Override
+                public void start() throws EngineException, IOException, InterruptedException {
+                    load(new DirectMemoryStack64(new Size(10, ByteUnits.KiB)));
+                }
+
+                @Override
+                public double progress() {
+                    return 0;
+                }
+
+                @Override
+                public void tick() {
+
+                }
+            };
+        }
+
+        @Override
+        public @NotNull Loader releaser() {
+            return new Loader() {
+                @Override
+                public void start() {
+
+                }
+
+                @Override
+                public double progress() {
+                    return 0;
+                }
+
+                @Override
+                public void tick() {
+
+                }
+            };
+        }
     }
 
     @Test
@@ -471,7 +517,9 @@ class VulkanEngineTest {
 
         VulkanEngine<TestGame> engine = new VulkanEngine<>(new TestGame());
 
-        //engine.loadScene(new TestScene(engine)).getResult();
+        Thread.sleep(2000);
+        System.out.println("TEST LOAD ANOTHER SCENE");
+        engine.loadScene(new TestScene(engine, -1.5f)).getResult().activate();
 
         engine.getEngineDeathFuture().getResult();
     }

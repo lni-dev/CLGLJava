@@ -22,8 +22,10 @@ import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;
 import de.linusdev.cvg4j.nat.abi.ABISelector;
 import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.HasAsyncManager;
 import de.linusdev.lutils.interfaces.AdvTRunnable;
+import de.linusdev.lutils.interfaces.TRunnable;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
@@ -64,4 +66,11 @@ public interface Engine<GAME extends Game> extends HasAsyncManager {
     @NotNull GAME getGame();
 
     <R> @NotNull Future<R, ? extends Engine<GAME>> runSupervised(@NotNull AdvTRunnable<R, ?> runnable);
+
+    default @NotNull Future<Nothing, ? extends Engine<GAME>> runSupervisedV(@NotNull TRunnable<?> runnable) {
+        return runSupervised(() -> {
+            runnable.run();
+            return Nothing.INSTANCE;
+        });
+    }
 }

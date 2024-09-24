@@ -16,18 +16,11 @@
 
 package de.linusdev.cvg4j.engine.scene;
 
-import de.linusdev.cvg4j.engine.ticker.Tickable;
-import de.linusdev.lutils.thread.var.SyncVar;
-import org.jetbrains.annotations.NotNull;
-
-public interface Scene extends Tickable, AutoCloseable {
-
-    @Override
-    void close();
-
-    @NotNull Loader loader();
-
-    @NotNull Loader releaser();
-
-    @NotNull SyncVar<@NotNull State> currentState();
+public enum State {
+    CREATED,
+    LOADING,
+    LOADED,
+    RENDERING,
+    RELEASING,
+    CLOSED
 }

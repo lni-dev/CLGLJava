@@ -17,7 +17,6 @@
 package de.linusdev.cvg4j.engine.vk.renderpass;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkAccessFlagBits;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkPipelineStageFlagBits;
@@ -37,12 +36,10 @@ public class RenderPass implements AutoCloseable {
 
     public static RenderPass create(
             @NotNull Stack stack,
-            @NotNull Instance instance,
+            @NotNull VkInstance vkInstance,
             @NotNull Device device,
             @NotNull SwapChain swapChain
     ) {
-        @NotNull VkInstance vkInstance = instance.getVkInstance();
-
         RenderPass renderPass = new RenderPass(vkInstance, device);
 
         try(var ignored = stack.popPoint()) {

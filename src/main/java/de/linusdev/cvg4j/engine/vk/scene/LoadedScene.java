@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.scene;
+package de.linusdev.cvg4j.engine.vk.scene;
 
-import de.linusdev.cvg4j.engine.ticker.Tickable;
-import de.linusdev.lutils.thread.var.SyncVar;
+import de.linusdev.cvg4j.engine.scene.Scene;
+import de.linusdev.lutils.async.Future;
+import de.linusdev.lutils.async.Nothing;
 import org.jetbrains.annotations.NotNull;
 
-public interface Scene extends Tickable, AutoCloseable {
+import java.util.function.Function;
 
-    @Override
-    void close();
+public class LoadedScene<S extends Scene> {
 
-    @NotNull Loader loader();
+    private final @NotNull S scene;
+    private final @NotNull Function<S, Future<S, Nothing>> activator;
 
-    @NotNull Loader releaser();
+    public LoadedScene(
+            @NotNull S scene,
+            @NotNull Function<S, Future<S, Nothing>> activator
+    ) {
+        this.scene = scene;
+        this.activator = activator;
+    }
 
-    @NotNull SyncVar<@NotNull State> currentState();
+    public @NotNull Future<S, Nothing> activate() {
+        return activator.apply(scene);
+    }
 }

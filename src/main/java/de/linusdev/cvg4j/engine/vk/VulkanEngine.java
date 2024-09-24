@@ -18,17 +18,18 @@ package de.linusdev.cvg4j.engine.vk;
 
 import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
+import de.linusdev.cvg4j.engine.scene.Loader;
+import de.linusdev.cvg4j.engine.scene.State;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.async.VkAsyncManager;
 import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
-import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
 import de.linusdev.cvg4j.engine.vk.render.RenderThread;
 import de.linusdev.cvg4j.engine.vk.renderer.rast.RasterizationRenderer;
-import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPassHolder;
+import de.linusdev.cvg4j.engine.vk.scene.LoadedScene;
 import de.linusdev.cvg4j.engine.vk.scene.SceneHolder;
 import de.linusdev.cvg4j.engine.vk.scene.VkScene;
 import de.linusdev.cvg4j.engine.vk.selector.VulkanEngineInfo;
@@ -57,6 +58,7 @@ import de.linusdev.lutils.nat.size.ByteUnits;
 import de.linusdev.lutils.nat.size.Size;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -103,10 +105,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private final @NotNull Instance instance;
     private final @NotNull Device device;
     private final @NotNull SwapChain swapChain;
-    private final @NotNull RenderPass renderPass;
     private final @NotNull GraphicsQueueTransientCommandPool transientCommandPool;
 
     private final @NotNull SceneHolder currentScene;
+    private final @NotNull RenderPassHolder currentRenderPass;
 
     public VulkanEngine(
             @NotNull GAME game
@@ -141,16 +143,27 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         inputManger = new InputManagerImpl(window);
 
         device = VkEngineUtils.selectAndCreateDevice(stack, game, instance, window);
+        transientCommandPool = GraphicsQueueTransientCommandPool.create(this, stack, instance, device);
         swapChain = VkEngineUtils.createSwapChain(stack, game, instance, window, device);
 
         renderer = new RasterizationRenderer(instance, window);
         renderThread = new RenderThread(this, swapChain, renderer, window);
+        // Wait until the render thread is created
+        renderThread.create().getResult();
 
-        renderPass = RenderPass.create(stack, instance, device, swapChain);
-        transientCommandPool = GraphicsQueueTransientCommandPool.create(this, stack, instance, device);
-
-        currentScene = new SceneHolder(game.startScene(this), instance, swapChain, renderer);
-        loadScene(currentScene.get());
+        // Load the start scene.
+        try {
+            VkScene<?> scene = game.startScene(this);
+            Loader loader = scene.loader();
+            scene.currentState().set(State.LOADING);
+            loader.start();
+            scene.currentState().set(State.LOADED);
+            currentScene = new SceneHolder(scene, instance, swapChain, renderer);
+            currentRenderPass = new RenderPassHolder(scene.getRenderPass());
+            scene.currentState().set(State.RENDERING);
+        } catch (IOException e) {
+            throw new EngineException(e);
+        }
 
         renderThread.getThreadDeathFuture().then((win, secondary, error) -> {
             LOG.log(StandardLogLevel.DEBUG, "Render thread died.");
@@ -163,7 +176,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             // cleanup
             currentScene.consumeIfNotNull(VkScene::close);
             transientCommandPool.close();
-            renderPass.close();
             swapChain.close();
 
             // Wait for the window thread to die before closing the window.
@@ -187,12 +199,13 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
 
 
-        ticker = new Ticker(currentScene, game.getMillisPerTick());
+        ticker = new Ticker(game.getMillisPerTick());
         ticker.start();
+        ticker.addTickable(currentScene);
 
-        renderer.init(stack, device, renderPass, swapChain, 2, currentScene);
-        // Wait until the render thread is created
-        renderThread.create().getResult();
+        renderer.init(stack, device, currentRenderPass, swapChain, 2, currentScene);
+        // Wait until render thread is in the main render loop
+        renderThread.endWarmUp().getResult();
         LOG.debug("Render thread created.");
 
     }
@@ -210,6 +223,14 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return device;
     }
 
+    public @NotNull SwapChain getSwapChain() {
+        return swapChain;
+    }
+
+    public @NotNull VulkanWindow getWindow() {
+        return window;
+    }
+
     public @NotNull InputManger getInputManger() {
         return inputManger;
     }
@@ -217,6 +238,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     @Override
     public @NotNull AsyncManager getAsyncManager() {
         return asyncManager;
+    }
+
+    public @NotNull RenderThread getRenderThread() {
+        return renderThread;
     }
 
     @Override
@@ -233,27 +258,54 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return future;
     }
 
-    public <G extends VulkanGame> TQFuture<VkScene<G>> loadScene(@NotNull VkScene<G> scene) {
-        var fut = renderThread.getTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, (stack) -> {
-            try(var ignored = stack.safePoint()) {
-                scene.onLoad0(stack, window, swapChain);
-                RasterizationPipeline pipeLine = RasterizationPipeline.create(stack, instance.getVkInstance(), device, swapChain, renderPass, scene.pipeline(stack));
-                scene.setPipeLine(pipeLine);
-            }
+    public <G extends VulkanGame> Future<LoadedScene<VkScene<G>>, Nothing> loadScene(@NotNull VkScene<G> scene) {
 
-            return scene;
-        });
+        var fut = CompletableFuture.<LoadedScene<VkScene<G>>, Nothing>create(getAsyncManager(), false);
+        Loader loader = scene.loader();
 
-        fut.then((loadedScene, secondary, error) -> {
-            if(error != null){
+       runSupervisedV(() -> {
+           scene.currentState().set(State.LOADING);
+           ticker.addTickable(loader);
+           loader.start();
+       }).then((result, secondary, error) -> {
+            if(error != null) {
                 LOG.throwable(error.asThrowable());
+                fut.complete(null, Nothing.INSTANCE, error);
                 return;
             }
-            currentScene.set(loadedScene);
-            LOG.debug("Scene loaded.");
+
+            scene.currentState().set(State.LOADED);
+
+            fut.complete(new LoadedScene<>(scene, s -> renderThread.getTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, stack -> {
+                // Wait until the old resources (Frame buffers) are not used anymore
+                renderer.waitIdle();
+
+                // Swap current render pass
+                currentRenderPass.swap(stack, scene.getRenderPass());
+
+                // Swap current scene
+                VkScene<?> oldScene = currentScene.get();
+                currentScene.set(scene);
+                ticker.removeTickable(loader);
+                scene.currentState().set(State.RENDERING);
+
+                // Release resources of the old scene async
+                Loader releaser = oldScene.releaser();
+                runSupervisedV(() -> {
+                    oldScene.currentState().set(State.RELEASING);
+                    ticker.addTickable(releaser);
+                    releaser.start();
+                    oldScene.close();
+                    ticker.removeTickable(releaser);
+                    oldScene.currentState().set(State.CLOSED);
+                });
+
+                return scene;
+            })), Nothing.INSTANCE, null);
+
         });
 
-       return fut;
+        return fut;
     }
 
     public @NotNull Future<Nothing, VulkanEngine<GAME>> getEngineDeathFuture() {

@@ -17,14 +17,14 @@
 package de.linusdev.cvg4j.engine.vk.frame.buffer;
 
 import de.linusdev.cvg4j.engine.vk.device.Device;
-import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPassChangedListener;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPassHolder;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
 import de.linusdev.cvg4j.nat.vulkan.enums.VkStructureType;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkFramebuffer;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkImageView;
 import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
-import de.linusdev.cvg4j.nat.vulkan.handles.VkRenderPass;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkFramebufferCreateInfo;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
@@ -32,16 +32,16 @@ import org.jetbrains.annotations.NotNull;
 
 import static de.linusdev.lutils.nat.pointer.TypedPointer64.ref;
 
-public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener {
+public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener, RenderPassChangedListener {
 
     public static @NotNull FrameBuffers create(
             @NotNull Stack stack,
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             @NotNull SwapChain swapChain,
-            @NotNull RenderPass renderPass
+            @NotNull RenderPassHolder renderPass
     ) {
-        FrameBuffers frameBuffers = new FrameBuffers(vkInstance, device, swapChain, renderPass.getVkRenderPass());
+        FrameBuffers frameBuffers = new FrameBuffers(vkInstance, device, swapChain, renderPass);
         frameBuffers.recreate(false, stack);
         return frameBuffers;
     }
@@ -49,7 +49,7 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
     private final @NotNull VkInstance vkInstance;
     private final @NotNull Device device;
     private final @NotNull SwapChain swapChain;
-    private final @NotNull VkRenderPass vkRenderPass;
+    private final @NotNull RenderPassHolder renderPass;
 
     /*
      * Managed by this class
@@ -60,16 +60,17 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
             @NotNull VkInstance vkInstance,
             @NotNull Device device,
             @NotNull SwapChain swapChain,
-            @NotNull VkRenderPass vkRenderPass
+            @NotNull RenderPassHolder renderPass
     ) {
         this.vkInstance = vkInstance;
         this.device = device;
         this.swapChain = swapChain;
 
         this.frameBuffers = StructureArray.newAllocated(swapChain.getSwapChainImageCount(), VkFramebuffer.class, VkFramebuffer::new);
-        this.vkRenderPass = vkRenderPass;
+        this.renderPass = renderPass;
 
         swapChain.addRecreationListener(this);
+        renderPass.addChangeListener(this);
     }
 
     public void recreate(@NotNull Stack stack) {
@@ -99,7 +100,7 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
             attachmentImages.get(swapChainImageIndex).set(swapChain.getSwapChainImageViews().get(i));
 
             frameBufferCreateInfo.sType.set(VkStructureType.FRAMEBUFFER_CREATE_INFO);
-            frameBufferCreateInfo.renderPass.set(vkRenderPass);
+            frameBufferCreateInfo.renderPass.set(renderPass.get().getVkRenderPass());
             frameBufferCreateInfo.attachmentCount.set(attachmentImagesCount);
             frameBufferCreateInfo.pAttachments.setOfArray(attachmentImages);
             frameBufferCreateInfo.width.set(swapChain.getExtend().width());
@@ -134,8 +135,14 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
     }
 
     @Override
+    public void renderPassChanged(@NotNull Stack stack) {
+        recreate(stack);
+    }
+
+    @Override
     public void close() {
         swapChain.removeRecreationListener(this);
+        renderPass.removeChangeListener(this);
         destroyForRecreation();
     }
 
@@ -143,6 +150,5 @@ public class FrameBuffers implements AutoCloseable, SwapChainRecreationListener 
         for (VkFramebuffer frameBuffer : frameBuffers)
             vkInstance.vkDestroyFramebuffer(device.getVkDevice(), frameBuffer, ref(null));
     }
-
 
 }

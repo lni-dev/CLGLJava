@@ -16,18 +16,17 @@
 
 package de.linusdev.cvg4j.engine.scene;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
-import de.linusdev.lutils.thread.var.SyncVar;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Blocking;
 
-public interface Scene extends Tickable, AutoCloseable {
+import java.io.IOException;
 
-    @Override
-    void close();
+public interface Loader extends Tickable {
 
-    @NotNull Loader loader();
+    @Blocking
+    void start() throws EngineException, IOException, InterruptedException;
 
-    @NotNull Loader releaser();
+    double progress();
 
-    @NotNull SyncVar<@NotNull State> currentState();
 }

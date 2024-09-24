@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.command.pool;
 
-import de.linusdev.cvg4j.engine.Engine;
+import de.linusdev.cvg4j.engine.vk.VulkanEngine;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.nat.vulkan.bitmasks.enums.VkCommandBufferUsageFlagBits;
@@ -29,6 +29,7 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.*;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
+import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,10 +40,10 @@ import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
 public class GraphicsQueueTransientCommandPool extends CommandPool {
 
-    private final @NotNull Engine<?> engine;
+    private final @NotNull VulkanEngine<?> engine;
 
     public static @NotNull GraphicsQueueTransientCommandPool create(
-            @NotNull Engine<?> engine,
+            @NotNull VulkanEngine<?> engine,
             @NotNull Stack stack,
             @NotNull Instance instance,
             @NotNull Device device
@@ -61,67 +62,73 @@ public class GraphicsQueueTransientCommandPool extends CommandPool {
     }
 
 
-    public GraphicsQueueTransientCommandPool( @NotNull Engine<?> engine, @NotNull VkInstance vkInstance, @NotNull Device device) {
+    public GraphicsQueueTransientCommandPool( @NotNull VulkanEngine<?> engine, @NotNull VkInstance vkInstance, @NotNull Device device) {
         super(vkInstance, device);
         this.engine = engine;
     }
 
     /**
-     *
-     * @param stack {@link Stack} of the current thread
+     * Will record and queue a command buffer using given {@code recordCommandBuffer} consumer. The recording and queuing of the
+     * command buffer happens on the {@link VulkanEngine#getRenderThread() renderThread}.
      * @param recordCommandBuffer function to record command buffer. commandBuffer has already begun when this function
      *                            is called and will be automatically ended when this function returns.
      * @return {@link Future} to wait until the work is done.
      */
-    public Future<Nothing, ? extends Engine<?>> submitSingleTimeCommand(
-            @NotNull Stack stack,
+    public Future<Nothing, VulkanEngine<?>> submitSingleTimeCommand(
             @NotNull Consumer<VkCommandBuffer> recordCommandBuffer
     ) {
-        VkCommandBuffer vkCommandBuffer = stack.push(new VkCommandBuffer());
-        VkCommandBufferAllocateInfo allocateInfo = stack.push(new VkCommandBufferAllocateInfo());
-        VkCommandBufferBeginInfo beginInfo = stack.push(new VkCommandBufferBeginInfo());
+        var fut = CompletableFuture.<Nothing, VulkanEngine<?>>create(engine.getAsyncManager(), true);
+
+        engine.getRenderThread().getTaskQueue().queueForExecution(stack -> {
+            if(fut.startIfNotCanceled()) return;
+
+            VkCommandBuffer vkCommandBuffer = stack.push(new VkCommandBuffer());
+            VkCommandBufferAllocateInfo allocateInfo = stack.push(new VkCommandBufferAllocateInfo());
+            VkCommandBufferBeginInfo beginInfo = stack.push(new VkCommandBufferBeginInfo());
 
 
-        allocateInfo.sType.set(VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO);
-        allocateInfo.level.set(VkCommandBufferLevel.PRIMARY);
-        allocateInfo.commandPool.set(vkCommandPool);
-        allocateInfo.commandBufferCount.set(1);
+            allocateInfo.sType.set(VkStructureType.COMMAND_BUFFER_ALLOCATE_INFO);
+            allocateInfo.level.set(VkCommandBufferLevel.PRIMARY);
+            allocateInfo.commandPool.set(vkCommandPool);
+            allocateInfo.commandBufferCount.set(1);
 
-        vkInstance.vkAllocateCommandBuffers(device.getVkDevice(), ref(allocateInfo), ref(vkCommandBuffer)).check();
+            vkInstance.vkAllocateCommandBuffers(device.getVkDevice(), ref(allocateInfo), ref(vkCommandBuffer)).check();
 
-        beginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
-        beginInfo.flags.set(VkCommandBufferUsageFlagBits.ONE_TIME_SUBMIT);
+            beginInfo.sType.set(VkStructureType.COMMAND_BUFFER_BEGIN_INFO);
+            beginInfo.flags.set(VkCommandBufferUsageFlagBits.ONE_TIME_SUBMIT);
 
-        vkInstance.vkBeginCommandBuffer(vkCommandBuffer, ref(beginInfo));
+            vkInstance.vkBeginCommandBuffer(vkCommandBuffer, ref(beginInfo));
 
-        recordCommandBuffer.accept(vkCommandBuffer);
+            recordCommandBuffer.accept(vkCommandBuffer);
 
-        vkInstance.vkEndCommandBuffer(vkCommandBuffer);
+            vkInstance.vkEndCommandBuffer(vkCommandBuffer);
 
-        VkSubmitInfo submitInfo = stack.push(new VkSubmitInfo());
-        submitInfo.sType.set(VkStructureType.SUBMIT_INFO);
-        submitInfo.commandBufferCount.set(1);
-        submitInfo.pCommandBuffers.set(vkCommandBuffer);
+            VkSubmitInfo submitInfo = stack.push(new VkSubmitInfo());
+            submitInfo.sType.set(VkStructureType.SUBMIT_INFO);
+            submitInfo.commandBufferCount.set(1);
+            submitInfo.pCommandBuffers.set(vkCommandBuffer);
 
-        VkFenceCreateInfo fenceCreateInfo = stack.push(new VkFenceCreateInfo());
-        fenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
+            VkFenceCreateInfo fenceCreateInfo = stack.push(new VkFenceCreateInfo());
+            fenceCreateInfo.sType.set(VkStructureType.FENCE_CREATE_INFO);
 
-        VkFence fence = allocate(new VkFence());
-        vkInstance.vkCreateFence(device.getVkDevice(), ref(fenceCreateInfo), ref(null), ref(fence)).check();
+            VkFence fence = allocate(new VkFence());
+            vkInstance.vkCreateFence(device.getVkDevice(), ref(fenceCreateInfo), ref(null), ref(fence)).check();
 
-        vkInstance.vkQueueSubmit(device.getGraphicsQueue(), 1, ref(submitInfo), fence);
+            vkInstance.vkQueueSubmit(device.getGraphicsQueue(), 1, ref(submitInfo), fence);
 
-        var fut = engine.runSupervised(() -> {
-            vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(fence), true, Long.MAX_VALUE).check();
-            vkInstance.vkDestroyFence(device.getVkDevice(), fence, ref(null));
-            return Nothing.INSTANCE;
+            engine.runSupervisedV(() -> {
+                vkInstance.vkWaitForFences(device.getVkDevice(), 1, ref(fence), true, Long.MAX_VALUE).check();
+                vkInstance.vkDestroyFence(device.getVkDevice(), fence, ref(null));
+                fut.complete(Nothing.INSTANCE, engine, null);
+            });
+
+            stack.pop(); // fenceCreateInfo
+            stack.pop(); // submitInfo
+            stack.pop(); // beginInfo
+            stack.pop(); // allocateInfo
+            stack.pop(); // vkCommandBuffer
         });
 
-        stack.pop(); // fenceCreateInfo
-        stack.pop(); // submitInfo
-        stack.pop(); // beginInfo
-        stack.pop(); // allocateInfo
-        stack.pop(); // vkCommandBuffer
 
         return fut;
     }

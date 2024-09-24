@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.ticker;
 
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
+import de.linusdev.lutils.llist.LLinkedList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,7 +32,7 @@ public class Ticker implements Runnable {
 
     private final static @NotNull LogInstance log = LLog.getLogInstance();
 
-    private final @NotNull Tickable tickable;
+    private final @NotNull LLinkedList<Tickable> tickables;
     private long millisPerTick;
 
     private final @NotNull ScheduledExecutorService executor;
@@ -40,8 +41,8 @@ public class Ticker implements Runnable {
     private long lastTickStart = 0L;
     private double deltaTime = 0d;
 
-    public Ticker(@NotNull Tickable tickable, long millisPerTick) {
-        this.tickable = tickable;
+    public Ticker(long millisPerTick) {
+        this.tickables = new LLinkedList<>();
         this.millisPerTick = millisPerTick;
         this.executor = Executors.newSingleThreadScheduledExecutor();
     }
@@ -67,6 +68,13 @@ public class Ticker implements Runnable {
         start();
     }
 
+    public void addTickable(@NotNull Tickable tickable) {
+        tickables.add(tickable);
+    }
+
+    public void removeTickable(@NotNull Tickable tickable) {
+        tickables.remove(tickable);
+    }
 
     @Override
     public void run() {
@@ -74,9 +82,11 @@ public class Ticker implements Runnable {
             long delta = System.currentTimeMillis() - lastTickStart;
             deltaTime = ((double) delta / 1000d);
             //TODO: make delta time easier accessible
-            tickable.tick();
+            for (Tickable tickable : tickables) {
+                tickable.tick();
+            }
         } catch (Throwable t) {
-            log.logThrowable(t);
+            log.throwable(t);
         }
     }
 

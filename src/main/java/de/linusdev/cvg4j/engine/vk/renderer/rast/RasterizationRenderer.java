@@ -22,7 +22,7 @@ import de.linusdev.cvg4j.engine.vk.frame.buffer.FrameBuffers;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.render.RenderState;
 import de.linusdev.cvg4j.engine.vk.render.Renderer;
-import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPassHolder;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.window.VulkanWindow;
 import de.linusdev.cvg4j.nat.vulkan.ReturnedVkResult;
@@ -113,7 +113,7 @@ public class RasterizationRenderer implements Renderer {
     public void init(
             @NotNull Stack stack,
             @NotNull Device device,
-            @NotNull RenderPass renderPass,
+            @NotNull RenderPassHolder renderPass,
             @NotNull SwapChain swapChain,
             int maxFramesInFlight,
             @NotNull RenderCommandsFunction renderCommandsFunction

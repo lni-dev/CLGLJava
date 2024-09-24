@@ -16,13 +16,13 @@
 
 package de.linusdev.cvg4j.engine.vk.scene;
 
-import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.scene.Scene;
+import de.linusdev.cvg4j.engine.scene.State;
 import de.linusdev.cvg4j.engine.vk.VulkanEngine;
 import de.linusdev.cvg4j.engine.vk.VulkanGame;
 import de.linusdev.cvg4j.engine.vk.device.Device;
 import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipeline;
-import de.linusdev.cvg4j.engine.vk.pipeline.RasterizationPipelineInfo;
+import de.linusdev.cvg4j.engine.vk.renderpass.RenderPass;
 import de.linusdev.cvg4j.engine.vk.swapchain.Extend2D;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChain;
 import de.linusdev.cvg4j.engine.vk.swapchain.SwapChainRecreationListener;
@@ -33,9 +33,8 @@ import de.linusdev.cvg4j.nat.vulkan.handles.VkInstance;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkRect2D;
 import de.linusdev.cvg4j.nat.vulkan.structs.VkViewport;
 import de.linusdev.lutils.nat.memory.stack.Stack;
-import org.jetbrains.annotations.ApiStatus;
+import de.linusdev.lutils.thread.var.SyncVar;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 
@@ -45,11 +44,12 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     protected final @NotNull VkInstance vkInstance;
     protected final @NotNull Device device;
+    protected final @NotNull SwapChain swapChain;
 
-    protected SwapChain swapChain;
+    protected final @NotNull VulkanWindow window;
 
+    protected RenderPass renderPass;
     protected RasterizationPipeline pipeLine;
-
 
     /*
      * Managed by this class
@@ -57,30 +57,27 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
     protected final @NotNull VkViewport viewport;
     protected final @NotNull VkRect2D scissors;
 
+    /*
+     * State
+     */
+    protected final @NotNull SyncVar<@NotNull State> state = SyncVar.createSyncVar(State.CREATED);
+
     protected VkScene(@NotNull VulkanEngine<GAME> engine) {
         this.engine = engine;
         this.vkInstance = engine.getVkInstance();
         this.device = engine.getDevice();
+        this.swapChain = engine.getSwapChain();
+        this.window = engine.getWindow();
 
         this.viewport = allocate(new VkViewport());
         this.scissors = allocate(new VkRect2D());
-    }
 
-    public final void onLoad0(
-            @NotNull Stack stack,
-            @NotNull VulkanWindow window,
-            @NotNull SwapChain swapChain
-    ) throws EngineException {
-        this.swapChain = swapChain;
-        calcViewportAndScissors(swapChain);
+
         swapChain.addRecreationListener(this);
-
-        onLoad(stack, window);
+        calcViewportAndScissors();
     }
 
-    public abstract void onLoad(@NotNull Stack stack, @NotNull VulkanWindow window) throws EngineException;
-
-    protected void calcViewportAndScissors(@NotNull SwapChain swapChain) {
+    protected void calcViewportAndScissors() {
         viewport.x.set(0f);
         viewport.y.set(0f);
         viewport.width.set(swapChain.getExtend().width());
@@ -96,7 +93,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     @Override
     public void swapChainExtendChanged(@NotNull Stack stack, @NotNull Extend2D newExtend) {
-        calcViewportAndScissors(swapChain);
+        calcViewportAndScissors();
     }
 
     protected abstract void render(
@@ -109,17 +106,21 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
             @NotNull VkFramebuffer frameBuffer
     ) ;
 
-    public abstract @NotNull RasterizationPipelineInfo pipeline(@NotNull Stack stack);
+    public RenderPass getRenderPass() {
+        return renderPass;
+    }
 
-    @ApiStatus.Internal
-    public void setPipeLine(@Nullable RasterizationPipeline pipeLine) {
-        this.pipeLine = pipeLine;
+    @Override
+    public @NotNull SyncVar<@NotNull State> currentState() {
+        return state;
     }
 
     @Override
     public void close() {
         swapChain.removeRecreationListener(this);
         if(pipeLine != null)
-            pipeLine.close(); //TODO: this may require better synchronization
+            pipeLine.close();
+        if(renderPass != null)
+            renderPass.close();
     }
 }

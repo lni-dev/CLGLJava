@@ -126,6 +126,16 @@ public class TaskQueue {
     }
 
     @NonBlocking
+    public @NotNull TQFuture<Nothing> queueForExecution(@Range(from = 0, to = MAX_TASK_ID) int id, @NotNull TQVoidRunnable runnable) {
+        TQFutureImpl<Nothing> f = new TQFutureImpl<>(asyncManager, s -> {
+            runnable.run(s);
+            return Nothing.INSTANCE;
+        });
+        queue(id, f);
+        return f;
+    }
+
+    @NonBlocking
     public <T> @NotNull TQFuture<T> queueForExecution(@NotNull TQRunnable<T> runnable) {
         TQFutureImpl<T> f = new TQFutureImpl<>(asyncManager, runnable);
         queue(NO_TASK_ID, f);
