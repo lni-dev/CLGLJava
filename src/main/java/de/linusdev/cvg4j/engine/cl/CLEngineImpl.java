@@ -23,6 +23,7 @@ import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
+import de.linusdev.cvg4j.engine.ticker.TickerImpl;
 import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.cl.objects.Context;
@@ -57,7 +58,7 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
     private final @NotNull UIThread<G> uiThread;
     private final @NotNull CLGLWindow window;
     private final @NotNull Executor executor = Executors.newWorkStealingPool(4);
-    private final @NotNull Ticker ticker;
+    private final @NotNull TickerImpl ticker;
 
 
     private final @NotNull SyncVar<@Nullable CLScene<G>> currentScene;
@@ -80,7 +81,8 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
             throw new RuntimeException(e);
         }
 
-        this.ticker = new Ticker(this, game.getMillisPerTick());
+        this.ticker = new TickerImpl(game.getMillisPerTick());
+        ticker.addTickable(this);
         if(game.getMillisPerTick() >= 0L)
             ticker.start();
     }
@@ -243,11 +245,11 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
 
     @Override
     @NonBlocking
-    public void tick() {
+    public void tick(@NotNull Ticker ticker) {
         CLScene<G> scene = currentScene.get();
         if(scene == null) return;
 
-        scene.getState().tick(scene);
+        scene.getState().tick(ticker, scene);
     }
 
     @Override

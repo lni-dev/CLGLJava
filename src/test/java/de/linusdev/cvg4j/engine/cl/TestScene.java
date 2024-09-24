@@ -19,6 +19,7 @@ package de.linusdev.cvg4j.engine.cl;
 import de.linusdev.cvg4j.engine.cl.structs.WorldStruct;
 import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.engine.cl.window.args.impl.AutoUpdateBuffer;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.window.input.TextInput;
 import de.linusdev.cvg4j.nat.cl.CL;
 import de.linusdev.cvg4j.nat.cl.objects.Buffer;
@@ -133,7 +134,7 @@ public class TestScene extends CLScene<TestGame> {
     }
 
     @Override
-    public void tick() {
+    public void tick(@NotNull Ticker ticker) {
 
         if(getEngine().getWindow().getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_A).isPressed()) {
             Random random = new Random();

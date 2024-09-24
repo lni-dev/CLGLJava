@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.obj.manager;
 
 import de.linusdev.cvg4j.engine.obj.GameObject;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -67,12 +68,12 @@ public class GameObjectManager<T extends GameObject<T>> implements
     }
 
     @Override
-    public void tick() {
+    public void tick(@NotNull Ticker ticker) {
         for(CollisionManager<T> manager : collisionManagers)
-            manager.tick();
+            manager.tick(ticker);
 
         for(GameObject<T> obj : gameObjects.values())
-            obj.tick();
+            obj.tick(ticker);
     }
 
     @Override

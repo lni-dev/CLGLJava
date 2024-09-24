@@ -17,9 +17,10 @@
 package de.linusdev.cvg4j.engine.ticker;
 
 import org.jetbrains.annotations.NonBlocking;
+import org.jetbrains.annotations.NotNull;
 
 public interface Tickable {
 
     @NonBlocking
-    void tick();
+    void tick(@NotNull Ticker ticker);
 }

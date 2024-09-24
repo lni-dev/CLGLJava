@@ -21,6 +21,7 @@ import de.linusdev.cvg4j.engine.cl.window.Handler;
 import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
 import de.linusdev.cvg4j.engine.cl.window.args.impl.ModifiableStructArgument;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.window.input.InputManagerImpl;
 import de.linusdev.cvg4j.engine.window.input.InputManger;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
@@ -127,7 +128,7 @@ public abstract class CLScene<GAME extends CLGame> implements
     abstract protected void unload();
 
     /**
-     * Called after the scene has finished {@link #load() loading} but before the first {@link #tick() tick}.
+     * Called after the scene has finished {@link #load() loading} but before the first {@link #tick(Ticker) tick}.
      */
     @ApiStatus.OverrideOnly
     @NonBlocking
@@ -136,11 +137,10 @@ public abstract class CLScene<GAME extends CLGame> implements
     @ApiStatus.OverrideOnly
     @NonBlocking
     @Override
-    abstract public void tick();
+    abstract public void tick(@NotNull Ticker ticker);
 
     /**
      * Called once per frame. Runs on the UI thread!
-     * @param engine {@link CLEngine}
      * @param frameInfo {@link FrameInfo}
      */
     @CallOnlyFromUIThread("glfw")
@@ -209,8 +209,8 @@ public abstract class CLScene<GAME extends CLGame> implements
 
     @ApiStatus.Internal
     @NonBlocking
-    void tick0() {
-        tick();
+    void tick0(@NotNull Ticker ticker) {
+        tick(ticker);
     }
 
     @Override

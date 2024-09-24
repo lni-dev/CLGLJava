@@ -18,6 +18,7 @@ package de.linusdev.cvg4j.engine.obj.manager;
 
 import de.linusdev.cvg4j.engine.obj.GameObject;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,7 +41,7 @@ public class CollisionManager<T extends GameObject<T>> implements Tickable {
     }
 
     @Override
-    public void tick() {
+    public void tick(@NotNull Ticker ticker) {
             //TODO: use a hierarchy volume
     }
 

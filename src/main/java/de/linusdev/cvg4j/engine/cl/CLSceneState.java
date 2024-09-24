@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.engine.cl;
 
 import de.linusdev.cvg4j.engine.cl.window.args.KernelView;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.nat.glfw3.custom.FrameInfo;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public enum CLSceneState {
     CREATED {
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
             
         }
 
@@ -69,7 +70,7 @@ public enum CLSceneState {
         }
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
             
         }
 
@@ -111,7 +112,7 @@ public enum CLSceneState {
         }
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
 
         }
 
@@ -151,8 +152,8 @@ public enum CLSceneState {
         }
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
-            scene.tick0();
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
+            scene.tick0(ticker);
         }
 
         @Override
@@ -177,7 +178,7 @@ public enum CLSceneState {
     UNLOADING {
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
             throw new UnsupportedOperationException();
         }
 
@@ -203,7 +204,7 @@ public enum CLSceneState {
     DEAD {
 
         @Override
-        <G extends CLGame> void tick(@NotNull CLScene<G> scene) {
+        <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene) {
             throw new UnsupportedOperationException();
         }
 
@@ -226,7 +227,7 @@ public enum CLSceneState {
     ;
 
     @NonBlocking
-    abstract <G extends CLGame> void tick(@NotNull CLScene<G> scene);
+    abstract <G extends CLGame> void tick(@NotNull Ticker ticker, @NotNull CLScene<G> scene);
 
     @NonBlocking
     abstract <G extends CLGame> void update(@NotNull CLScene<G> scene, @NotNull CLEngine<G> engine, @NotNull FrameInfo info);

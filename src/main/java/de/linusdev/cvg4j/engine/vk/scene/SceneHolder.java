@@ -17,6 +17,7 @@
 package de.linusdev.cvg4j.engine.vk.scene;
 
 import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.instance.Instance;
 import de.linusdev.cvg4j.engine.vk.renderer.rast.RasterizationRenderer;
 import de.linusdev.cvg4j.engine.vk.renderer.rast.RenderCommandsFunction;
@@ -46,9 +47,9 @@ public class SceneHolder extends SyncVarImpl<@NotNull VkScene<?>> implements Tic
     }
 
     @Override
-    public void tick() {
+    public void tick(@NotNull Ticker ticker) {
         VkScene<?> scene = get();
-        scene.tick();
+        scene.tick(ticker);
     }
 
     @Override

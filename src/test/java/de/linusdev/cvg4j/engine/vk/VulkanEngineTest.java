@@ -20,6 +20,7 @@ import de.linusdev.cvg4j.engine.Engine;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.obj.ModelViewProjection;
 import de.linusdev.cvg4j.engine.scene.Loader;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.DescriptorSet;
 import de.linusdev.cvg4j.engine.vk.descriptor.pool.FixedSizeDescriptorPool;
 import de.linusdev.cvg4j.engine.vk.extension.VulkanExtension;
@@ -429,7 +430,7 @@ class VulkanEngineTest {
 
 
         @Override
-        public void tick() {
+        public void tick(@NotNull Ticker ticker) {
             Key KEY_W = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_W);
             Key KEY_A = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_A);
             Key KEY_S = engine.getInputManger().getUSKey(GLFWValues.Keys_US.GLFW_KEY_S);
@@ -484,7 +485,7 @@ class VulkanEngineTest {
                 }
 
                 @Override
-                public void tick() {
+                public void tick(@NotNull Ticker ticker) {
 
                 }
             };
@@ -504,7 +505,7 @@ class VulkanEngineTest {
                 }
 
                 @Override
-                public void tick() {
+                public void tick(@NotNull Ticker ticker) {
 
                 }
             };

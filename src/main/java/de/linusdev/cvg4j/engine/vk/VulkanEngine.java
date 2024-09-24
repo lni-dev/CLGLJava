@@ -21,7 +21,7 @@ import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.TaskQueue;
 import de.linusdev.cvg4j.engine.scene.Loader;
 import de.linusdev.cvg4j.engine.scene.State;
-import de.linusdev.cvg4j.engine.ticker.Ticker;
+import de.linusdev.cvg4j.engine.ticker.TickerImpl;
 import de.linusdev.cvg4j.engine.vk.async.VkAsyncManager;
 import de.linusdev.cvg4j.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.cvg4j.engine.vk.device.Device;
@@ -92,7 +92,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private final @NotNull VkAsyncManager asyncManager;
 
     private final @NotNull Executor executor = Executors.newWorkStealingPool(16);
-    private final @NotNull Ticker ticker;
+    private final @NotNull TickerImpl ticker;
     private final @NotNull InputManger inputManger;
 
     private final @NotNull WindowThread<VulkanWindow> windowThread;
@@ -199,7 +199,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
 
 
-        ticker = new Ticker(game.getMillisPerTick());
+        ticker = new TickerImpl(game.getMillisPerTick());
         ticker.start();
         ticker.addTickable(currentScene);
 
