@@ -16,7 +16,7 @@
 
 package de.linusdev.cvg4j.engine;
 
-import de.linusdev.cvg4j.de.linusdev.cvg4j.GeneratedConstants;
+import de.linusdev.cvg4j.GeneratedConstants;
 import de.linusdev.cvg4j.engine.info.Game;
 import de.linusdev.cvg4j.nat.Load;
 import de.linusdev.cvg4j.nat.NativeUtils;

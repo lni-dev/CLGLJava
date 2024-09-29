@@ -18,12 +18,36 @@ package de.linusdev.cvg4j.glslc;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.UnknownTaskException;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskProvider;
 import org.jetbrains.annotations.NotNull;
 
 public class GlslCGradlePlugin implements Plugin<Project> {
 
     @Override
     public void apply(@NotNull Project target) {
-        target.getTasks().register("glslc", GlslCTask.class);
+        TaskProvider<GlslCTask> glslcTask = target.getTasks().register("glslc", GlslCTask.class);
+
+        target.getPlugins().withId("java", plugin -> {
+            target.afterEvaluate(proj -> {
+                SourceSetContainer sourceSets = target.getExtensions().getByType(SourceSetContainer.class);
+                SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+
+                // Add src
+                mainSourceSet.getResources().srcDir(glslcTask);
+
+                // Ensure the resources are generated before processing them
+                target.getTasks().named(mainSourceSet.getProcessResourcesTaskName())
+                        .configure(task -> task.dependsOn(glslcTask));
+
+                // For some reason we get an error, if processTestResources doesn't depend on the glslc task.
+                try {
+                    target.getTasks().named("processTestResources").configure(task -> task.dependsOn(glslcTask));
+                } catch (UnknownTaskException ignored) {}
+
+            });
+        });
     }
 }

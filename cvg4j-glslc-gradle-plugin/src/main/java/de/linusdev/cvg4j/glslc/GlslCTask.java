@@ -29,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @CacheableTask
@@ -76,14 +77,17 @@ public class GlslCTask extends DefaultTask {
     @TaskAction
     public void glslC() throws IOException, InterruptedException {
 
+        // create the output directory
+        Path resources = generatedResourcesSource.getAsFile().get().toPath();
+        Files.createDirectories(resources);
+
+        // Only run, if shaders are specified.
+        if(shaderLocation.getOrNull() == null)
+            return;
+
         if(compiledShadersRootResourcesPackage.getOrNull() == null)
             throw new IllegalStateException("compileShadersRootResourcesPackage must be set.");
 
-        if(shaderLocation.getOrNull() == null)
-            throw new IllegalStateException("shaderLocation must be set.");
-
-        Path resources = generatedResourcesSource.getAsFile().get().toPath();
-        Files.createDirectories(resources);
 
         Path shadersDir = shaderLocation.get().getAsFile().toPath();
 
@@ -128,6 +132,10 @@ public class GlslCTask extends DefaultTask {
 
     public void setShaderLocation(Path shaderLocation) {
         this.shaderLocation.set(shaderLocation.toFile());
+    }
+
+    public void setShaderLocation(String shaderLocation) {
+        this.shaderLocation.set(Paths.get(shaderLocation).toFile());
     }
 
     public Directory getShaderLocation() {
