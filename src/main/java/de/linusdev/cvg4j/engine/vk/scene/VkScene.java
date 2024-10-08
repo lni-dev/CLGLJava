@@ -48,12 +48,11 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     protected final @NotNull VulkanWindow window;
 
-    protected RenderPass renderPass;
-    protected RasterizationPipeline pipeLine;
-
     /*
      * Managed by this class
      */
+    protected RenderPass renderPass;
+    protected RasterizationPipeline pipeLine;
     protected final @NotNull VkViewport viewport;
     protected final @NotNull VkRect2D scissors;
 

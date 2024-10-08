@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-package de.linusdev.cvg4j.engine.scene;
+package de.linusdev.cvg4j.engine.scene.loaders;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
-import de.linusdev.cvg4j.engine.ticker.Tickable;
-import org.jetbrains.annotations.Blocking;
+import de.linusdev.cvg4j.engine.scene.Loader;
+import de.linusdev.cvg4j.engine.ticker.Ticker;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
-public interface Loader extends Tickable {
+public class NoOpLoader implements Loader {
 
-    @Blocking
-    void start() throws EngineException, IOException, InterruptedException;
+    @Override
+    public void start() throws EngineException, IOException, InterruptedException {
 
-    /**
-     * Current loading progress between {@code 0.0} and {@code 1.0}. If the progress is
-     * unknown a negative number should be returned.
-     */
-    double progress();
+    }
 
+    @Override
+    public double progress() {
+        return 1.0;
+    }
+
+    @Override
+    public void tick(@NotNull Ticker ticker) {
+
+    }
 }

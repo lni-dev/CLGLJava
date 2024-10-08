@@ -62,10 +62,6 @@ def glslCTestTask = tasks.<GlslCTask>register("glslCTest", GlslCTask.class) {
     compiledShadersRootResourcesPackage = 'de.linusdev.cvg4j.vulkan.shaders'
 }
 
-compileJava.dependsOn(glslCTestTask)
-processTestResources.dependsOn(glslCTestTask)
-processResources.dependsOn(glslCTestTask)
-
 constantGen {
     basePackage = "de.linusdev.cvg4j"
     add("ENGINE_VERSION", engineVersion)
@@ -84,7 +80,7 @@ sourceSets {
     }
     test {
         resources {
-            srcDir(glslCTestTask)
+            srcDir(glslCTestTask.get())
         }
     }
 }

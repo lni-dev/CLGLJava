@@ -26,7 +26,9 @@ https://developer.nvidia.com/vulkan-memory-management
 ## Autocloseable fix 
 All objects implementing auto closable should check if they actually need closing and what has to be closed.
 
-
+## Glfw-Stuff
+- Get Monitor(s) (size, which is main)
 
 ## TODO: Quality of life changes to generated code
+- auto escaped generated java doc.
 - none
