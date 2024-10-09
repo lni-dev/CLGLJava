@@ -39,6 +39,8 @@ import de.linusdev.lutils.async.completeable.CompletableFuture;
 import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.interfaces.AdvTRunnable;
+import de.linusdev.lutils.interfaces.TFunction;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.thread.var.SyncVar;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
@@ -201,6 +203,11 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
             }
         });
         return future;
+    }
+
+    @Override
+    public @NotNull <R> Future<R, Nothing> runSupervised(@NotNull TFunction<Stack, R, ?> runnable) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

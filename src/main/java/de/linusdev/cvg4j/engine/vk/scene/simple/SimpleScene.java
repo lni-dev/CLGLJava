@@ -16,6 +16,7 @@
 
 package de.linusdev.cvg4j.engine.vk.scene.simple;
 
+import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.queue.TQFuture;
 import de.linusdev.cvg4j.engine.scene.Loader;
 import de.linusdev.cvg4j.engine.scene.loaders.NoOpLoader;
@@ -28,13 +29,15 @@ import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 public abstract class SimpleScene<GAME extends VulkanGame> extends VkScene<GAME> {
     protected SimpleScene(@NotNull VulkanEngine<GAME> engine) {
         super(engine);
     }
 
     @Blocking
-    void load0(@NotNull Stack stack) throws InterruptedException {
+    void load0(@NotNull Stack stack) throws InterruptedException, IOException, EngineException {
         TQFuture<Nothing> fut = window.getWindowThread().getTaskQueue().queueForExecution(this::setupWindow);
         load(stack, fut);
         fut.getResult();
@@ -44,7 +47,7 @@ public abstract class SimpleScene<GAME extends VulkanGame> extends VkScene<GAME>
     abstract protected void setupWindow(@NotNull Stack stack);
 
     @Blocking
-    abstract protected void load(@NotNull Stack stack, @NotNull TQFuture<Nothing> windowSetupFuture);
+    abstract protected void load(@NotNull Stack stack, @NotNull TQFuture<Nothing> windowSetupFuture) throws InterruptedException, IOException, EngineException ;
 
     @Override
     public @NotNull Loader loader() {
