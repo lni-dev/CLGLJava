@@ -41,6 +41,7 @@ import static de.linusdev.lutils.nat.struct.abstracts.Structure.allocate;
 public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapChainRecreationListener {
 
     protected final @NotNull VulkanEngine<GAME> engine;
+    protected final @NotNull GAME game;
 
     protected final @NotNull VkInstance vkInstance;
     protected final @NotNull Device device;
@@ -63,6 +64,7 @@ public abstract class VkScene<GAME extends VulkanGame> implements Scene, SwapCha
 
     protected VkScene(@NotNull VulkanEngine<GAME> engine) {
         this.engine = engine;
+        this.game = engine.getGame();
         this.vkInstance = engine.getVkInstance();
         this.device = engine.getDevice();
         this.swapChain = engine.getSwapChain();
