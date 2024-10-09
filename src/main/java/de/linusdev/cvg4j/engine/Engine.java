@@ -25,7 +25,10 @@ import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.manager.HasAsyncManager;
 import de.linusdev.lutils.interfaces.AdvTRunnable;
+import de.linusdev.lutils.interfaces.TConsumer;
+import de.linusdev.lutils.interfaces.TFunction;
 import de.linusdev.lutils.interfaces.TRunnable;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
@@ -70,6 +73,15 @@ public interface Engine<GAME extends Game> extends HasAsyncManager {
     default @NotNull Future<Nothing, ? extends Engine<GAME>> runSupervisedV(@NotNull TRunnable<?> runnable) {
         return runSupervised(() -> {
             runnable.run();
+            return Nothing.INSTANCE;
+        });
+    }
+
+    @NotNull <R> Future<R, Nothing> runSupervised(@NotNull TFunction<Stack, R, ?> runnable);
+
+    default @NotNull Future<Nothing,Nothing> runSupervisedV(@NotNull TConsumer<Stack, ?> runnable) {
+        return runSupervised((stack) -> {
+            runnable.consume(stack);
             return Nothing.INSTANCE;
         });
     }

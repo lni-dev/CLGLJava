@@ -18,14 +18,24 @@ package de.linusdev.cvg4j.engine.scene;
 
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.ticker.Tickable;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.Blocking;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 public interface Loader extends Tickable {
 
+    /**
+     * Starts and executes the loading progress on the current thread. This method should return only after
+     * the loading is finished.
+     * @param stack {@link Stack}, which can be used for short term allocations
+     * @throws EngineException can be thrown, will be logged and fail loading
+     * @throws IOException can be thrown, will be logged and fail loading
+     * @throws InterruptedException can be thrown, will be logged and fail loading
+     */
     @Blocking
-    void start() throws EngineException, IOException, InterruptedException;
+    void start(@NotNull Stack stack) throws EngineException, IOException, InterruptedException;
 
     /**
      * Current loading progress between {@code 0.0} and {@code 1.0}. If the progress is

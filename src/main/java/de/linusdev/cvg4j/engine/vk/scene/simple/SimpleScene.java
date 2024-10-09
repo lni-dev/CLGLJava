@@ -34,16 +34,17 @@ public abstract class SimpleScene<GAME extends VulkanGame> extends VkScene<GAME>
     }
 
     @Blocking
-    void load0() {
+    void load0(@NotNull Stack stack) throws InterruptedException {
         TQFuture<Nothing> fut = window.getWindowThread().getTaskQueue().queueForExecution(this::setupWindow);
-        load(fut);
+        load(stack, fut);
+        fut.getResult();
     }
 
     @NonBlocking
     abstract protected void setupWindow(@NotNull Stack stack);
 
     @Blocking
-    abstract protected void load(@NotNull TQFuture<Nothing> windowSetupFuture);
+    abstract protected void load(@NotNull Stack stack, @NotNull TQFuture<Nothing> windowSetupFuture);
 
     @Override
     public @NotNull Loader loader() {

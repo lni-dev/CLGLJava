@@ -19,6 +19,7 @@ package de.linusdev.cvg4j.engine.vk.scene.simple;
 import de.linusdev.cvg4j.engine.exception.EngineException;
 import de.linusdev.cvg4j.engine.scene.Loader;
 import de.linusdev.cvg4j.engine.ticker.Ticker;
+import de.linusdev.lutils.nat.memory.stack.Stack;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -32,8 +33,8 @@ public class SimpleSceneLoader implements Loader {
     }
 
     @Override
-    public void start() throws EngineException, IOException, InterruptedException {
-        scene.load0();
+    public void start(@NotNull Stack stack) throws EngineException, IOException, InterruptedException {
+        scene.load0(stack);
     }
 
     @Override

@@ -53,9 +53,13 @@ import de.linusdev.lutils.async.error.ThrowableAsyncError;
 import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.async.manager.HasAsyncManager;
 import de.linusdev.lutils.interfaces.AdvTRunnable;
+import de.linusdev.lutils.interfaces.TFunction;
+import de.linusdev.lutils.nat.memory.stack.Stack;
+import de.linusdev.lutils.nat.memory.stack.StackFactory;
 import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
 import de.linusdev.lutils.nat.size.ByteUnits;
 import de.linusdev.lutils.nat.size.Size;
+import de.linusdev.lutils.thread.pool.ThreadWithStackPool;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -92,6 +96,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     private final @NotNull VkAsyncManager asyncManager;
 
     private final @NotNull Executor executor = Executors.newWorkStealingPool(16);
+    private final @NotNull ThreadWithStackPool threadWithStackPool;
     private final @NotNull TickerImpl ticker;
     private final @NotNull InputManger inputManger;
 
@@ -123,6 +128,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
         // Init variables
         this.asyncManager = new VkAsyncManager();
+        this.threadWithStackPool = new ThreadWithStackPool(1, 10000, this.asyncManager, Thread::new, StackFactory.DEFAULT);
         this.vulkanInfo = new VulkanEngineInfo();
         this.game = game;
 
@@ -156,7 +162,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
             VkScene<?> scene = game.startScene(this);
             Loader loader = scene.loader();
             scene.currentState().set(State.LOADING);
-            loader.start();
+            loader.start(stack);
             scene.currentState().set(State.LOADED);
             currentScene = new SceneHolder(scene, instance, swapChain, renderer);
             currentRenderPass = new RenderPassHolder(scene.getRenderPass());
@@ -258,15 +264,20 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return future;
     }
 
+    @Override
+    public @NotNull <R> Future<R, Nothing> runSupervised(@NotNull TFunction<Stack, R, ?> runnable) {
+        return threadWithStackPool.execute(runnable);
+    }
+
     public <G extends VulkanGame> Future<LoadedScene<VkScene<G>>, Nothing> loadScene(@NotNull VkScene<G> scene) {
 
         var fut = CompletableFuture.<LoadedScene<VkScene<G>>, Nothing>create(getAsyncManager(), false);
         Loader loader = scene.loader();
 
-       runSupervisedV(() -> {
+       runSupervisedV((stack) -> {
            scene.currentState().set(State.LOADING);
            ticker.addTickable(loader);
-           loader.start();
+           loader.start(stack);
        }).then((result, secondary, error) -> {
             if(error != null) {
                 LOG.throwable(error.asThrowable());
@@ -276,12 +287,12 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
             scene.currentState().set(State.LOADED);
 
-            fut.complete(new LoadedScene<>(scene, s -> renderThread.getTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, stack -> {
+            fut.complete(new LoadedScene<>(scene, s -> renderThread.getTaskQueue().queueForExecution(LOAD_SCENE_TASK_ID, renderThreadStack -> {
                 // Wait until the old resources (Frame buffers) are not used anymore
                 renderer.waitIdle();
 
                 // Swap current render pass
-                currentRenderPass.swap(stack, scene.getRenderPass());
+                currentRenderPass.swap(renderThreadStack, scene.getRenderPass());
 
                 // Swap current scene
                 VkScene<?> oldScene = currentScene.get();
@@ -291,10 +302,10 @@ public class VulkanEngine<GAME extends VulkanGame> implements
 
                 // Release resources of the old scene async
                 Loader releaser = oldScene.releaser();
-                runSupervisedV(() -> {
+                runSupervisedV((stack) -> {
                     oldScene.currentState().set(State.RELEASING);
                     ticker.addTickable(releaser);
-                    releaser.start();
+                    releaser.start(stack);
                     oldScene.close();
                     ticker.removeTickable(releaser);
                     oldScene.currentState().set(State.CLOSED);

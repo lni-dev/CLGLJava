@@ -61,9 +61,6 @@ import de.linusdev.lutils.math.vector.array.floatn.ABFloat3;
 import de.linusdev.lutils.math.vector.array.floatn.ABFloat4;
 import de.linusdev.lutils.math.vector.buffer.shortn.BBUShort1;
 import de.linusdev.lutils.nat.memory.stack.Stack;
-import de.linusdev.lutils.nat.memory.stack.impl.DirectMemoryStack64;
-import de.linusdev.lutils.nat.size.ByteUnits;
-import de.linusdev.lutils.nat.size.Size;
 import de.linusdev.lutils.nat.struct.abstracts.Structure;
 import de.linusdev.lutils.nat.struct.array.StructureArray;
 import de.linusdev.lutils.result.BiResult;
@@ -475,8 +472,8 @@ class VulkanEngineTest {
         public @NotNull Loader loader() {
             return new Loader() {
                 @Override
-                public void start() throws EngineException, IOException, InterruptedException {
-                    load(new DirectMemoryStack64(new Size(10, ByteUnits.KiB)));
+                public void start(@NotNull Stack stack) throws EngineException, IOException, InterruptedException {
+                    load(stack);
                 }
 
                 @Override
@@ -495,7 +492,7 @@ class VulkanEngineTest {
         public @NotNull Loader releaser() {
             return new Loader() {
                 @Override
-                public void start() {
+                public void start(@NotNull Stack stack) {
 
                 }
 
