@@ -168,7 +168,7 @@ public class CommandsGenerator {
 
             var method = vkInstanceClassGenerator.addMethod(returnClass, cmd.name);
             method.setVisibility(JavaVisibility.PUBLIC);
-            method.setJavaDoc("<pre>{@code " + cmd.cDef + "}</pre>");
+            method.setJavaDoc("<pre>{@code " + cmd.cDef + "}</pre>", false);
 
             for(Command.Param param : cmd.params) {
                 Type actualParamType = param.type.resolve();

@@ -110,7 +110,7 @@ public class GroupedDefinesType implements Type {
         clazz.setVisibility(JavaVisibility.PUBLIC);
         clazz.setName(name);
         if(comment != null)
-            clazz.setJavaDoc(comment);
+            clazz.setJavaDoc(comment, true);
 
         for (Define define : defines.values()) {
             if(define.skip) continue;
@@ -138,7 +138,7 @@ public class GroupedDefinesType implements Type {
                 }
             }
 
-            if(define.comment != null) var.setJavaDoc(define.comment);
+            if(define.comment != null) var.setJavaDoc(define.comment, true);
             define.var = var;
         }
     }

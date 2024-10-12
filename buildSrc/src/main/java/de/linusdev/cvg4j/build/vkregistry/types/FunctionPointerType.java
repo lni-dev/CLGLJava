@@ -79,7 +79,7 @@ public class FunctionPointerType implements Type {
         clazz.setName(name);
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        clazz.setJavaDoc("<pre>{@code " + cDefinition + "}</pre>");
+        clazz.setJavaDoc("<pre>{@code " + cDefinition + "}</pre>", false);
         clazz.setExtendedClass(JavaClass.ofClass(BBPointer64.class));
         var constructor = clazz.addConstructor();
         constructor.body(block ->

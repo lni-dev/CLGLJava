@@ -150,7 +150,7 @@ public class BitMaskEnumType implements Type {
         clazz.setName(name);
         clazz.setType(JavaClassType.ENUM);
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        if(comment != null) clazz.setJavaDoc(comment);
+        if(comment != null) clazz.setJavaDoc(comment, true);
 
         if(bitWidth == 32)
             clazz.setImplementedClasses(new JavaClass[]{
@@ -206,7 +206,7 @@ public class BitMaskEnumType implements Type {
                                 JavaVariable.of(Deprecated.class, "since"),
                                 JavaExpression.ofString(value.deprecated)
                         );
-            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment);
+            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment, true);
             if(value.writeDoc != null)
                 value.writeDoc.accept(doc);
         }

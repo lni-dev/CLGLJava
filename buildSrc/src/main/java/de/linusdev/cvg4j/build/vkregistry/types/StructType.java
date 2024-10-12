@@ -182,7 +182,7 @@ public class StructType implements Type {
         clazz.setType(JavaClassType.CLASS);
         clazz.setVisibility(JavaVisibility.PUBLIC);
         if(comment != null)
-            clazz.setJavaDoc(comment);
+            clazz.setJavaDoc(comment, true);
 
         if(union) clazz.setExtendedClass(JavaClass.ofClass(ComplexUnion.class));
         else clazz.setExtendedClass(JavaClass.ofClass(ComplexStructure.class));
@@ -375,16 +375,16 @@ public class StructType implements Type {
             // JavaDoc
             var doc = jVariable.setJavaDoc();
             if(member.comment != null)
-                doc.addText(member.comment);
+                doc.addText(member.comment, true);
             if(member.optional != null)
-                doc.addAtText(jdTag("vk.optional"), member.optional);
+                doc.addAtText(jdTag("vk.optional"), member.optional, true);
             if(member.noAutoValidity != null)
-                doc.addAtText(jdTag("vk.noAutoValidity"), member.noAutoValidity);
+                doc.addAtText(jdTag("vk.noAutoValidity"), member.noAutoValidity, true);
             if(member.limitType != null)
-                doc.addAtText(jdTag("vk.limitType"), member.limitType);
+                doc.addAtText(jdTag("vk.limitType"), member.limitType, true);
             if(member.len != null)
-                doc.addAtText(jdTag("vk.len"), member.len);
-            doc.addAtText(jdTag("cDef"), member.cDefinition);
+                doc.addAtText(jdTag("vk.len"), member.len, true);
+            doc.addAtText(jdTag("cDef"), member.cDefinition, true);
 
             variables[index] = jVariable;
             index++;

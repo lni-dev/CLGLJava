@@ -665,7 +665,7 @@ public class RegistryLoader {
                             valueAttr.getNodeValue(),
                             comment,
                             null,
-                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
+                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName, true)
                     ));
                 } else if(aliasAttr != null) {
                     enumToExtend.addValue(new EnumType.Value(
@@ -673,7 +673,7 @@ public class RegistryLoader {
                             enumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             enumToExtend.getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()",
                             comment, null,
-                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
+                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName, true)
                     ));
                 } else if(offsetAttr != null) {
 
@@ -691,7 +691,7 @@ public class RegistryLoader {
                             enumToExtend.getEnumValueName(nameAttr.getNodeValue()),
                             "" + value,
                             comment, null,
-                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
+                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName, true)
                     ));
                 }  else {
                     throw new IllegalStateException("Unknown Enum extension type. name=" + nameAttr.getNodeValue());
@@ -704,7 +704,7 @@ public class RegistryLoader {
                             Integer.parseInt(bitposAttr.getNodeValue()),
                             null,
                             comment, null,
-                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
+                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName, true)
                     ));
                     return;
                 } else if(aliasAttr != null || valueAttr != null) {
@@ -713,7 +713,7 @@ public class RegistryLoader {
                             -1,
                             valueAttr == null ? bitMaskEnumToExtend.getEnumValueName(aliasAttr.getNodeValue()) + ".getValue()" : valueAttr.getNodeValue(),
                             comment, null,
-                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName)
+                            javaDocGenerator -> javaDocGenerator.addAtText(jdTag("addedByExtension"), extensionOrFeatureName, true)
                     ));
                     return;
                 } else {

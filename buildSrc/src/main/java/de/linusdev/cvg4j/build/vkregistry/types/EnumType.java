@@ -134,7 +134,7 @@ public class EnumType implements Type {
         clazz.setName(name);
         clazz.setType(JavaClassType.ENUM);
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        if(comment != null) clazz.setJavaDoc(comment);
+        if(comment != null) clazz.setJavaDoc(comment, true);
         clazz.setImplementedClasses(new JavaClass[]{JavaClass.ofClass(NativeEnumMember32.class)});
         var valueVar = clazz.addVariable(JavaClass.ofClass(int.class), "value");
         valueVar.setFinal(true);
@@ -165,7 +165,7 @@ public class EnumType implements Type {
                                 JavaExpression.ofString(value.deprecated)
                         );
 
-            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment);
+            var doc = member.setJavaDoc(value.comment == null ? "" : value.comment, true);
             if(value.writeDoc != null)
                 value.writeDoc.accept(doc);
         }
