@@ -306,7 +306,7 @@ class VulkanEngineTest {
                     (float) swapChain.getExtend().width() / swapChain.getExtend().height(),
                     4f, 4f,
                     .01f, 10f,
-                    true, 1.3f, mvp.projection
+                    true, true, 1.3f, mvp.projection
             );
 
             // calcVerticesOnCPU(mvp.model, mvp.view, mvp.projection);
