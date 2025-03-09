@@ -59,7 +59,7 @@ Finally, you can run the build
 ```shell
 cmake --build cmake-build
 ```
-
+TODO: cmake relase/debug for linux/windows presets -> CMAKE_BUILD_TYPE
 
 
 
