@@ -29,7 +29,7 @@ plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'de.linusdev.cvg4j.glslc' version '+'
+//    id 'de.linusdev.cvg4j.glslc' version '+'
     id 'de.linusdev.lutils.gradle' version '+'
 }
 
