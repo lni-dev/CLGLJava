@@ -18,6 +18,8 @@ package de.linusdev.cvg4j.build.vkregistry;
 
 import de.linusdev.cvg4j.build.vkregistry.types.CTypes;
 import de.linusdev.cvg4j.build.vkregistry.types.abstracts.Type;
+import de.linusdev.llog.LLog;
+import de.linusdev.llog.base.LogInstance;
 import de.linusdev.lutils.codegen.SourceGenerator;
 import de.linusdev.lutils.codegen.c.CPPFileType;
 import de.linusdev.lutils.codegen.c.CPPUtils;
@@ -32,6 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 
 public class NativeFunctionsGenerator {
+
+    public static final @NotNull LogInstance LOG = LLog.getLogInstance();
 
     private final @NotNull RegistryLoader registry;
 
@@ -82,6 +86,7 @@ public class NativeFunctionsGenerator {
             @NotNull RegistryLoader registry,
             @NotNull SourceGenerator generator
     ) {
+        LOG.debug("START GEN NativeFunctions.java and NativeFunctions.cpp");
         var cClazz = generator.addCFile();
         cClazz.setType(CPPFileType.SOURCE_CPP);
         cClazz.setName("NativeFunctions");
@@ -155,8 +160,9 @@ public class NativeFunctionsGenerator {
                                     cCallFun
                     )
             ));
-
         }
+
+        LOG.debug("END GEN NativeFunctions.java and NativeFunctions.cpp");
     }
 
     public static class NativeFunction {

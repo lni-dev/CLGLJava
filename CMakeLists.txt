@@ -17,11 +17,19 @@ add_library(${PROJECT_NAME} STATIC MODULE
         src/main/cpp/GLFW.cpp
         src/main/cpp/CL.cpp
         src/main/cpp/NativeUtils.cpp
-        src/main/cpp/WGL.cpp
+
         src/main/cpp/JniUtils.cpp
         build/generated/sources/vulkan/src/main/cpp/NativeFunctions.cpp
         src/main/cpp/VulkanNatDebugUtilsMessageCallback.cpp
 )
+
+if (WIN32)
+# Windows only sources:
+    target_sources(
+            ${PROJECT_NAME}
+            PUBLIC src/main/cpp/WGL.cpp
+    )
+endif()
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
@@ -31,12 +39,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 #dependencies
 find_package(Java REQUIRED)
-# We are only interested in finding jni.h: we do not care about extended JVM
-# functionality or the AWT library.
-set(JAVA_AWT_LIBRARY NotNeeded)
-set(JAVA_JVM_LIBRARY NotNeeded)
-set(JAVA_INCLUDE_PATH2 NotNeeded)
-set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 find_package(JNI REQUIRED)
 find_package(OpenCL REQUIRED)
 find_package(OpenGL REQUIRED)
@@ -61,5 +63,5 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${_classDir}
         ${_stubDir}
         include/
-        build/generated/sources/headers/java/main/
+        build/generated/sources/headers/java/main
 )

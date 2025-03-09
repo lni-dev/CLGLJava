@@ -1040,6 +1040,7 @@ public class RegistryLoader {
         var vkInstanceFile = generator.getJavaFile("de.linusdev.cvg4j.nat.vulkan.handles", "VkInstance");
         assert vkInstanceFile != null;
         commandsGenerator.generate(this, generator, vkInstanceFile);
+
         nativeFunctionsGenerator.generate(this, generator);
     }
 }

@@ -16,7 +16,19 @@
 
 package de.linusdev.cvg4j.nat.wgl;
 
+import de.linusdev.lutils.os.OSType;
+import de.linusdev.lutils.os.OsUtils;
+
+/**
+ * Windows specific OpenGL functions
+ */
 public class WGL {
+
+    static {
+        if(OsUtils.CURRENT_OS != OSType.WINDOWS) {
+            throw new IllegalStateException("Wrong OS. This class is only available on Windows!");
+        }
+    }
 
     public static native long _wglGetCurrentContext();
     public static native long _wglGetCurrentDC();

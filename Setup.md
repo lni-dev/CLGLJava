@@ -42,8 +42,22 @@ export PATH=/path/to/ninja-dir/:$PATH
 ## Build
 
 ### Manual Cmake Build
+First you need to run the gradle task `genFromVulkanXML`, which will generate
+the native Java mappings including the cpp code:
+```shell
+gradlew genFromVulkanXML
+```
+Now run the gradle task `compileJava` to generate all c-headers as a by-product
+```shell
+gradlew compileJava
+```
+Now you can run the cmake to create the `cmake-build` directory:
 ```shell
 cmake --preset=default
+```
+Finally, you can run the build
+```shell
+cmake --build cmake-build
 ```
 
 
