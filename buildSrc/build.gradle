@@ -28,6 +28,8 @@ repositories {
 }
 
 dependencies {
+    implementation gradleApi()
+
     implementation("de.linusdev:lutils:2.0.0")
     implementation("de.linusdev:llog:1.0.2")
 }

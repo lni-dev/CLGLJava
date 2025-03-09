@@ -991,9 +991,14 @@ public class RegistryLoader {
             addType(n);
 
             for (Node memberNode : iterableNode(typeNode)) {
-                if(memberNode.getNodeType() == Node.TEXT_NODE || memberNode.getNodeName().equals("comment"))
-                    continue;
+                LOG.debug(String.valueOf(memberNode.getNodeType()));
+                if(
+                        memberNode.getNodeType() == Node.TEXT_NODE
+                        || memberNode.getNodeType() == Node.COMMENT_NODE
+                        || memberNode.getNodeName().equals("comment")
+                ) continue;
                 n.addMember(memberNode);
+
             }
 
             LOG.debug("END handle struct/union");

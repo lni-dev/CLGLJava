@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 4.0.0)
 project(CLGLJava VERSION 1.0.0 DESCRIPTION "OpenCL Rendering Library")
 
 include(FetchContent)
@@ -31,6 +31,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 #dependencies
 find_package(Java REQUIRED)
+# We are only interested in finding jni.h: we do not care about extended JVM
+# functionality or the AWT library.
+set(JAVA_AWT_LIBRARY NotNeeded)
+set(JAVA_JVM_LIBRARY NotNeeded)
+set(JAVA_INCLUDE_PATH2 NotNeeded)
+set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 find_package(JNI REQUIRED)
 find_package(OpenCL REQUIRED)
 find_package(OpenGL REQUIRED)

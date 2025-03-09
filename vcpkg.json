@@ -1,0 +1,7 @@
+{
+  "dependencies": [
+    "vulkan",
+    "opengl",
+    "opencl"
+  ]
+}

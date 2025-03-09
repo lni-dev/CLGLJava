@@ -98,6 +98,8 @@ public class GroupedDefinesType implements Type {
             isGenereated = true;
         }
 
+        LOG.debug("START GEN grouped define types '" + name + "'.");
+
         JavaClassGenerator clazz =
                 parent == null ?
                         generator.addJavaFile(SUB_PACKAGE)
@@ -114,6 +116,7 @@ public class GroupedDefinesType implements Type {
 
         for (Define define : defines.values()) {
             if(define.skip) continue;
+            LOG.debug("GEN define " + define);
             var var = clazz.addVariable(JavaClass.ofClass(define.getType(defines).getJavaClass()), define.getName(defines));
             var.setVisibility(JavaVisibility.PUBLIC);
             var.setStatic(true);
@@ -257,6 +260,20 @@ public class GroupedDefinesType implements Type {
 
         public @NotNull String getStringValue(@NotNull Map<String, Define> defineMap) {
             return stringValue;
+        }
+
+        @Override
+        public String toString() {
+            return "Define{" +
+                    "name='" + name + '\'' +
+                    ", alias='" + alias + '\'' +
+                    ", type=" + type +
+                    ", stringValue='" + stringValue + '\'' +
+                    ", comment='" + comment + '\'' +
+                    ", skip=" + skip +
+                    ", parent=" + parent +
+                    ", var=" + var +
+                    '}';
         }
     }
 }
