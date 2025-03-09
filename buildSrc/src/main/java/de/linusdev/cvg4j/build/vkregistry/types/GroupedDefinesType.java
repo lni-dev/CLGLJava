@@ -117,7 +117,7 @@ public class GroupedDefinesType implements Type {
         for (Define define : defines.values()) {
             if(define.skip) continue;
             LOG.debug("GEN define " + define);
-            var var = clazz.addVariable(JavaClass.ofClass(define.getType(defines).getJavaClass()), define.getName(defines));
+            var var = clazz.addVariable(JavaClass.ofClass(define.getType(registry).getJavaClass()), define.getName(defines));
             var.setVisibility(JavaVisibility.PUBLIC);
             var.setStatic(true);
             var.setFinal(true);
@@ -248,12 +248,12 @@ public class GroupedDefinesType implements Type {
             return name;
         }
 
-        public @NotNull CTypes getType(@NotNull Map<String, Define> defineMap) {
+        public @NotNull CTypes getType(@NotNull RegistryLoader registry) {
             if(type == null) {
                 if(alias == null)
                     throw new IllegalStateException("alias and type are null for define with name '" + name + "' in group " + parent.getName());
 
-                return defineMap.get(alias).getType(defineMap);
+                return registry.getPUDefine(alias).resolve().getType(registry);
             }
             return type;
         }

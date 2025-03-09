@@ -464,6 +464,12 @@ public class RegistryLoader {
                 "" + vkMakeVideoStdVersion(1, 0, 0),
                 null, false, group
         ));
+        group.addDefine(new GroupedDefinesType.Define(
+                "VK_STD_VULKAN_VIDEO_CODEC_AV1_ENCODE_API_VERSION_1_0_0",
+                null, CTypes.INT32,
+                "" + vkMakeVideoStdVersion(1, 0, 0),
+                null, false, group
+        ));
 
         addType(group);
     }
