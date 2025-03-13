@@ -63,7 +63,7 @@ public interface Engine<GAME extends Game> extends HasAsyncManager {
     }
 
     static @NotNull String name() {
-        return "CVG4J";
+        return GeneratedConstants.ENGINE_NAME;
     }
 
     @NotNull GAME getGame();

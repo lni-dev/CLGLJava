@@ -75,6 +75,7 @@ constantGen {
     basePackage = "$engine_group.$engine_package"
     add("ENGINE_VERSION", engineVersion)
     add("NATIVE_LIB_NAME", "${engine_package}.${nativeBuildType.libFileEnding}")
+    add("ENGINE_NAME", engine_short_name)
 }
 
 sourceSets {

@@ -16,6 +16,7 @@
 
 package de.linusdev.ljgel.vulkan;
 
+import de.linusdev.ljgel.GeneratedConstants;
 import de.linusdev.ljgel.engine.cl.CLEngine;
 import de.linusdev.ljgel.nat.NativeUtils;
 import de.linusdev.ljgel.nat.glfw3.GLFW;
@@ -92,7 +93,7 @@ public class VulkanTransparentWindowTest {
         vkApplicationInfo.pNext.set(0);
         vkApplicationInfo.pApplicationName.set(NullTerminatedUTF8String.newAllocated("Test Application"));
         vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(1, 0, 0));
-        vkApplicationInfo.pEngineName.set(NullTerminatedUTF8String.newAllocated("CVG4J"));
+        vkApplicationInfo.pEngineName.set(NullTerminatedUTF8String.newAllocated(GeneratedConstants.ENGINE_NAME));
         vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(0, 1, 0));
         vkApplicationInfo.apiVersion.set(VulkanApiVersion.V_1_3_0.getAsInt());
 
