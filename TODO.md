@@ -3,6 +3,9 @@ this file contains todos and notes about this project.
 
 ## cmake-presets release/debug for linux
 
+## Currently native lib is only generated for a single build type
+It should be generated for 64x-windows and 64x-linux at the same time and the correct lib loaded at runtime.
+
 ## Native Objects
 Allocate one big chunk of memory for permanent objects instead of using Structure.allocate().
 

@@ -1,5 +1,8 @@
 # LinusDev's Java Game Engine Library (LJGEL)
 
+## Building the Library
+For building simply run `jar` gradle task. See [Setup](/SETUP.md) for requirements.
+
 ## Scene
 
 ### State
