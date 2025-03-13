@@ -36,6 +36,25 @@
       "generator": "Visual Studio 17 2022",
       "binaryDir": "${sourceDir}/build/cmake/msvc",
       "inherits": ["base"]
+    },
+
+    {
+      "name": "gcc-release",
+      "inherits": [ "base", "ninja", "release"],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "binaryDir": "${sourceDir}/build/cmake/gcc-release"
+    },
+    {
+      "name": "gcc-debug",
+      "inherits": [ "base", "ninja", "debug"],
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++"
+      },
+      "binaryDir": "${sourceDir}/build/cmake/gcc-debug"
     }
 
   ]

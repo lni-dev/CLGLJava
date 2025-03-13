@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.8)
+cmake_minimum_required(VERSION 4.0.0)
 project(ljgel VERSION 1.0.0 DESCRIPTION "LinusDev's Java Game Engine Library")
 
 include(FetchContent)
