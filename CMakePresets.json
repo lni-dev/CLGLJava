@@ -2,16 +2,41 @@
   "version": 10,
   "configurePresets": [
     {
-      "name": "vcpkg",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/cmake-build",
+      "name": "base",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
       }
     },
+
     {
-      "name": "default",
-      "inherits": "vcpkg"
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+
+    {
+      "name": "ninja",
+      "hidden": true,
+      "generator": "Ninja"
+    },
+
+    {
+      "name": "msvc",
+      "description": "Build with Visual Studio 17 2022. Debug or release can be set in the 'cmake --build' command using '--config Debug/Release'.",
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/cmake-build/msvc",
+      "inherits": ["base"]
     }
+
   ]
 }

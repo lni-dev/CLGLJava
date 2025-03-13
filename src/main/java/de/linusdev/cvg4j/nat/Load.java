@@ -24,8 +24,7 @@ public class Load {
 
     static {
         LibraryLoader loader = new LibraryLoader(
-                Load.class, "native-libraries/", "CLGLJava.jnilib",
-                "glfw3", "glad"
+                Load.class, "native-libraries/", "CLGLJava.dll"
         );
 
         try {

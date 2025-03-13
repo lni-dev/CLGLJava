@@ -53,13 +53,13 @@ gradlew compileJava
 ```
 Now you can run the cmake to create the `cmake-build` directory:
 ```shell
-cmake --preset=default
+cmake --preset=msvc
 ```
 Finally, you can run the build
 ```shell
-cmake --build cmake-build
+cmake --build cmake-build/msvc --config Release
 ```
-TODO: cmake relase/debug for linux/windows presets -> CMAKE_BUILD_TYPE
+TODO: cmake release/debug for linux presets
 
 
 

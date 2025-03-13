@@ -16,20 +16,65 @@
 
 package de.linusdev.cvg4j.build;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 public enum CPPBuildType {
-    RELEASE_MINGW("cmake-build-release-mingw-x86_64", "lib", "a"),
-    DEBUG_MINGW("cmake-build-debug-mingw-x86_64", "lib", "a"),
-    DEBUG_VS_X64("cmake-build-debug-vs-x64", "", "lib"),
-    RELEASE_VS_X64("cmake-build-release-vs-x64", "", "lib"),
+    MSVC_DEBUG(
+            "msvc",
+            "cmake-build/msvc",
+            true, "Debug",
+            "Debug",
+            "dll"
+    ),
+    MSVC_RELEASE(
+            "msvc",
+            "cmake-build/msvc",
+            true, "Release",
+            "Release",
+            "dll"
+    ),
     ;
 
-    public final String folderName;
-    public final String filePrefix;
-    public final String fileEnding;
+    /**
+     * The name of the cmake preset in 'CMakePresets.json'.
+     */
+    public final @NotNull String cmakePresetName;
+    /**
+     * Build-directory relative to repository-root.
+     */
+    public final @NotNull String buildDir;
+    /**
+     * Whether the 'cmake --build' requires a '--config' param to switch between debug and release mode.
+     */
+    public final boolean requiresConfigParam;
+    /**
+     * The '--config' param or {@code null} if {@link #requiresConfigParam} is false.
+     */
+    public final @Nullable String configParam;
+    /**
+     * Directory that contains the library binaries (e.g. dll or so files) relative to
+     * {@link #buildDir}. Empty string ("") if it is the same as {@link #buildDir}.
+     */
+    public final @NotNull String libFileDir;
+    /**
+     * File ending of the library binaries (e.g. dll or so).
+     */
+    public final @NotNull String libFileEnding;
 
-    CPPBuildType (String folderName, String filePrefix, String fileEnding) {
-        this.folderName = folderName;
-        this.filePrefix = filePrefix;
-        this.fileEnding = fileEnding;
+
+    CPPBuildType(
+            @NotNull String cmakePresetName, @NotNull String buildDir,
+            boolean requiresConfigParam,
+            @Nullable String configParam,
+            @NotNull String libFileDir,
+            @NotNull String libFileEnding
+    ) {
+        this.cmakePresetName = cmakePresetName;
+        this.buildDir = buildDir;
+        this.requiresConfigParam = requiresConfigParam;
+        this.configParam = configParam;
+        this.libFileDir = libFileDir;
+        this.libFileEnding = libFileEnding;
     }
 }
