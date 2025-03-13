@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Linus Andera
+ * Copyright (c) 2024-2025 Linus Andera
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,63 +14,83 @@
  * limitations under the License.
  */
 
-
-import de.linusdev.cvg4j.build.CPPBuildType
-import de.linusdev.cvg4j.build.FileDownloader
-import de.linusdev.cvg4j.build.codegen.VulkanXMLGeneratorTask
-import de.linusdev.cvg4j.glslc.GlslCTask
+import de.linusdev.ljgel.build.CPPBuildType
 import de.linusdev.lutils.version.ReleaseType
 import de.linusdev.lutils.version.Version
 
-import java.nio.file.Paths
 
 plugins {
     id 'java'
     id 'java-library'
     id 'maven-publish'
-    id 'de.linusdev.cvg4j.glslc' version '+'
     id 'de.linusdev.lutils.gradle' version '+'
-    id 'CMakeRunnerPlugin'
+    id 'ljgel'
 }
 
-def engineVersion = Version.of(ReleaseType.valueOf(engine_release_type), engine_version)
+Version engineVersion = Version.of(ReleaseType.valueOf(engine_release_type), engine_version)
+CPPBuildType nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.MSVC_DEBUG : CPPBuildType.MSVC_RELEASE
 
-group 'de.linusdev'
+group engine_group
 version engineVersion.version().asUserFriendlyString;
 
-CPPBuildType buildType = CPPBuildType.MSVC_DEBUG
 targetCompatibility = JavaVersion.VERSION_17
 sourceCompatibility = JavaVersion.VERSION_17
 compileJava.options.encoding = 'UTF-8'
 
-def downloadVKTask = tasks.register("downloadVk.xml", FileDownloader.class) {
-    url "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/vk.xml"
+downloads {
+
+    urls = List.of(
+            'https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/vk.xml',
+            "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/video.xml"
+    )
+
+    outputFileNames = List.of(
+            'vk.xml',
+            'video.xml'
+    )
+
+    backup = true
 }
 
-def downloadVKVideoTask = tasks.register("downloadVkVideo.xml", FileDownloader.class) {
-    url "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Docs/main/xml/video.xml"
+vulkanWrapper {
+    basePackage = "$engine_group.${engine_package}.nat"
+    vulkanXmlFileDir = downloads
 }
 
-def generateVulkanFromXML = tasks.register("genFromVulkanXML", VulkanXMLGeneratorTask.class) {
-    basePackage = "de.linusdev.cvg4j.nat"
-    vulkanXmlFile = downloadVKTask
-    vulkanVideoXmlFile = downloadVKVideoTask
+compileNativeLibraries {
+    nativeLibName = "$engine_package"
+    resourcePackage = "$engine_group.${engine_package}.libs"
+    buildType = nativeBuildType
 }
 
-def glslCTestTask = tasks.<GlslCTask>register("glslCTest", GlslCTask.class) {
-    shaderLocation = Paths.get('src/test/glsl/test/')
-    compiledShadersRootResourcesPackage = 'de.linusdev.cvg4j.vulkan.shaders'
+compileTestShaders {
+    shaderLocation = 'src/test/glsl/test/'
+    compiledShadersRootResourcesPackage = "$engine_group.${engine_package}.vulkan.shaders"
 }
 
-processTestResources.dependsOn(glslCTestTask)
-processResources.dependsOn(glslCTestTask)
-
-processTestResources.dependsOn(glslc)
-processResources.dependsOn(glslc)
+//processTestResources.dependsOn(glslCTestTask)
+//processResources.dependsOn(glslCTestTask)
 
 constantGen {
-    basePackage = "de.linusdev.cvg4j"
+    basePackage = "$engine_group.$engine_package"
     add("ENGINE_VERSION", engineVersion)
+    add("NATIVE_LIB_NAME", "${engine_package}.${nativeBuildType.libFileEnding}")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir(vulkanWrapper)
+        }
+        resources {
+            srcDir(compileNativeLibraries)
+        }
+    }
+    test {
+        resources {
+            srcDir(compileTestShaders)
+        }
+    }
 }
 
 java {
@@ -78,35 +98,27 @@ java {
     withSourcesJar()
 }
 
-sourceSets {
-    main {
-        java {
-            srcDir(generateVulkanFromXML)
-        }
-    }
-    test {
-        resources {
-            srcDirs(glslCTestTask)
-        }
-    }
+jar {
+
 }
+
 
 javadoc {
     options.encoding = 'UTF-8'
     options.addStringOption('Xdoclint:none', '-quiet')
-    title = "CVG4J"
+    title = engine_short_name
 
     configure(options) {
         tags(
                 'implNote:a:Implementation Note:',
                 'implSpec:a:Implemenatation Requirements:',
                 'apiNote:a:API Note:',
-                'cvg4j.addedByExtension:a:Added By Extension:',
-                'cvg4j.vk.optional:a:Optional',
-                'cvg4j.vk.noAutoValidity:a:NoAutoValidity',
-                'cvg4j.vk.limitType:a:LimitType',
-                'cvg4j.vk.len:a:Len',
-                'cvg4j.cDef:a:C-Definition'
+                'ljgel.addedByExtension:a:Added By Extension:',
+                'ljgel.vk.optional:a:Optional',
+                'ljgel.vk.noAutoValidity:a:NoAutoValidity',
+                'ljgel.vk.limitType:a:LimitType',
+                'ljgel.vk.len:a:Len',
+                'ljgel.cDef:a:C-Definition'
         )
     }
 }
@@ -119,10 +131,6 @@ repositories {
     mavenLocal()
     mavenCentral()
 }
-
-def cnlTask = tasks.register('copy-native-libraries') {
-}.get()
-tasks.named("build").get().dependsOn(cnlTask)
 
 tasks.register("testWithRenderDoc", Exec.class) {
     def javaHome = System.properties['java.home']
@@ -144,13 +152,13 @@ tasks.register("testWithRenderDoc", Exec.class) {
             "org.gradle.wrapper.GradleWrapperMain",
             ":test",
             "--tests",
-            "\"de.linusdev.cvg4j.engine.vk.VulkanEngineTest.test\""
+            "\"$engine_group.${engine_package}.engine.vk.VulkanEngineTest.test\""
     ]
 
 }
 
 dependencies {
-    api 'de.linusdev:lutils:2.0.0'
+    api 'de.linusdev:lutils:2.0.1'
     implementation 'de.linusdev:llog:1.0.2'
     api 'org.jetbrains:annotations:24.0.1'
 
@@ -166,12 +174,12 @@ test {
 publishing {
     publications {
 
-        CVG4J(MavenPublication) {
-            artifactId = 'cvg4j'
+        ljgel(MavenPublication) {
+            artifactId = engine_package
             from components.java
             pom {
-                name = 'CVG4J'
-                description = ''
+                name = engine_short_name
+                description = engine_short_description
                 url = 'https://www.linusdev.de'
                 groupId = 'de.linusdev'
                 version = project.version
@@ -192,9 +200,9 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:git://github.com/lni-dev/CLGLJava.git'
-                    developerConnection ='scm:git:ssh://github.com:lni-dev/CLGLJava.git'
-                    url = 'https://github.com/lni-dev/CLGLJava/tree/master'
+                    connection = 'scm:git:git://github.com/lni-dev/ljgel.git'
+                    developerConnection ='scm:git:ssh://github.com:lni-dev/ljgel.git'
+                    url = 'https://github.com/lni-dev/ljgel/tree/master'
                 }
             }
         }

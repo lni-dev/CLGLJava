@@ -1,14 +1,7 @@
 # TODO
 this file contains todos and notes about this project.
 
-## Building the Project
-currently the Project has to be built in several steps. Ideally, these would be automatically run
-through gradle. (That means cmake build should be executed by the gradle build script). Native libs
-should not be copied to resources, but instead into generated sources by that cmake task and then included
-like we are doing with the spir-v shader binary.
-
-## Project Name
-Rename the cmake project to CVG4J.
+## cmake-presets release/debug for linux
 
 ## Native Objects
 Allocate one big chunk of memory for permanent objects instead of using Structure.allocate().

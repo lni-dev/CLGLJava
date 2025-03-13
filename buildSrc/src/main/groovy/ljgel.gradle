@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2025 Linus Andera
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+plugins {
+    id 'de.linusdev.ljgel.glslc' apply false
+}
+
+// Download task
+def downloads = tasks.register("downloads", de.linusdev.ljgel.build.DownloadTask.class) {}
+
+// Generate vulkan wrapper code
+def vulkanWrapper = tasks.register("vulkanWrapper", de.linusdev.ljgel.build.VulkanXMLGeneratorTask.class)
+
+// CMake task
+def compileNativeLibraries = tasks.register("compileNativeLibraries", de.linusdev.ljgel.build.CMakeRunnerTask.class) {
+    dependsOn(vulkanWrapper) // ensure NativeFunctions.cpp is generated
+    mustRunAfter(compileJava) // ensure headers are already generated
+    inputs.file("CMakeLists.txt")
+    inputs.dir("src/main/cpp")
+    inputs.dir(vulkanWrapper.get().outputs.files.singleFile.toPath().parent.resolve("cpp").toFile())
+}
+
+// GlslC task for test resources
+def compileTestShaders = tasks.register("compileTestShaders", de.linusdev.ljgel.glslc.GlslCTask.class)
+// We add compileTestShaders as resource srcDir but for some reason the dependencies do
+// not get automatically added so I have to add them manually:
+processResources.mustRunAfter(compileTestShaders)
+processResources.mustRunAfter(glslc)
+processTestResources.mustRunAfter(compileTestShaders)
+processTestResources.mustRunAfter(glslc)
+

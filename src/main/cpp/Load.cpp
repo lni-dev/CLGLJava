@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "de_linusdev_cvg4j_nat_Load.h"
+#include "de_linusdev_ljgel_nat_Load.h"
 
 #include "JniUtils.h"
 
@@ -22,7 +22,7 @@
  * Method:    _test
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1init
+JNIEXPORT void JNICALL Java_de_linusdev_ljgel_nat_Load__1init
     (JNIEnv* env, jclass clazz)
 {
     if(JNI_UTILS != nullptr) return;
@@ -33,7 +33,7 @@ JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1init
 
 }
 
-JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_Load__1close
+JNIEXPORT void JNICALL Java_de_linusdev_ljgel_nat_Load__1close
         (JNIEnv* env, jclass clazz)
 {
     //This causes problems, when some threads are still working while another already called the close method

@@ -16,7 +16,7 @@
 // Created by Linus on 14.09.2024.
 //
 
-#include "de_linusdev_cvg4j_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback.h"
+#include "de_linusdev_ljgel_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback.h"
 #include "JniUtils.h"
 #include <vulkan/vulkan.h>
 
@@ -42,14 +42,14 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 }
 
-JNIEXPORT void JNICALL Java_de_linusdev_cvg4j_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback_setCallbackClass(
+JNIEXPORT void JNICALL Java_de_linusdev_ljgel_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback_setCallbackClass(
         JNIEnv* env, jclass, jclass callbackClazz
 ) {
     javaCallbackClazz = (jclass)(env->NewGlobalRef(callbackClazz));
     javaCallbackMethodId = env->GetStaticMethodID(javaCallbackClazz, "callback", "(IIJJ)Z");
 }
 
-JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback_getVulkanDebugCallbackFunPointer(
+JNIEXPORT jlong JNICALL Java_de_linusdev_ljgel_nat_vulkan_debug_callback_VulkanNatDebugUtilsMessageCallback_getVulkanDebugCallbackFunPointer(
         JNIEnv *, jclass
 ) {
     return reinterpret_cast<jlong>(debugCallback);

@@ -1,6 +1,6 @@
 
 #include <cstring>
-#include "de_linusdev_cvg4j_nat_NativeUtils.h"
+#include "de_linusdev_ljgel_nat_NativeUtils.h"
 #include "CL/cl.h"
 
 /*
@@ -8,7 +8,7 @@
  * Method:    isNull
  * Signature: (J)Z
  */
-JNIEXPORT jboolean JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils_isNull
+JNIEXPORT jboolean JNICALL Java_de_linusdev_ljgel_nat_NativeUtils_isNull
   (JNIEnv* env, jclass clazz, jlong pointer) {
     return reinterpret_cast<void*>(pointer) == nullptr ? JNI_TRUE : JNI_FALSE;
 }
@@ -18,12 +18,12 @@ JNIEXPORT jboolean JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils_isNull
  * Method:    _getNullPointer
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils__1getNullPointer
+JNIEXPORT jlong JNICALL Java_de_linusdev_ljgel_nat_NativeUtils__1getNullPointer
         (JNIEnv *, jclass) {
     return reinterpret_cast<jlong>(nullptr);
 }
 
-JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils_sf_1cl_1mem
+JNIEXPORT jlong JNICALL Java_de_linusdev_ljgel_nat_NativeUtils_sf_1cl_1mem
         (JNIEnv *, jclass) {
     return sizeof(cl_mem);
 }
@@ -33,7 +33,7 @@ JNIEXPORT jlong JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils_sf_1cl_1mem
  * Method:    getBufferFromPointer
  * Signature: (JI)Ljava/nio/ByteBuffer;
  */
-JNIEXPORT jobject JNICALL Java_de_linusdev_cvg4j_nat_NativeUtils_getBufferFromPointer(
+JNIEXPORT jobject JNICALL Java_de_linusdev_ljgel_nat_NativeUtils_getBufferFromPointer(
         JNIEnv* env, jclass clazz, jlong pointer, jint capacity
 ) {
     if(capacity != 0) {

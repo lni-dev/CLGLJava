@@ -12,8 +12,9 @@ This document describes the required programs and how to build this library.
    - XRANDR dev package `sudo apt install libxrandr-dev`
    - GL dev package`sudo apt-get install libgl1-mesa-dev` (Required only for OpenGl)
    - [GLFW3 requirements](https://www.glfw.org/docs/latest/compile_guide.html#compile_deps_wayland) `sudo apt install libwayland-dev libxkbcommon-dev xorg-dev`
- - LunarG Vulkan SDK and Vulkan Configurator.
-   - Validation Layers can be enabled globally in the Vulkan Configurator.
+ - Optional for Vulkan validation layers:
+   - [LunarG Vulkan SDK and Vulkan Configurator](https://vulkan.lunarg.com/)
+   - Validation layers can then be enabled globally in the `Vulkan Configurator`
 
 ### Installing VCPKG
 First go to the directory where you want to install vcpkg. Then run
@@ -31,6 +32,7 @@ Set the following environment variables. On windows using the gui. on linux add 
 export VCPKG_ROOT=C:\path\to\vcpkg
 export PATH=$VCPKG_ROOT:$PATH
 ```
+Remember environment variable expansion in windows uses `%PATH%` instead of `$PATH`.
 
 ### Installing Ninja
 Download the binary from [here](https://github.com/ninja-build/ninja/releases). Extract it and
@@ -45,7 +47,7 @@ export PATH=/path/to/ninja-dir/:$PATH
 First you need to run the gradle task `genFromVulkanXML`, which will generate
 the native Java mappings including the cpp code:
 ```shell
-gradlew genFromVulkanXML
+gradlew vulkanWrapper
 ```
 Now run the gradle task `compileJava` to generate all c-headers as a by-product
 ```shell
@@ -57,34 +59,14 @@ cmake --preset=msvc
 ```
 Finally, you can run the build
 ```shell
-cmake --build cmake-build/msvc --config Release
+cmake --build cmake-build/msvc --config Debug
 ```
-TODO: cmake release/debug for linux presets
 
 
 
 
-# Old Stuff below
 
-### VCPKG
-This Additional Cmake Option must be set:
-```
--DCMAKE_TOOLCHAIN_FILE=<path-to-vcpkg>/scripts/buildsystems/vcpkg.cmake
-```
-This option can be set in
-`File` -> `Settings` -> `Build, Execution, Deployment`-> `CMake` -> `Profiles` -> `CMake options`.
 
-### Building the Project
-The project must be build in three steps:
-- Generate the vulkan related sources from the vk.xml file
-- Generate the native jnilib
-- Compile Java
-
-The easiest way to accomplish this is:
-- Run any existing java test case inside this project (you will likely get an UnsatisfiedLinkError at runtime. 
-  This error can be ignored), to generate the vulkan related sources
-- Run the CMakeLists.txt and build the native library
-- Compile Java
   
 
 ## Vulkan

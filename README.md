@@ -1,4 +1,4 @@
-# Engine
+# LinusDev's Java Game Engine Library (LJGEL)
 
 ## Scene
 

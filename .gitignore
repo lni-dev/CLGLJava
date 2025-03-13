@@ -1,15 +1,7 @@
-/cmake-build-*/
 /build/
 /buildSrc/build/
-/cvg4j-glslc-gradle-plugin/build/
-/cmake-build/
 /.gradle/
 /buildSrc/.gradle/
-*.log
-*.mdmp
-/*.lib
-/*.a
-/*.jnilib
 
 # Working Directory for tests
 /wd/

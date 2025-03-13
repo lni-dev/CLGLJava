@@ -34,7 +34,7 @@
       "name": "msvc",
       "description": "Build with Visual Studio 17 2022. Debug or release can be set in the 'cmake --build' command using '--config Debug/Release'.",
       "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/cmake-build/msvc",
+      "binaryDir": "${sourceDir}/build/cmake/msvc",
       "inherits": ["base"]
     }
 

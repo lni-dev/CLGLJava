@@ -12,7 +12,7 @@
         <list>
           <option value=":test" />
           <option value="--tests" />
-          <option value="&quot;de.linusdev.cvg4j.engine.vk.VulkanEngineTest.test&quot;" />
+          <option value="&quot;de.linusdev.ljgel.engine.vk.VulkanEngineTest.test&quot;" />
         </list>
       </option>
       <option name="vmOptions" />

@@ -5,6 +5,12 @@
       <module name="CLGLJava.buildSrc" target="19" />
       <module name="CLGLJava.buildSrc.main" target="19" />
       <module name="CLGLJava.buildSrc.test" target="19" />
+      <module name="CVG4J.buildSrc" target="23" />
+      <module name="CVG4J.buildSrc.main" target="23" />
+      <module name="CVG4J.buildSrc.test" target="23" />
+      <module name="CVG4J.cvg4j-glslc-gradle-plugin" target="23" />
+      <module name="CVG4J.cvg4j-glslc-gradle-plugin.main" target="23" />
+      <module name="CVG4J.cvg4j-glslc-gradle-plugin.test" target="23" />
     </bytecodeTargetLevel>
   </component>
 </project>

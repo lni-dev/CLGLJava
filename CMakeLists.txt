@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29.8)
-project(CLGLJava VERSION 1.0.0 DESCRIPTION "OpenCL Rendering Library")
+project(ljgel VERSION 1.0.0 DESCRIPTION "LinusDev's Java Game Engine Library")
 
 include(FetchContent)
 include(UseJava)
@@ -30,7 +30,7 @@ add_library(${PROJECT_NAME} SHARED
         src/main/cpp/NativeUtils.cpp
 
         src/main/cpp/JniUtils.cpp
-        build/generated/sources/vulkan/src/main/cpp/NativeFunctions.cpp
+        build/generated/sources/vulkan/cpp/NativeFunctions.cpp
         src/main/cpp/VulkanNatDebugUtilsMessageCallback.cpp
 )
 
