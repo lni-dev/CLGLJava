@@ -1,8 +1,0 @@
-<component name="InspectionProjectProfileManager">
-  <profile version="1.0">
-    <option name="myName" value="Project Default" />
-    <inspection_tool class="JavadocDeclaration" enabled="true" level="WARNING" enabled_by_default="true">
-      <option name="ADDITIONAL_TAGS" value="cvg4j.addedByExtension,cvg4j.vk.limitType,cvg4j.cDef,cvg4j.vk.len,cvg4j.vk.optional" />
-    </inspection_tool>
-  </profile>
-</component>

@@ -29,6 +29,7 @@ plugins {
 
 Version engineVersion = Version.of(ReleaseType.valueOf(engine_release_type), engine_version)
 CPPBuildType nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.MSVC_DEBUG : CPPBuildType.MSVC_RELEASE
+nativeBuildType = CPPBuildType.GCC_DEBUG
 
 group engine_group
 version engineVersion.version().asUserFriendlyString;
@@ -58,7 +59,7 @@ vulkanWrapper {
 }
 
 compileNativeLibraries {
-    nativeLibName = "$engine_package"
+    nativeLibName = "lib$engine_package" //TODO: lib prefix on linux but not on windows
     resourcePackage = "$engine_group.${engine_package}.libs"
     buildType = nativeBuildType
 }
@@ -67,9 +68,6 @@ compileTestShaders {
     shaderLocation = 'src/test/glsl/test/'
     compiledShadersRootResourcesPackage = "$engine_group.${engine_package}.vulkan.shaders"
 }
-
-//processTestResources.dependsOn(glslCTestTask)
-//processResources.dependsOn(glslCTestTask)
 
 constantGen {
     basePackage = "$engine_group.$engine_package"

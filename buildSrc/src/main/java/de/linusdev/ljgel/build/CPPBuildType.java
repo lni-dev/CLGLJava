@@ -36,6 +36,14 @@ public enum CPPBuildType {
             "dll",
             "windows"
     ),
+    GCC_DEBUG(
+            "gcc-debug",
+            "build/cmake/gcc-debug",
+            false, null,
+            "",
+            "so",
+            "windows"
+    ),
     ;
 
     /**

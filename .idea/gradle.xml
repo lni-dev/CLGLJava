@@ -16,19 +16,9 @@
           </compositeBuild>
         </compositeConfiguration>
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleJvm" value="23" />
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/buildSrc" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/buildSrc" />
-        <option name="gradleJvm" value="23" />
-        <option name="modules">
-          <set>
             <option value="$PROJECT_DIR$/buildSrc" />
           </set>
         </option>

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 project(glad)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 add_library(
         glad

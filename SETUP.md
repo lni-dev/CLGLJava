@@ -12,8 +12,9 @@ This document describes the required programs and how to build this library.
    - XRANDR dev package `sudo apt install libxrandr-dev`
    - GL dev package`sudo apt-get install libgl1-mesa-dev` (Required only for OpenGl)
    - [GLFW3 requirements](https://www.glfw.org/docs/latest/compile_guide.html#compile_deps_wayland) `sudo apt install libwayland-dev libxkbcommon-dev xorg-dev`
- - Optional for Vulkan validation layers:
+ - Vulkan validation layers and glslc:
    - [LunarG Vulkan SDK and Vulkan Configurator](https://vulkan.lunarg.com/)
+   - glslc is included in the vulkan sdk
    - Validation layers can then be enabled globally in the `Vulkan Configurator`
 
 ### Installing VCPKG
@@ -69,16 +70,3 @@ or on linux:
 ```shell
 cmake --build build/cmake/gcc-debug
 ```
-
-
-
-
-
-
-  
-
-## Vulkan
-
-### Vulkan Validation Layers
-Install LunarG Vulkan SDK and Vulkan Configurator.
-Validation Layers can be enabled globally in the Vulkan Configurator.
