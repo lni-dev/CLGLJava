@@ -2,6 +2,3 @@
 /buildSrc/build/
 /.gradle/
 /buildSrc/.gradle/
-
-# Working Directory for tests
-/wd/

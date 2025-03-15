@@ -167,7 +167,7 @@ dependencies {
 
 test {
     useJUnitPlatform()
-    workingDir = "/wd/"
+    workingDir = "${project.projectDir}/wd/"
 }
 
 publishing {
