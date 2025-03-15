@@ -298,6 +298,10 @@ public class SwapChain extends HasRecreationListeners<SwapChainRecreationListene
         StructureArray<VkImage> swapchainImages = stack.pushArray(integer.get(), VkImage.class, VkImage::new);
         vkInstance.vkGetSwapchainImagesKHR(device.getVkDevice(), vkSwapChain, ref(integer), ofArray(swapchainImages));
 
+        // TODO: Some hardware combos might not support the request amount of swapchain
+        // images. The minimum may be higher than 2. If this happens we should automatically
+        // change to use the next best supported count (if enabled by the game) and log
+        // a warning message.
         if(swapChainImageCount != swapchainImages.length())
             throw new Error("Set and actual swap chain image count does not match.");
 
