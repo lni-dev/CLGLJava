@@ -25,7 +25,7 @@ public enum CPPBuildType {
             "build/cmake/msvc",
             true, "Debug",
             "Debug",
-            "dll",
+            "", "dll",
             "windows"
     ),
     MSVC_RELEASE(
@@ -33,7 +33,7 @@ public enum CPPBuildType {
             "build/cmake/msvc",
             true, "Release",
             "Release",
-            "dll",
+            "", "dll",
             "windows"
     ),
     GCC_DEBUG(
@@ -41,7 +41,7 @@ public enum CPPBuildType {
             "build/cmake/gcc-debug",
             false, null,
             "",
-            "so",
+            "lib", "so",
             "windows"
     ),
     ;
@@ -68,6 +68,10 @@ public enum CPPBuildType {
      */
     public final @NotNull String libFileDir;
     /**
+     * File prefix of the library binaries (e.g. "lib" or "").
+     */
+    public final @NotNull String libFilePrefix;
+    /**
      * File ending of the library binaries (e.g. dll or so).
      */
     public final @NotNull String libFileEnding;
@@ -83,6 +87,7 @@ public enum CPPBuildType {
             boolean requiresConfigParam,
             @Nullable String configParam,
             @NotNull String libFileDir,
+            @NotNull String libFilePrefix,
             @NotNull String libFileEnding,
             @NotNull String targetPlatform
     ) {
@@ -91,6 +96,7 @@ public enum CPPBuildType {
         this.requiresConfigParam = requiresConfigParam;
         this.configParam = configParam;
         this.libFileDir = libFileDir;
+        this.libFilePrefix = libFilePrefix;
         this.libFileEnding = libFileEnding;
         this.targetPlatform = targetPlatform;
     }

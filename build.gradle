@@ -29,7 +29,7 @@ plugins {
 
 Version engineVersion = Version.of(ReleaseType.valueOf(engine_release_type), engine_version)
 CPPBuildType nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.MSVC_DEBUG : CPPBuildType.MSVC_RELEASE
-nativeBuildType = CPPBuildType.GCC_DEBUG
+//nativeBuildType = CPPBuildType.GCC_DEBUG
 
 group engine_group
 version engineVersion.version().asUserFriendlyString;
@@ -59,7 +59,7 @@ vulkanWrapper {
 }
 
 compileNativeLibraries {
-    nativeLibName = "lib$engine_package" //TODO: lib prefix on linux but not on windows
+    nativeLibName = "${nativeBuildType.libFilePrefix}$engine_package"
     resourcePackage = "$engine_group.${engine_package}.libs"
     buildType = nativeBuildType
 }
