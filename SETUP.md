@@ -57,9 +57,17 @@ Now you can run the cmake to create the `cmake-build` directory:
 ```shell
 cmake --preset=msvc
 ```
+or on linux:
+```shell
+cmake --preset=gcc-debug
+```
 Finally, you can run the build
 ```shell
 cmake --build cmake-build/msvc --config Debug
+```
+or on linux:
+```shell
+cmake --build build/cmake/gcc-debug
 ```
 
 
