@@ -47,7 +47,7 @@ public class GLFW {
     protected static final @NotNull NativeErrorCallback staticErrorCallback = (code, description) -> {
         GLFWError error = new GLFWError(code, description);
 
-        LLog.getLogInstance().logError(
+        LLog.getLogInstance().error(
                 error.description() == null ?
                         "Error " + error.code() + ": " + "No description provided." :
                         "Error " + error.code() + ": " + error.description()

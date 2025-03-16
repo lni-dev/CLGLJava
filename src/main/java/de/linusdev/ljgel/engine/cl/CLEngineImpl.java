@@ -116,7 +116,7 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
 
         loadFut.then((result, secondary, error) -> {
             if(error != null)
-                log.logThrowable(error.asThrowable());
+                log.throwable(error.asThrowable());
         });
 
         CLEngineUtils.loadKernels(this, scene.getLoadingRenderKernelInfo(), scene.getLoadingUIKernelInfo()).then(
@@ -216,7 +216,7 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
             try {
                 runnable.run();
             } catch (Throwable t) {
-                log.logThrowable(t);
+                log.throwable(t);
 
             }
         });

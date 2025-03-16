@@ -70,7 +70,7 @@ public class UIThread<G extends CLGame> extends Thread implements HasCLEngine<G>
             window.close();
             windowClosedFuture.complete(Nothing.INSTANCE, this, null);
         } catch (Throwable t) {
-            log.logThrowable(t);
+            log.throwable(t);
             windowClosedFuture.complete(null, this, new ThrowableAsyncError(t));
         }
     }

@@ -15,6 +15,8 @@
  */
 
 import de.linusdev.ljgel.build.CPPBuildType
+import de.linusdev.lutils.os.OsType
+import de.linusdev.lutils.os.OsUtils
 import de.linusdev.lutils.version.ReleaseType
 import de.linusdev.lutils.version.Version
 
@@ -28,8 +30,15 @@ plugins {
 }
 
 Version engineVersion = Version.of(ReleaseType.valueOf(engine_release_type), engine_version)
-CPPBuildType nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.MSVC_DEBUG : CPPBuildType.MSVC_RELEASE
-nativeBuildType = CPPBuildType.GCC_DEBUG
+
+CPPBuildType nativeBuildType = null;
+if(OsUtils.CURRENT_OS == OsType.WINDOWS) {
+    nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.MSVC_DEBUG : CPPBuildType.MSVC_RELEASE
+} else if(OsUtils.CURRENT_OS == OsType.LINUX) {
+    nativeBuildType = engineVersion.type() == ReleaseType.DEVELOPMENT_BUILD ? CPPBuildType.GCC_DEBUG : CPPBuildType.GCC_RELEASE
+} else {
+    OsUtils.requireAnyOfOsTypes(OsType.WINDOWS, OsType.LINUX)
+}
 
 group engine_group
 version engineVersion.version().asUserFriendlyString;
@@ -95,6 +104,10 @@ sourceSets {
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+compileJava {
+    options.compilerArgs.add("-Xlint:deprecation")
 }
 
 jar {

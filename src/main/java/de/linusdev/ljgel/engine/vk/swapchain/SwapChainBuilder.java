@@ -48,7 +48,7 @@ public class SwapChainBuilder {
     private @Nullable EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform = null;
 
     public SwapChainBuilder() {
-        LOG.logDebug("Start building SwapChain.");
+        LOG.debug("Start building SwapChain.");
     }
 
     public SwapChainBuilder setSurfaceFormat(
@@ -59,7 +59,7 @@ public class SwapChainBuilder {
         if(surfaceFormat == null)
             throw new EngineException("SurfaceFormatSelector could not select a suitable format.");
 
-        LOG.logDebug("Surface format chosen: format=" + surfaceFormat.format.get(VkFormat.class)
+        LOG.debug("Surface format chosen: format=" + surfaceFormat.format.get(VkFormat.class)
                 + ", colorSpace=" + surfaceFormat.colorSpace.get(VkColorSpaceKHR.class)
         );
 
@@ -72,28 +72,28 @@ public class SwapChainBuilder {
         if(presentMode == null)
             throw new EngineException("PresentModeSelector could not select a suitable mode.");
 
-        LOG.logDebug("Present mode chosen: " + presentMode.get());
+        LOG.debug("Present mode chosen: " + presentMode.get());
 
         return this;
     }
 
     public SwapChainBuilder setSwapExtend(@NotNull Extend2D swapExtend) {
         this.swapExtend = swapExtend;
-        LOG.logDebug("Swap extend chosen: width=" + swapExtend.width() + ", height=" + swapExtend.height());
+        LOG.debug("Swap extend chosen: width=" + swapExtend.width() + ", height=" + swapExtend.height());
 
         return this;
     }
 
     public SwapChainBuilder setSwapChainImageCount(@NotNull Integer swapChainImageCount) {
         this.swapChainImageCount = swapChainImageCount;
-        LOG.logDebug("Swap chain image count chosen: " + swapChainImageCount);
+        LOG.debug("Swap chain image count chosen: " + swapChainImageCount);
 
         return this;
     }
 
     public SwapChainBuilder setSurfaceTransform(@NotNull EnumValue32<VkSurfaceTransformFlagBitsKHR> surfaceTransform) {
         this.surfaceTransform = surfaceTransform;
-        LOG.logDebug("Surface transform chosen: " + surfaceTransform.get());
+        LOG.debug("Surface transform chosen: " + surfaceTransform.get());
 
         return this;
     }
