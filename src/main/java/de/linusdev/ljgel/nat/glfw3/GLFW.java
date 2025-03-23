@@ -24,7 +24,7 @@ import de.linusdev.ljgel.nat.glfw3.custom.window.GLFWNativeCallbacks;
 import de.linusdev.ljgel.nat.glfw3.exceptions.GLFWError;
 import de.linusdev.ljgel.nat.glfw3.exceptions.GLFWException;
 import de.linusdev.llog.LLog;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt1;
 import de.linusdev.lutils.math.vector.buffer.intn.BBInt2;
 import de.linusdev.lutils.math.vector.buffer.longn.BBLong1;

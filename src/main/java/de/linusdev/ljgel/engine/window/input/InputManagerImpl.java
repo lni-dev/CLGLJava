@@ -23,7 +23,7 @@ import de.linusdev.ljgel.nat.glfw3.custom.ListSupplier;
 import de.linusdev.ljgel.nat.glfw3.custom.MouseButtonListener;
 import de.linusdev.ljgel.nat.glfw3.custom.TextInputListener;
 import de.linusdev.ljgel.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

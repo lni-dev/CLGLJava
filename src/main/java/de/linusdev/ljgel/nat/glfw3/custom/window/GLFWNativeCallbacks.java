@@ -19,7 +19,7 @@ package de.linusdev.ljgel.nat.glfw3.custom.window;
 import de.linusdev.ljgel.nat.NativeUtils;
 import de.linusdev.ljgel.nat.custom.StaticCallbackObjects;
 import de.linusdev.ljgel.nat.glfw3.custom.JoystickListener;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import org.jetbrains.annotations.NotNull;
 

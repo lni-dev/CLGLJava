@@ -17,7 +17,7 @@
 package de.linusdev.ljgel.nat.glad.custom;
 
 import de.linusdev.ljgel.nat.glad.listener.ReCreationListener;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 

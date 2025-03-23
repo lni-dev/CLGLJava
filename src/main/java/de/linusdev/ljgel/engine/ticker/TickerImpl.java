@@ -18,7 +18,7 @@ package de.linusdev.ljgel.engine.ticker;
 
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

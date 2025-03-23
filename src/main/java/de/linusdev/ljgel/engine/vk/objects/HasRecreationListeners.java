@@ -16,7 +16,7 @@
 
 package de.linusdev.ljgel.engine.vk.objects;
 
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import org.jetbrains.annotations.NotNull;
 
 public class HasRecreationListeners<L> {

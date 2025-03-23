@@ -16,7 +16,7 @@
 
 package de.linusdev.ljgel.engine.vk.renderpass;
 
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.thread.var.SyncVarImpl;
 import org.jetbrains.annotations.NotNull;

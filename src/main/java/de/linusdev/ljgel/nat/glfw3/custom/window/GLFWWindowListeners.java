@@ -20,7 +20,7 @@ import de.linusdev.ljgel.api.misc.annos.CallFromAnyThread;
 import de.linusdev.ljgel.nat.custom.StaticCallbackObject;
 import de.linusdev.ljgel.nat.glfw3.custom.*;
 import de.linusdev.ljgel.nat.glfw3.objects.GLFWWindow;
-import de.linusdev.lutils.llist.LLinkedList;
+import de.linusdev.lutils.collections.llist.LLinkedList;
 import org.jetbrains.annotations.NonBlocking;
 import org.jetbrains.annotations.NotNull;
 
