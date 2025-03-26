@@ -18,6 +18,7 @@ package de.linusdev.ljgel.engine;
 
 import de.linusdev.ljgel.GeneratedConstants;
 import de.linusdev.ljgel.engine.info.Game;
+import de.linusdev.ljgel.engine.info.HasGame;
 import de.linusdev.ljgel.nat.Load;
 import de.linusdev.ljgel.nat.NativeUtils;
 import de.linusdev.ljgel.nat.abi.ABISelector;
@@ -33,7 +34,7 @@ import de.linusdev.lutils.nat.struct.utils.BufferUtils;
 import de.linusdev.lutils.version.Version;
 import org.jetbrains.annotations.NotNull;
 
-public interface Engine<GAME extends Game> extends HasAsyncManager {
+public interface Engine<GAME extends Game> extends HasAsyncManager, HasGame<GAME> {
 
     class StaticSetup {
 
