@@ -81,6 +81,7 @@ public class TickerImpl implements Runnable, Ticker {
         try {
             long delta = System.currentTimeMillis() - lastTickStart;
             deltaTime = ((double) delta / 1000d);
+            lastTickStart = System.currentTimeMillis();
 
             for (Tickable tickable : tickables) {
                 tickable.tick(this);
