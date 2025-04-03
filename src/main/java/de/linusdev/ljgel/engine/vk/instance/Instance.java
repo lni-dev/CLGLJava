@@ -91,7 +91,7 @@ public class Instance implements AutoCloseable {
 
             // VkApplicationInfo
             NullTerminatedUTF8String appName = stack.pushString(game.name());
-            NullTerminatedUTF8String engineName = stack.pushString(Engine.name());
+            NullTerminatedUTF8String engineName = stack.pushString(Engine.getName());
 
             VkApplicationInfo vkApplicationInfo = stack.push(new VkApplicationInfo());
             vkApplicationInfo.sType.set(VkStructureType.APPLICATION_INFO);
@@ -99,7 +99,7 @@ public class Instance implements AutoCloseable {
             vkApplicationInfo.pApplicationName.set(appName);
             vkApplicationInfo.applicationVersion.set(VulkanVersionUtils.makeVersion(game.version().version()));
             vkApplicationInfo.pEngineName.set(engineName);
-            vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.version().version()));
+            vkApplicationInfo.engineVersion.set(VulkanVersionUtils.makeVersion(Engine.getVersion().version()));
             vkApplicationInfo.apiVersion.set(game.minRequiredInstanceVersion().getAsInt());
             LOG.log(StandardLogLevel.DATA, "VkApplicationInfo: " + vkApplicationInfo);
 

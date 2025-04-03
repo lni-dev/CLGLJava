@@ -16,7 +16,6 @@
 
 package de.linusdev.ljgel.engine.vk;
 
-import de.linusdev.ljgel.engine.Engine;
 import de.linusdev.ljgel.engine.exception.EngineException;
 import de.linusdev.ljgel.engine.obj.ModelViewProjection;
 import de.linusdev.ljgel.engine.scene.Loader;
@@ -511,7 +510,7 @@ class VulkanEngineTest {
 
     @Test
     void test() throws EngineException, InterruptedException {
-        Engine.StaticSetup.setup();
+        VulkanEngine.StaticSetup.setup();
 
         VulkanEngine<TestGame> engine = new VulkanEngine<>(new TestGame());
 

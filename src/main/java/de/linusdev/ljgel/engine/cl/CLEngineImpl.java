@@ -17,6 +17,7 @@
 package de.linusdev.ljgel.engine.cl;
 
 import de.linusdev.ljgel.api.misc.interfaces.TRunnable;
+import de.linusdev.ljgel.engine.NativeInteropEngine;
 import de.linusdev.ljgel.engine.cl.window.CLGLWindow;
 import de.linusdev.ljgel.engine.cl.window.Handler;
 import de.linusdev.ljgel.engine.cl.window.args.KernelView;
@@ -50,7 +51,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
-public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tickable, KeyListener, MouseButtonListener, TextInputListener {
+public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, NativeInteropEngine, Handler, Tickable, KeyListener, MouseButtonListener, TextInputListener {
 
     private final static @NotNull LogInstance log = LLog.getLogInstance();
 
@@ -192,14 +193,14 @@ public class CLEngineImpl<G extends CLGame> implements CLEngine<G>, Handler, Tic
     }
 
     @Override
-    public @NotNull <R> Future<R, CLEngine<G>> runSupervised(@NotNull AdvTRunnable<R, ?> runnable) {
-        var future = CompletableFuture.<R, CLEngine<G>>create(getAsyncManager(), false);
+    public @NotNull <R> Future<R, Nothing> runSupervised(@NotNull AdvTRunnable<R, ?> runnable) {
+        var future = CompletableFuture.<R, Nothing>create(getAsyncManager(), false);
         executor.execute(() -> {
             try {
-                future.complete(runnable.run(), this, null);
+                future.complete(runnable.run(), Nothing.INSTANCE, null);
             } catch (Throwable t) {
                 log.throwable(t);
-                future.complete(null, this, new ThrowableAsyncError(t));
+                future.complete(null, Nothing.INSTANCE, new ThrowableAsyncError(t));
             }
         });
         return future;

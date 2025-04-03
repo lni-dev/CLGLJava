@@ -34,7 +34,7 @@ public class CLEngineUtils {
     }
 
     @NonBlocking
-    static <G extends CLGame> @NotNull Future<LoadKernelsResult, CLEngine<G>> loadKernels(
+    static <G extends CLGame> @NotNull Future<LoadKernelsResult, Nothing> loadKernels(
             @NotNull CLEngine<G> engine,
             @Nullable KernelSourceInfo renderKernelInfo,
             @Nullable KernelSourceInfo uiKernelInfo

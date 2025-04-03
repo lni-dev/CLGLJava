@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package de.linusdev.ljgel.engine.vk.async;
+package de.linusdev.ljgel.engine.async;
 
 import de.linusdev.llog.LLog;
 import de.linusdev.llog.base.LogInstance;
@@ -25,7 +25,7 @@ import de.linusdev.lutils.async.manager.AsyncManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class VkAsyncManager implements AsyncManager {
+public class BasicAsyncManager implements AsyncManager {
 
     public static final @NotNull LogInstance LOG = LLog.getLogInstance();
 

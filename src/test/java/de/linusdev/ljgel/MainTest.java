@@ -16,7 +16,7 @@
 
 package de.linusdev.ljgel;
 
-import de.linusdev.ljgel.engine.Engine;
+import de.linusdev.ljgel.engine.NativeInteropEngine;
 import de.linusdev.ljgel.engine.cl.window.CLGLWindow;
 import de.linusdev.ljgel.engine.cl.window.Handler;
 import de.linusdev.ljgel.engine.cl.window.args.KernelView;
@@ -122,7 +122,7 @@ public class MainTest {
 
     @Test
     void test() throws InterruptedException, GLFWException, GladInitException {
-        Engine.StaticSetup.setup();
+        NativeInteropEngine.StaticSetup.setup();
         OpenGLWindow window = new OpenGLWindow(null);
 
         window.setSize(800, 500);

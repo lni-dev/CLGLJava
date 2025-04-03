@@ -94,7 +94,7 @@ public interface CLEngine<G extends CLGame> extends Engine<G> {
     UIThread<G> getUIThread();
 
     @Override
-    <R> @NotNull Future<R, CLEngine<G>> runSupervised(@NotNull AdvTRunnable<R,?> runnable);
+    <R> @NotNull Future<R, Nothing> runSupervised(@NotNull AdvTRunnable<R,?> runnable);
 
     void runSupervised(@NotNull TRunnable runnable);
 

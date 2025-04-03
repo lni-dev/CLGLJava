@@ -16,13 +16,12 @@
 
 package de.linusdev.ljgel.engine.vk;
 
-import de.linusdev.ljgel.engine.Engine;
+import de.linusdev.ljgel.engine.AbstractEngine;
+import de.linusdev.ljgel.engine.NativeInteropEngine;
 import de.linusdev.ljgel.engine.exception.EngineException;
 import de.linusdev.ljgel.engine.queue.TaskQueue;
 import de.linusdev.ljgel.engine.scene.Loader;
 import de.linusdev.ljgel.engine.scene.State;
-import de.linusdev.ljgel.engine.ticker.TickerImpl;
-import de.linusdev.ljgel.engine.vk.async.VkAsyncManager;
 import de.linusdev.ljgel.engine.vk.command.pool.GraphicsQueueTransientCommandPool;
 import de.linusdev.ljgel.engine.vk.device.Device;
 import de.linusdev.ljgel.engine.vk.instance.Instance;
@@ -43,16 +42,11 @@ import de.linusdev.ljgel.engine.window.input.InputManger;
 import de.linusdev.ljgel.nat.glfw3.GLFW;
 import de.linusdev.ljgel.nat.glfw3.custom.WindowCloseListener;
 import de.linusdev.ljgel.nat.vulkan.handles.VkInstance;
-import de.linusdev.llog.LLog;
-import de.linusdev.llog.base.LogInstance;
 import de.linusdev.llog.base.impl.StandardLogLevel;
 import de.linusdev.lutils.async.Future;
 import de.linusdev.lutils.async.Nothing;
 import de.linusdev.lutils.async.completeable.CompletableFuture;
-import de.linusdev.lutils.async.error.ThrowableAsyncError;
-import de.linusdev.lutils.async.manager.AsyncManager;
 import de.linusdev.lutils.async.manager.HasAsyncManager;
-import de.linusdev.lutils.interfaces.AdvTRunnable;
 import de.linusdev.lutils.interfaces.TFunction;
 import de.linusdev.lutils.nat.memory.stack.Stack;
 import de.linusdev.lutils.nat.memory.stack.StackFactory;
@@ -63,8 +57,6 @@ import de.linusdev.lutils.thread.pool.ThreadWithStackPool;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import static de.linusdev.ljgel.nat.glfw3.GLFWValues.GLFW_TRUE;
 
@@ -82,22 +74,14 @@ import static de.linusdev.ljgel.nat.glfw3.GLFWValues.GLFW_TRUE;
  * thread until the window thread has died, if it did not already die. Thus the engine death is the same
  * as the death of the render thread.</p>
  */
-public class VulkanEngine<GAME extends VulkanGame> implements
-        Engine<GAME>,
+public class VulkanEngine<GAME extends VulkanGame> extends AbstractEngine<GAME> implements
+        NativeInteropEngine,
         HasAsyncManager
 {
 
-    public final static @NotNull LogInstance LOG = LLog.getLogInstance();
-
     private static final int LOAD_SCENE_TASK_ID = TaskQueue.getUniqueTaskId("LOAD_SCENE");
 
-    private final @NotNull GAME game;
-
-    private final @NotNull VkAsyncManager asyncManager;
-
-    private final @NotNull Executor executor = Executors.newWorkStealingPool(16);
     private final @NotNull ThreadWithStackPool threadWithStackPool;
-    private final @NotNull TickerImpl ticker;
     private final @NotNull InputManger inputManger;
 
     private final @NotNull WindowThread<VulkanWindow> windowThread;
@@ -118,6 +102,7 @@ public class VulkanEngine<GAME extends VulkanGame> implements
     public VulkanEngine(
             @NotNull GAME game
     ) throws EngineException, InterruptedException {
+        super(game);
         // Check if StaticSetup was called!
         StaticSetup.checkSetup();
 
@@ -127,10 +112,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         }
 
         // Init variables
-        this.asyncManager = new VkAsyncManager();
         this.threadWithStackPool = new ThreadWithStackPool(1, 10000, this.asyncManager, Thread::new, StackFactory.DEFAULT);
         this.vulkanInfo = new VulkanEngineInfo();
-        this.game = game;
 
 
         // Create a small stack for short-lived structures
@@ -204,8 +187,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         });
 
 
-
-        ticker = new TickerImpl(game.getMillisPerTick());
         ticker.start();
         ticker.addTickable(currentScene);
 
@@ -214,11 +195,6 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         renderThread.endWarmUp().getResult();
         LOG.debug("Render thread created.");
 
-    }
-
-    @Override
-    public @NotNull GAME getGame() {
-        return game;
     }
 
     public @NotNull VkInstance getVkInstance() {
@@ -241,27 +217,8 @@ public class VulkanEngine<GAME extends VulkanGame> implements
         return inputManger;
     }
 
-    @Override
-    public @NotNull AsyncManager getAsyncManager() {
-        return asyncManager;
-    }
-
     public @NotNull RenderThread getRenderThread() {
         return renderThread;
-    }
-
-    @Override
-    public @NotNull <R> Future<R, VulkanEngine<GAME>> runSupervised(@NotNull AdvTRunnable<R, ?> runnable) {
-        var future = CompletableFuture.<R, VulkanEngine<GAME>>create(getAsyncManager(), false);
-        executor.execute(() -> {
-            try {
-                future.complete(runnable.run(), this, null);
-            } catch (Throwable t) {
-                LOG.throwable(t);
-                future.complete(null, this, new ThrowableAsyncError(t));
-            }
-        });
-        return future;
     }
 
     @Override
