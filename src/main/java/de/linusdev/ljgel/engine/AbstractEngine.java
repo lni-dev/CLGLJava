@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public class AbstractEngine<GAME extends Game> implements Engine<GAME>, HasAsyncManager {
+public abstract class AbstractEngine<GAME extends Game> implements Engine<GAME>, HasAsyncManager {
 
     protected final @NotNull GAME game;
     protected final @NotNull Executor executor;
