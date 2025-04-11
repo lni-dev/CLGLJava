@@ -28,6 +28,12 @@ public interface Ticker {
 
     void setDeltaTimeFactor(double deltaTimeFactor);
 
+    double getDeltaTimeFactor();
+
+    void pause();
+
+    void resume();
+
     double getLastDeltaTime();
 
 }

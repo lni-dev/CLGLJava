@@ -73,6 +73,21 @@ public class TickerImpl implements Runnable, Ticker {
         this.deltaTimeFactor = deltaTimeFactor;
     }
 
+    @Override
+    public double getDeltaTimeFactor() {
+        return deltaTimeFactor;
+    }
+
+    @Override
+    public void pause() {
+        stop();
+    }
+
+    @Override
+    public void resume() {
+        start();
+    }
+
     public void addTickable(@NotNull Tickable tickable) {
         tickables.add(tickable);
     }
