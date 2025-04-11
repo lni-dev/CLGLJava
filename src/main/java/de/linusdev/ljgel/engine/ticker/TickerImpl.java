@@ -40,6 +40,7 @@ public class TickerImpl implements Runnable, Ticker {
 
     private long lastTickStart = 0L;
     private double deltaTime = 0d;
+    private double deltaTimeFactor = 1d;
 
     public TickerImpl(long millisPerTick) {
         this.tickables = new LLinkedList<>();
@@ -68,6 +69,10 @@ public class TickerImpl implements Runnable, Ticker {
         start();
     }
 
+    public void setDeltaTimeFactor(double deltaTimeFactor) {
+        this.deltaTimeFactor = deltaTimeFactor;
+    }
+
     public void addTickable(@NotNull Tickable tickable) {
         tickables.add(tickable);
     }
@@ -80,7 +85,7 @@ public class TickerImpl implements Runnable, Ticker {
     public void run() {
         try {
             long delta = System.currentTimeMillis() - lastTickStart;
-            deltaTime = ((double) delta / 1000d);
+            deltaTime = (deltaTimeFactor * (double) delta) / 1000d;
             lastTickStart = System.currentTimeMillis();
 
             for (Tickable tickable : tickables) {

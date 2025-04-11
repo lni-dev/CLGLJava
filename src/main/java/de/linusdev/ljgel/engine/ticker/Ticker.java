@@ -26,6 +26,8 @@ public interface Ticker {
 
     void changeMillisPerTick(long millisPerTick);
 
+    void setDeltaTimeFactor(double deltaTimeFactor);
+
     double getLastDeltaTime();
 
 }
