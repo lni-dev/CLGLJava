@@ -17,19 +17,19 @@
 package de.linusdev.ljgel.nat;
 
 import de.linusdev.ljgel.GeneratedConstants;
-import de.linusdev.ljgel.nat.loader.LibraryLoader;
+import de.linusdev.lutils.nat.loader.ResourceNativeLibraryLoader;
 
 import java.io.IOException;
 
 public class Load {
 
     static {
-        LibraryLoader loader = new LibraryLoader(
-                Load.class, "de/linusdev/ljgel/libs/", GeneratedConstants.NATIVE_LIB_NAME
-        );
-
         try {
-            loader.load();
+            new ResourceNativeLibraryLoader(
+                    null,
+                    null,
+                    "/de/linusdev/ljgel/libs/" + GeneratedConstants.NATIVE_LIB_NAME
+            ).load();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
