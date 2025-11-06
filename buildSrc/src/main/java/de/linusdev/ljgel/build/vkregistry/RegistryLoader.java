@@ -351,6 +351,8 @@ public class RegistryLoader {
 
         // OpenHarmony
         types.put("OHNativeWindow", new BasicType("OHNativeWindow", CTypes.VOID, "oh"));
+        types.put("OH_NativeBuffer", new BasicType("OHNativeBuffer", CTypes.VOID, "oh"));
+        types.put("OHBufferHandle", new BasicType("OHBufferHandle", CTypes.VOID, "oh"));
 
         // Default C types
         addType(CTypes.INT8);
